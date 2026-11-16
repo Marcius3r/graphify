@@ -133,3 +133,12 @@ def test_scenes_without_gpu_fall_back_to_pending(tmp_path):
     assert (tmp_path / "generation_tasks.json").exists()
     with pytest.raises(core.StepError):
         scenes.gather_clips(script, shots, tmp_path, "short", S)
+
+
+def test_voice_design_tasks_are_original_descriptions():
+    from marcius3r import wan2gp
+    d = S["providers"]["voice"]["design"]
+    t = wan2gp.voice_design_task(d["sample_text"], d["base"], "spanish", 20)
+    assert t["model_type"] == "qwen3_tts_voicedesign" and t["model_mode"] == "spanish"
+    assert "audio_guide" not in t  # diseño por descripción, sin audio de nadie
+    assert len(d["variants"]) >= 3

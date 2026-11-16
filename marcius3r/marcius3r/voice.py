@@ -149,3 +149,45 @@ def write_voice_manifest(script: dict, workdir: Path, settings: dict) -> None:
     (workdir / "generation_manifest.json").write_text(json.dumps(
         {"engine": "wan2gp", "stage": "voice", "unzip_to": "voice", "shots": shots, "tasks": tasks},
         ensure_ascii=False, indent=2))
+
+
+def design_candidates(settings: dict, out_dir: Path, remote: bool = False) -> list[Path]:
+    """Genera voces candidatas ORIGINALES (Qwen3-TTS VoiceDesign) con el estilo descrito en settings."""
+    from . import wan2gp
+    d = settings["providers"]["voice"]["design"]
+    tasks = [wan2gp.voice_design_task(d["sample_text"], f"{d['base']}. {v}", d.get("language", "spanish"), 20, seed=i + 1)
+             for i, v in enumerate(d["variants"])]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if remote:
+        from .kaggle_gpu import run_remote
+        paths = run_remote(tasks, out_dir, settings, "voicedesign")
+    else:
+        paths = wan2gp.run(tasks, out_dir, settings["providers"]["wan2gp"], "voicedesign")
+    result = []
+    for i, src in enumerate(paths, 1):
+        dest = out_dir / f"candidata_{i}.wav"
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-ar", "24000", "-ac", "1", str(dest)], check=True)
+        result.append(dest)
+    return result
+
+
+def pick_candidate(n: int, settings: dict, cand_dir: Path) -> Path:
+    """Fija la candidata N como voz del canal (referencia para OmniVoice) y guarda su transcripción."""
+    import yaml as _yaml
+    from .core import ROOT
+    src = cand_dir / f"candidata_{n}.wav"
+    if not src.exists():
+        raise StepError(f"no existe {src}")
+    cfg = settings["providers"]["voice"]["wan2gp"]
+    dest = ROOT / cfg["reference_audio"]
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    # recorte a ≤10 s (OmniVoice rinde mejor con 3-10 s de referencia)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-t", "10", "-af",
+                    "silenceremove=start_periods=1:start_threshold=-45dB,afade=t=out:st=9.7:d=0.3", str(dest)], check=True)
+    text = settings["providers"]["voice"]["design"]["sample_text"]
+    p = ROOT / "config" / "settings.yaml"
+    raw = p.read_text(encoding="utf-8")
+    raw = raw.replace('reference_transcript: ""', f'reference_transcript: "{text}"', 1)
+    p.write_text(raw, encoding="utf-8")
+    _yaml.safe_load(raw)  # sigue siendo YAML válido
+    return dest

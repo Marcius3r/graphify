@@ -63,6 +63,12 @@ def tts_task(text: str, cfg: dict, seed: int = 7) -> dict:
     return t
 
 
+def voice_design_task(text: str, description: str, language: str = "spanish", seconds: int = 20, seed: int = 1) -> dict:
+    """Qwen3-TTS VoiceDesign: crea una voz NUEVA a partir de una descripción (no clona a nadie)."""
+    return {"model_type": "qwen3_tts_voicedesign", "prompt": text, "alt_prompt": description,
+            "model_mode": language, "duration_seconds": seconds, "seed": seed}
+
+
 def music_task(style: str, seconds: float, seed: int = 11) -> dict:
     return {"model_type": "ace_step_v1_5_turbo_lm_1_7b", "prompt": "[Instrumental]", "alt_prompt": style,
             "duration_seconds": int(seconds) + 2, "num_inference_steps": 8, "seed": seed}

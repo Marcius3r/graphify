@@ -33,6 +33,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("pause", help="detener la automatización")
     sub.add_parser("unpause", help="reanudar la automatización")
     sub.add_parser("status", help="resumen en texto")
+    p = sub.add_parser("voice-design", help="crear voces candidatas originales (Qwen3 VoiceDesign)")
+    p.add_argument("--kaggle", action="store_true", help="usar la GPU gratuita de Kaggle")
+    p = sub.add_parser("voice-pick", help="fijar la candidata N como voz del canal")
+    p.add_argument("n", type=int)
     p = sub.add_parser("dashboard", help="panel web local")
     p.add_argument("--port", type=int, default=8787)
     p = sub.add_parser("ideas", help="listar ideas")
@@ -77,6 +81,15 @@ def main(argv: list[str] | None = None) -> int:
             for r in con.execute("SELECT id,format,status,title,publish_at,youtube_id,cost_credits FROM videos ORDER BY id DESC LIMIT 20"):
                 print(dict(r))
         print("pausada" if core.is_stopped() else "activa", "| créditos mes:", pipeline.credits_this_month())
+    elif a.cmd in ("voice-design", "voice-pick"):
+        from . import voice as vmod
+        cand = core.ROOT / "library" / "voice" / "candidatas"
+        if a.cmd == "voice-design":
+            for pth in vmod.design_candidates(core.load_settings(), cand, remote=a.kaggle):
+                print("candidata:", pth)
+            print("Escúchalas y ejecuta: python -m marcius3r voice-pick <N>")
+        else:
+            print("voz del canal fijada:", vmod.pick_candidate(a.n, core.load_settings(), cand))
     elif a.cmd == "dashboard":
         from .dashboard import serve
         serve(a.port)

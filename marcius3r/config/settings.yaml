@@ -69,6 +69,18 @@ providers:
       reference_transcript: ""          # vacío = Wan2GP la transcribe con Whisper
       voice_tags: "male, young adult, moderate pitch"   # si no hay referencia (acento no garantizado)
       steps: 32
+    # Voz ORIGINAL del canal diseñada con Qwen3-TTS VoiceDesign, inspirada en el ESTILO (no la identidad) de
+    # «Gerardo»: F0 ~150 Hz (medio-grave), entonación muy expresiva (100-240 Hz), timbre cálido, habla fluida.
+    # `python -m marcius3r voice-design` crea candidatas → `voice-pick N` fija la elegida como referencia.
+    design:
+      language: spanish
+      sample_text: "¿Ya están listos? Hoy les traigo un secreto de GTA seis que casi nadie conoce. Quédense hasta el final, porque esto les va a volar la cabeza."
+      base: "Young Latin American man in his late twenties speaking neutral Latin American Spanish, warm medium-low baritone voice around 150 Hz, slightly husky texture, relaxed and confident cool attitude, very expressive intonation with energetic rises, fluid fast-paced delivery with few pauses, friendly gaming content creator, close studio microphone, clean audio"
+      variants:
+        - "balanced: cool and confident, smiling tone"
+        - "more energetic and hyped, punchy emphasis on key words"
+        - "slightly deeper and smoother, late-night radio vibe"
+        - "brighter and more playful, quick rhythm"
     voicestudio:
       url: http://127.0.0.1:3900
       model: omnivoice
