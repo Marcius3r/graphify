@@ -13,3 +13,7 @@ ideas:
   - {title: "El tráiler de lanzamiento se grabó en una PS5 normal", category: C, needs: [launch_trailer], angle: "Qué significa para cómo se verá en casa", evergreen: true}
   - {title: "GTA Online en GTA 6: ¿cuándo?", category: B, needs: [online_unknown], angle: "Sin fecha oficial; separar rumor", evergreen: true}
   - {title: "Las reservas de GTA 6 rompen expectativas", category: E, needs: [preorders], angle: "Qué dijo Take-Two", evergreen: false}
+  # Inspiradas en el formato viral «¿ya estás preparado?» (cuenta atrás + emoción + pregunta personal)
+  - {title: "13 años de espera: de GTA 5 a GTA 6", category: F, needs: [gta5_release, release_date, delays], angle: "Nostalgia + cuenta atrás; cierre: ¿con quién vas a jugarlo?", evergreen: false}
+  - {title: "¿Ya estás preparado para GTA 6? Lo que tienes que saber antes de jugar", category: E, needs: [release_date, preload, physical_code, no_pc], angle: "Checklist del lanzamiento; cierre: ¿lo jugarás el primer día?", evergreen: false}
+  - {title: "¿Sabías que el disco de GTA 6 no trae el juego?", category: C, needs: [physical_code], angle: "Gancho ¿sabías que...?; cierre: ¿físico o digital?", evergreen: true}

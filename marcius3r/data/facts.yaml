@@ -73,6 +73,11 @@ facts:
     status: prensa_oficial
     sources: ["https://variety.com/2026/gaming/news/gta-6-preorders-expectations-launch-1236943278/"]
     verified_live: false
+  - id: gta5_release
+    text: "GTA 5 salió el 17 de septiembre de 2013, así que entre GTA 5 y GTA 6 pasan más de trece años."
+    status: oficial
+    sources: ["https://www.rockstargames.com/gta-v", "https://es.wikipedia.org/wiki/Grand_Theft_Auto_V"]
+    verified_live: false
 
 # Cosas que NO se deben presentar como hechos
 caution:

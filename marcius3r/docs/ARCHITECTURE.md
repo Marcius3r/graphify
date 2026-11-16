@@ -83,3 +83,28 @@ El estilo implementado sigue los patrones de los Shorts virales de GTA:
   - Los vídeos subidos por API se quedan en privado hasta pasar la auditoría.
   - Las políticas de «inauthentic content» penalizan la producción en serie sin valor propio.
 - **Rockstar:** tolera el gameplay, pero no el material filtrado o previo al lanzamiento, los finales ni las compilaciones de cinemáticas.
+
+## Reel de referencia analizado: @lo_sabias_ya · DfTf4NrvDpt (3-nov-2026)
+Se analizó a partir del HTML de la página guardado por el usuario. El vídeo y la portada no se pudieron descargar porque el CDN de Instagram está bloqueado en esta red.
+
+### Datos
+- **Métricas:** 58.792 «me gusta» y 191 comentarios.
+- **Formato:** vertical 720×1280, **45,3 s**, voz original y sin música con licencia.
+- **El canal:** de curiosidades en español («¿Lo sabías?»). Sus Reels más vistos llegan a 100-150 K «me gusta». En un post sus seguidores preguntan con qué IA hacen los vídeos, así que producen con IA.
+- **Texto del post:**
+  - Pregunta de emoción: «¿ya estás preparado para el juego más esperado? 🎮».
+  - Línea emocional: «13 años de espera terminan pronto».
+  - Pregunta personal: «¿con quién vas a jugarlo?».
+- **Momento:** 16 días antes del lanzamiento.
+
+### Qué se ha incorporado
+- `target_seconds: 45`.
+- En el guionista:
+  - Gancho de tipo «¿Sabías que…?» o pregunta de emoción.
+  - Una línea emocional.
+  - Un **cierre con pregunta personal**.
+  - Campos nuevos `caption_hook` y `comment_question`. La descripción del vídeo empieza por ellos.
+- Ideas nuevas de cuenta atrás y nostalgia en `data/idea_bank.yaml`, y el hecho verificado `gta5_release`.
+
+### Qué no se pudo analizar
+Los planos, el ritmo de corte, el estilo de los subtítulos y la voz. Hace falta el MP4 o capturas de pantalla.

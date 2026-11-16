@@ -29,7 +29,8 @@ def build_metadata(script: dict, fmt: str, synthetic: bool, settings: dict) -> d
     title = script["title"].strip()
     if fmt == "short" and "#shorts" not in title.lower() and len(title) <= 90:
         title = f"{title} #Shorts"
-    desc_parts = [script.get("description", "").strip(), "",
+    lead = [x for x in (script.get("caption_hook", "").strip(), script.get("comment_question", "").strip()) if x]
+    desc_parts = [*lead, *([""] if lead else []), script.get("description", "").strip(), "",
                   "🔔 Suscríbete a MARCIUS3R para descubrir cada día un secreto nuevo de GTA 6.", ""]
     if synthetic:
         desc_parts += [DISCLOSURE, CREDITS, ""]

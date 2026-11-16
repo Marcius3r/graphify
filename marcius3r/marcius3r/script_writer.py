@@ -41,9 +41,11 @@ SCRIPT_SCHEMA = {
         "description": {"type": "string"},
         "hashtags": {"type": "array", "items": {"type": "string"}},
         "tags": {"type": "array", "items": {"type": "string"}},
+        "caption_hook": {"type": "string"},
+        "comment_question": {"type": "string"},
     },
     "required": ["title", "title_alternatives", "thumbnail_text", "thumbnail_scene", "music_mood",
-                 "beats", "description", "hashtags", "tags"],
+                 "beats", "description", "hashtags", "tags", "caption_hook", "comment_question"],
     "additionalProperties": False,
 }
 
@@ -62,7 +64,13 @@ REGLAS INQUEBRANTABLES:
 7. Estructura obligatoria de beats: 1 hook (0-3 s, curiosidad máxima), 1 intro, varios body/detail, 1 ending, 1 cta.
 8. El cta debe ser exactamente el CTA del canal.
 9. Escribe números con letra cuando se lean ("diecinueve de noviembre").
-10. Título < 70 caracteres, sin clickbait falso. Descripción con fuentes al final y aviso de recreación IA."""
+10. Título < 70 caracteres, sin clickbait falso. Descripción con fuentes al final y aviso de recreación IA.
+FÓRMULA QUE FUNCIONA (Reels virales de curiosidades en español, p.ej. 45 s y 59K likes):
+- Gancho tipo «¿Sabías que…?» o pregunta de emoción («¿Ya estás preparado…?») en la primera frase.
+- Una línea emocional que conecte con el jugador (espera, nostalgia, hype del lanzamiento), sin exagerar datos.
+- Cierra el ending con una PREGUNTA PERSONAL fácil de responder («¿con quién vas a jugarlo?», «¿cuál vas a
+  explorar primero?»), no una pregunta genérica: eso dispara los comentarios.
+- caption_hook: 1-2 líneas en minúscula, cercanas, con 1 emoji (texto del post). comment_question: esa pregunta personal."""
 
 
 def target_words(fmt: str, settings: dict) -> int:
@@ -156,7 +164,8 @@ def write_template(idea: dict, fmt: str, settings: dict) -> dict:
     return {"title": f"GTA 6: {idea['title']}"[:70], "title_alternatives": [], "thumbnail_text": "NADIE LO VIO",
             "thumbnail_scene": beats[0]["scene_prompt"], "music_mood": "dark synthwave trap",
             "beats": beats, "description": f"{idea['title']}.", "hashtags": ["#GTA6", "#GTAVI", "#Shorts"],
-            "tags": ["GTA 6", "GTA VI", "Leonida", "Vice City"]}
+            "tags": ["GTA 6", "GTA VI", "Leonida", "Vice City"],
+            "caption_hook": "¿ya estás preparado para GTA 6? 🎮", "comment_question": "¿Con quién vas a jugarlo?"}
 
 
 def validate_script(script: dict, fmt: str, settings: dict) -> list[str]:
