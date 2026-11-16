@@ -75,6 +75,8 @@ def synthesize(script: dict, workdir: Path, settings: dict, video_id: int | None
     # lote Wan2GP/Kaggle para todas las frases que falten
     missing = [i for i in range(len(script["beats"])) if _agent_file(i, vdir) is None]
     for prov in vcfg["order"]:
+        if prov == "elevenlabs" and secrets.get("ELEVENLABS_API_KEY") and vcfg["elevenlabs"].get("voice_id"):
+            break  # la voz elegida (ElevenLabs) tiene prioridad: no generamos lote local
         if not missing or prov not in ("wan2gp", "kaggle"):
             continue
         try:

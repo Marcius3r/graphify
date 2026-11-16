@@ -49,7 +49,7 @@ SCRIPT_SCHEMA = {
     "additionalProperties": False,
 }
 
-SYSTEM = """Eres el guionista de MARCIUS3R, canal de YouTube en español de España sobre GTA 6.
+SYSTEM_ES = """Eres el guionista de MARCIUS3R, canal de YouTube en español sobre GTA 6 (público España + LATAM).
 Voz: chico joven de España, creador gaming, enérgico y cercano, frases cortas, ritmo rápido, cero relleno.
 REGLAS INQUEBRANTABLES:
 1. Solo puedes afirmar como hecho lo que aparece en HECHOS VERIFICADOS. Cita sus ids en fact_ids.
@@ -71,6 +71,19 @@ FÓRMULA QUE FUNCIONA (Reels virales de curiosidades en español, p.ej. 45 s y 5
 - Cierra el ending con una PREGUNTA PERSONAL fácil de responder («¿con quién vas a jugarlo?», «¿cuál vas a
   explorar primero?»), no una pregunta genérica: eso dispara los comentarios.
 - caption_hook: 1-2 líneas en minúscula, cercanas, con 1 emoji (texto del post). comment_question: esa pregunta personal."""
+
+
+SYSTEM_LATAM = SYSTEM_ES.replace(
+    "Voz: chico joven de España, creador gaming,",
+    "Voz: chico joven latinoamericano, creador gaming, en ESPAÑOL NEUTRO (entendible en España y LATAM): "
+    "usa «ustedes», nada de «vosotros», «tío», «mola», «guay» ni modismos locales;")
+
+
+def system_prompt(settings: dict) -> str:
+    return SYSTEM_LATAM if settings["channel"].get("voice_accent") == "latam" else SYSTEM_ES
+
+
+SYSTEM = SYSTEM_ES  # compatibilidad
 
 
 def target_words(fmt: str, settings: dict) -> int:
@@ -116,7 +129,7 @@ def _write_anthropic(idea: dict, fmt: str, settings: dict) -> dict:
     kwargs = dict(
         model=cfg["model"],
         max_tokens=16000 if fmt == "short" else 32000,
-        system=SYSTEM,
+        system=system_prompt(settings),
         messages=[{"role": "user", "content": build_prompt(idea, fmt, settings)}],
         output_config={"effort": cfg.get("effort", "high"),
                        "format": {"type": "json_schema", "schema": SCRIPT_SCHEMA}},

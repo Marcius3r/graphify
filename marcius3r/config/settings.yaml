@@ -4,6 +4,7 @@
 channel:
   name: MARCIUS3R
   language: es-ES
+  voice_accent: latam          # latam = español neutro (voz Gerardo) | es = castellano de España
   timezone: Europe/Madrid
   cta: "¿Tú qué opinas? Déjamelo en comentarios y suscríbete a MARCIUS3R para descubrir más secretos de GTA 6."
 
@@ -60,7 +61,7 @@ providers:
     profile: 4
     timeout_minutes: 170
   voice:
-    order: [external, wan2gp, voicestudio, kaggle, elevenlabs]
+    order: [external, elevenlabs, wan2gp, voicestudio, kaggle]   # voz elegida: Gerardo (ElevenLabs)
     wan2gp:
       language: spanish
       # Recomendado: 3-10 s de TU voz en castellano, limpia (WAV). Con referencia → acento de España fiable.
@@ -75,6 +76,9 @@ providers:
       instructions: "Hombre joven, español de España (castellano peninsular), creador de contenido gaming, enérgico, cercano, pausas naturales."
       speed: 1.05
     elevenlabs:
+      # Voz elegida por el canal: «Gerardo - Cool Latin American Voice» (Voice Library de ElevenLabs).
+      # Añádela a "My Voices" en elevenlabs.io y pega aquí su Voice ID. Se usa SOLO vía la API oficial.
+      voice_name: "Gerardo - Cool Latin American Voice"
       voice_id: ""
       model_id: eleven_multilingual_v2
   video:
