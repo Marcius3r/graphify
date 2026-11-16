@@ -1,0 +1,16 @@
+[project]
+name = "marcius3r"
+version = "0.1.0"
+description = "Producción y publicación automática del canal de YouTube MARCIUS3R (GTA 6)"
+requires-python = ">=3.11"
+dependencies = [
+  "anthropic>=2.0", "google-api-python-client>=2.100", "google-auth-oauthlib>=1.2",
+  "google-auth-httplib2>=0.2", "feedparser>=6.0", "pyyaml>=6.0", "requests>=2.31", "pillow>=10.0",
+]
+[project.optional-dependencies]
+whisper = ["faster-whisper>=1.0"]
+dev = ["pytest>=8"]
+[project.scripts]
+marcius3r = "marcius3r.cli:main"
+[tool.pytest.ini_options]
+markers = ["slow: render de vídeo completo (2-3 min)"]

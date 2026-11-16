@@ -1,0 +1,109 @@
+"""PASO 5: narración en español de España.
+
+Se sintetiza CADA beat por separado → conocemos su duración exacta y cada escena
+se corta a medida de su frase (sincronía perfecta voz-imagen).
+
+Proveedores (en orden de settings.providers.voice.order):
+- voicestudio      → VoiceStudio local (API compatible OpenAI /v1/audio/speech). Gratis, local.
+- higgsfield_agent → audios generados por el agente Claude vía Higgsfield (se depositan en workdir/voice/).
+- elevenlabs       → API de ElevenLabs (de pago) como respaldo.
+"""
+from __future__ import annotations
+
+import subprocess
+from pathlib import Path
+
+import requests
+
+from .core import StepError, add_cost, load_secrets, log_event
+from .media import ffprobe_duration
+
+PAUSE_BY_ROLE = {"hook": 0.30, "intro": 0.18, "body": 0.14, "detail": 0.14, "ending": 0.30, "cta": 0.10}
+
+
+def _voicestudio(text: str, out: Path, cfg: dict, secrets: dict) -> None:
+    key = secrets.get("VOICESTUDIO_API_KEY")
+    r = requests.post(
+        f"{cfg['url'].rstrip('/')}/v1/audio/speech",
+        headers={"Authorization": f"Bearer {key}"} if key else {},
+        json={"model": cfg.get("model", "omnivoice"), "input": text, "voice": cfg.get("voice", "default"),
+              "instructions": cfg.get("instructions"), "response_format": "wav",
+              "speed": cfg.get("speed", 1.0), "language": "es"},
+        timeout=600,
+    )
+    if r.status_code != 200:
+        raise StepError(f"VoiceStudio {r.status_code}: {r.text[:300]}")
+    out.write_bytes(r.content)
+
+
+def _elevenlabs(text: str, out: Path, cfg: dict, secrets: dict) -> None:
+    key = secrets.get("ELEVENLABS_API_KEY")
+    if not key or not cfg.get("voice_id"):
+        raise StepError("ElevenLabs sin API key o voice_id")
+    r = requests.post(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{cfg['voice_id']}?output_format=mp3_44100_128",
+        headers={"xi-api-key": key},
+        json={"text": text, "model_id": cfg.get("model_id", "eleven_multilingual_v2"),
+              "voice_settings": {"stability": 0.38, "similarity_boost": 0.8, "style": 0.55, "use_speaker_boost": True}},
+        timeout=300,
+    )
+    if r.status_code != 200:
+        raise StepError(f"ElevenLabs {r.status_code}: {r.text[:300]}")
+    mp3 = out.with_suffix(".mp3")
+    mp3.write_bytes(r.content)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp3), "-ar", "48000", str(out)], check=True)
+
+
+def _agent_file(i: int, voice_dir: Path) -> Path | None:
+    for ext in ("wav", "mp3", "m4a", "ogg"):
+        p = voice_dir / f"beat_{i:02d}.{ext}"
+        if p.exists():
+            return p
+    return None
+
+
+def synthesize(script: dict, workdir: Path, settings: dict, video_id: int | None = None) -> list[dict]:
+    """Devuelve [{path, duration, pause}] por beat, normalizado a WAV 48 kHz mono."""
+    vcfg = settings["providers"]["voice"]
+    secrets = load_secrets()
+    vdir = workdir / "voice"
+    vdir.mkdir(parents=True, exist_ok=True)
+    result = []
+    for i, beat in enumerate(script["beats"]):
+        final = vdir / f"beat_{i:02d}.clean.wav"
+        raw = vdir / f"beat_{i:02d}.raw.wav"
+        src = _agent_file(i, vdir)
+        errors = []
+        if src is None:
+            for prov in vcfg["order"]:
+                try:
+                    if prov == "voicestudio":
+                        _voicestudio(beat["narration"], raw, vcfg["voicestudio"], secrets)
+                    elif prov == "elevenlabs":
+                        _elevenlabs(beat["narration"], raw, vcfg["elevenlabs"], secrets)
+                        add_cost(video_id, "elevenlabs", f"beat {i}", usd=len(beat["narration"]) * 0.00018)
+                    else:
+                        continue
+                    src = raw
+                    break
+                except Exception as e:  # noqa: BLE001 - probamos el siguiente proveedor
+                    errors.append(f"{prov}: {e}")
+            if src is None:
+                raise StepError(f"sin voz para beat {i}: " + " | ".join(errors))
+        clean_voice(src, final)
+        result.append({"path": str(final), "duration": ffprobe_duration(final),
+                       "pause": PAUSE_BY_ROLE.get(beat["role"], 0.15)})
+    log_event(video_id, "info", "voice", f"{len(result)} frases, {sum(r['duration'] for r in result):.1f}s")
+    return result
+
+
+def clean_voice(src: Path, out: Path) -> None:
+    """Cadena de locución: limpieza, presencia, compresión suave, recorte de silencios."""
+    af = ("highpass=f=80,lowpass=f=15000,"
+          "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.05,"
+          "areverse,silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08,areverse,"
+          "equalizer=f=200:t=q:w=1.2:g=-2,equalizer=f=3500:t=q:w=1.0:g=2.5,"
+          "acompressor=threshold=-20dB:ratio=3:attack=5:release=80:makeup=3,"
+          "alimiter=limit=0.95")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-af", af,
+                    "-ar", "48000", "-ac", "1", str(out)], check=True)

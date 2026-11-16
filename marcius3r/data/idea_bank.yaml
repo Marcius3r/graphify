@@ -1,0 +1,15 @@
+# Banco inicial de ideas por categoría (A-F). La investigación diaria añade más.
+# needs: lista de fact ids que el guion debe usar. evergreen: true si no caduca.
+ideas:
+  - {title: "A qué hora sale GTA 6 en tu país", category: E, needs: [release_date, preload], angle: "Horas de desbloqueo ES, MX, AR, CO; medianoche local", evergreen: false}
+  - {title: "Leonida vs Florida real: qué es cada sitio", category: C, needs: [leonida, regions], angle: "Vice City=Miami, Leonida Keys=Cayos, Grassrivers=Everglades", evergreen: true}
+  - {title: "Lo confirmado vs lo que es solo rumor", category: B, needs: [online_unknown, no_pc, release_date], angle: "Semáforo verde/rojo", evergreen: true}
+  - {title: "Por qué GTA 6 no sale en PC (todavía)", category: B, needs: [no_pc], angle: "Qué ha dicho Rockstar y qué pasó con GTA 5", evergreen: true}
+  - {title: "Jason y Lucia: lo que sabemos de verdad", category: C, needs: [protagonists, premise], angle: "Solo datos oficiales", evergreen: true}
+  - {title: "La edición física de GTA 6 no trae el juego en el disco", category: B, needs: [physical_code], angle: "Qué implica para quien compra en tienda", evergreen: true}
+  - {title: "Todos los retrasos de GTA 6 en 30 segundos", category: E, needs: [delays, release_date], angle: "Cronología rápida", evergreen: true}
+  - {title: "6 zonas de Leonida que tienes que explorar", category: A, needs: [regions], angle: "Qué tipo de entorno es cada una", evergreen: true}
+  - {title: "GTA 6 vs GTA 5: el mapa", category: D, needs: [leonida, regions], angle: "Los Santos vs Leonida, solo lo confirmado", evergreen: true}
+  - {title: "El tráiler de lanzamiento se grabó en una PS5 normal", category: C, needs: [launch_trailer], angle: "Qué significa para cómo se verá en casa", evergreen: true}
+  - {title: "GTA Online en GTA 6: ¿cuándo?", category: B, needs: [online_unknown], angle: "Sin fecha oficial; separar rumor", evergreen: true}
+  - {title: "Las reservas de GTA 6 rompen expectativas", category: E, needs: [preorders], angle: "Qué dijo Take-Two", evergreen: false}

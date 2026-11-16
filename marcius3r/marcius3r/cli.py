@@ -1,0 +1,90 @@
+"""Línea de comandos: `python -m marcius3r <orden>`."""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+
+from . import core
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="marcius3r", description="Producción automática del canal MARCIUS3R")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("research", help="investigar noticias/tendencias y actualizar ideas")
+    p = sub.add_parser("produce", help="crear y montar un vídeo")
+    p.add_argument("--format", choices=["short", "long"], default="short")
+    p.add_argument("--idea", type=int)
+    p.add_argument("--template", action="store_true", help="guion sin IA (pruebas)")
+    p.add_argument("--allow-test-scenes", action="store_true", help="usar escenas procedurales de PRUEBA (nunca publicables)")
+    p = sub.add_parser("resume", help="continuar un vídeo (p.ej. tras recibir los clips)")
+    p.add_argument("id", type=int)
+    p.add_argument("--allow-test-scenes", action="store_true")
+    p = sub.add_parser("approve", help="aprobar un vídeo 'ready'")
+    p.add_argument("id", type=int)
+    p = sub.add_parser("publish", help="subir y programar un vídeo aprobado")
+    p.add_argument("id", type=int)
+    p.add_argument("--now", action="store_true")
+    sub.add_parser("daily", help="ciclo diario completo (lo que ejecuta cron/systemd)")
+    sub.add_parser("analytics", help="actualizar métricas y aprender")
+    sub.add_parser("auth", help="conectar el canal de YouTube (OAuth)")
+    sub.add_parser("channel", help="comprobar la conexión con el canal")
+    sub.add_parser("pause", help="detener la automatización")
+    sub.add_parser("unpause", help="reanudar la automatización")
+    sub.add_parser("status", help="resumen en texto")
+    p = sub.add_parser("dashboard", help="panel web local")
+    p.add_argument("--port", type=int, default=8787)
+    p = sub.add_parser("ideas", help="listar ideas")
+    p.add_argument("-n", type=int, default=20)
+    a = ap.parse_args(argv)
+
+    from . import pipeline
+    if a.cmd == "research":
+        from .research import run_research
+        print(json.dumps(run_research(), ensure_ascii=False, indent=2))
+    elif a.cmd == "produce":
+        vid = pipeline.create(a.format, a.idea, template=a.template)
+        print(f"vídeo {vid}: {pipeline.advance(vid, allow_test=a.allow_test_scenes)}")
+        print(pipeline.get_video(vid)["workdir"])
+    elif a.cmd == "resume":
+        print(pipeline.advance(a.id, allow_test=a.allow_test_scenes))
+    elif a.cmd == "approve":
+        pipeline.approve(a.id)
+        print("aprobado")
+    elif a.cmd == "publish":
+        print(pipeline.publish(a.id, publish_now=a.now))
+    elif a.cmd == "daily":
+        print(json.dumps(pipeline.daily(), ensure_ascii=False, indent=2, default=str))
+    elif a.cmd == "analytics":
+        from .scheduler import learn
+        print(pipeline.update_analytics(), learn())
+    elif a.cmd == "auth":
+        from .youtube import authorize, channel_info
+        authorize()
+        print(channel_info())
+    elif a.cmd == "channel":
+        from .youtube import channel_info
+        print(channel_info())
+    elif a.cmd == "pause":
+        core.pause("cli")
+        print("automatización DETENIDA")
+    elif a.cmd == "unpause":
+        core.resume()
+        print("automatización ACTIVA")
+    elif a.cmd == "status":
+        with core.db() as con:
+            for r in con.execute("SELECT id,format,status,title,publish_at,youtube_id,cost_credits FROM videos ORDER BY id DESC LIMIT 20"):
+                print(dict(r))
+        print("pausada" if core.is_stopped() else "activa", "| créditos mes:", pipeline.credits_this_month())
+    elif a.cmd == "dashboard":
+        from .dashboard import serve
+        serve(a.port)
+    elif a.cmd == "ideas":
+        with core.db() as con:
+            for r in con.execute("SELECT id,category,tier,score,status,title FROM ideas ORDER BY status, score DESC LIMIT ?", (a.n,)):
+                print(dict(r))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

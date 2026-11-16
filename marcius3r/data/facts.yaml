@@ -1,0 +1,82 @@
+# Base de conocimiento verificada. El guionista SOLO puede afirmar como "confirmado"
+# lo que esté aquí con status: oficial o prensa_oficial. Todo lo demás se dice como
+# rumor/teoría explícitamente. Revisado: 2026-11-16 (investigación web; varias páginas
+# no se pudieron abrir desde la sesión, ver "verified_live").
+facts:
+  - id: release_date
+    text: "GTA 6 sale el 19 de noviembre de 2026 en PS5 y Xbox Series X|S."
+    status: oficial
+    sources: ["https://store.rockstargames.com/game/buy-gta-vi", "https://www.forbes.com/sites/erikkain/2026/11/16/gta-6-release-date-time-ps5-xbox-series-x-download-size-day-one-update/"]
+    verified_live: false
+  - id: preload
+    text: "La precarga digital está disponible desde el 10 de noviembre de 2026."
+    status: oficial
+    sources: ["https://store.rockstargames.com/game/buy-gta-vi"]
+    verified_live: false
+  - id: physical_code
+    text: "La edición física incluye un código de descarga, no un disco con el juego."
+    status: oficial
+    sources: ["https://store.rockstargames.com/game/buy-gta-vi"]
+    verified_live: false
+  - id: delays
+    text: "El juego se retrasó de 2025 al 26 de mayo de 2026 y después al 19 de noviembre de 2026."
+    status: oficial
+    sources: ["https://www.gtabase.com/articles/gta-6/gta-6-delayed-again-now-releasing-november-19-2026"]
+    verified_live: false
+  - id: leonida
+    text: "La historia transcurre en Leonida, un estado ficticio inspirado en Florida, con Vice City como gran ciudad."
+    status: oficial
+    sources: ["https://www.gematsu.com/2025/05/grand-theft-auto-vi-second-trailer-characters-and-places-detailed"]
+    verified_live: false
+  - id: regions
+    text: "Regiones mostradas por Rockstar: Vice City, Leonida Keys, Grassrivers, Port Gellhorn, Ambrosia y Mount Kalaga National Park."
+    status: oficial
+    sources: ["https://geekculture.co/rockstar-releases-second-grand-theft-auto-vi-trailer-reveals-6-major-in-game-locations-following-delay"]
+    verified_live: false
+  - id: protagonists
+    text: "Los protagonistas son Jason Duval y Lucia Caminos."
+    status: oficial
+    sources: ["https://www.tomsguide.com/gaming/gta-6-trailer-just-dropped-and-we-just-learned-a-lot-about-the-main-characters"]
+    verified_live: false
+  - id: premise
+    text: "Jason y Lucia acaban metidos en una conspiración criminal después de que un golpe 'fácil' salga mal."
+    status: oficial
+    sources: ["https://www.vice.com/en/article/gta-6-launch-trailer-jason-lucia-story-details/"]
+    verified_live: false
+  - id: trailer2
+    text: "El segundo tráiler se publicó el 6 de mayo de 2025 junto con unas 70 capturas oficiales."
+    status: oficial
+    sources: ["https://www.gtabase.com/articles/gta-6-trailer-2-is-out-now"]
+    verified_live: false
+  - id: launch_trailer
+    text: "Rockstar publicó el tráiler de lanzamiento a mediados de octubre de 2026; según Rockstar se capturó en una PS5 estándar."
+    status: prensa_oficial
+    sources: ["https://www.g2a.com/news/gta-6-news/gta-vi-launch-trailer-is-here-and-rockstar-puts-jason-and-lucia-front-and-center/"]
+    verified_live: false
+  - id: no_pc
+    text: "No hay versión de PC anunciada para el lanzamiento; Rockstar prioriza consolas."
+    status: oficial
+    sources: ["https://www.pcgamer.com/no-gta-6-pc-release-announced"]
+    verified_live: false
+  - id: online_unknown
+    text: "Rockstar no ha dado fecha para el componente online de GTA 6."
+    status: oficial
+    sources: ["https://titanquisitor.com/2026/11/16/gta-6-launch-guide/"]
+    verified_live: false
+  - id: price_us
+    text: "En EE. UU. la edición estándar cuesta 79,99 dólares y la Ultimate 99,99 dólares."
+    status: prensa_oficial
+    sources: ["https://variety.com/2026/gaming/news/gta-6-preorders-expectations-launch-1236943278/"]
+    verified_live: false
+  - id: preorders
+    text: "El CEO de Take-Two dijo que las reservas superan con creces sus expectativas."
+    status: prensa_oficial
+    sources: ["https://variety.com/2026/gaming/news/gta-6-preorders-expectations-launch-1236943278/"]
+    verified_live: false
+
+# Cosas que NO se deben presentar como hechos
+caution:
+  - "Material filtrado (p.ej. 'Cyberleek'): no se muestra, no se describe como real. Take-Two ha enviado DMCA."
+  - "Fecha de GTA Online 2027: rumor."
+  - "Tamaño de 212 GB: una sola fuente; decir 'según algunos medios'."
+  - "Precios en euros: varían según tienda; no afirmar una cifra única."

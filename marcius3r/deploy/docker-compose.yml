@@ -1,0 +1,16 @@
+# VoiceStudio local (AGPL-3.0, se usa sin modificar como servicio separado) + panel MARCIUS3R.
+# Uso: docker compose -f deploy/docker-compose.yml up -d
+services:
+  voicestudio:
+    image: palashdeb/omnivoice-studio:stable     # espejo Docker Hub de ghcr.io/debpalash/voicestudio:stable
+    container_name: voicestudio
+    restart: unless-stopped
+    ports: ["127.0.0.1:3900:3900"]
+    environment:
+      OMNIVOICE_API_KEY: ${VOICESTUDIO_API_KEY:?define VOICESTUDIO_API_KEY en deploy/.env}
+      OMNIVOICE_DATA_DIR: /app/omnivoice_data
+    volumes: ["omnivoice-data:/app/omnivoice_data"]
+    # Con GPU NVIDIA descomenta:
+    # deploy: {resources: {reservations: {devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]}}}
+volumes:
+  omnivoice-data:

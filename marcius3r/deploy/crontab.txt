@@ -1,0 +1,4 @@
+# Alternativa a systemd (crontab -e). CRON_TZ asegura hora de Madrid.
+CRON_TZ=Europe/Madrid
+17 10 * * * cd $HOME/marcius3r && .venv/bin/python -m marcius3r daily >> workspace/daily.log 2>&1
+47 */6 * * * cd $HOME/marcius3r && .venv/bin/python -m marcius3r analytics >> workspace/analytics.log 2>&1

@@ -1,0 +1,9 @@
+.venv/
+workspace/
+__pycache__/
+*.pyc
+library/gameplay/*.mp4
+library/music/*.mp3
+library/music/*.wav
+library/sfx/*.wav
+library/sfx/*.mp3

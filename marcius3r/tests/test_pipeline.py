@@ -1,0 +1,101 @@
+import json
+import random
+import subprocess
+from datetime import datetime
+from pathlib import Path
+
+import pytest
+
+from marcius3r import core, editor, qc, scenes, scheduler, thumbnail
+from marcius3r.metadata import build_metadata
+from marcius3r.research import guess_category, ingest_items, pick_idea, seed_idea_bank, similarity
+from marcius3r.script_writer import validate_script, write_template
+from marcius3r.subtitles import word_timings
+
+S = core.load_settings()
+
+
+def test_similarity_and_category():
+    assert similarity("GTA 6 fecha de lanzamiento", "Fecha de lanzamiento de GTA 6 confirmada") > 0.5
+    assert similarity("Leonida vs Florida", "Precio de GTA 6 en México") < 0.2
+    assert guess_category("GTA 6 vs GTA 5: el mapa") == "D"
+    assert guess_category("Rockstar publica un nuevo tráiler") == "E"
+
+
+def test_leaks_are_never_ingested():
+    n = ingest_items([{"title": "GTA 6 leak shows new map", "link": "https://x.com/a", "tier": "prensa", "published": None}], S)
+    assert n == 0
+
+
+def test_seed_and_pick_without_repeats():
+    seed_idea_bank()
+    idea = pick_idea("short")
+    assert idea and idea["status"] == "new"
+
+
+def test_template_script_is_valid_and_rumor_rules():
+    idea = {"title": "Leonida vs Florida real", "needs": json.dumps(["leonida", "regions", "protagonists"]),
+            "angle": "", "category": "C", "tier": "oficial", "source_urls": "[]"}
+    s = write_template(idea, "short", S)
+    assert validate_script(s, "short", S) == []
+    s["beats"][2]["claim_type"] = "rumor"  # rumor no anunciado en voz → error
+    assert any("rumor" in p for p in validate_script(s, "short", S))
+    s["beats"][2]["claim_type"] = "confirmado"
+    s["beats"][2]["fact_ids"] = ["inventado"]
+    assert any("desconocido" in p for p in validate_script(s, "short", S))
+
+
+def test_word_timings_cover_duration():
+    w = word_timings("Hay un detalle de GTA 6 que casi nadie ha visto.", 1.0, 3.0)
+    assert w[0][1] == 1.0 and abs(w[-1][2] - 4.0) < 1e-6
+
+
+def test_wer():
+    assert qc.wer("hola qué tal", "hola qué tal") == 0
+    assert qc.wer("hola qué tal", "hola tal") > 0
+
+
+def test_slot_rotation_and_madrid_time():
+    slot = scheduler.choose_slot(S, random.Random(1))
+    assert slot in S["schedule"]["slots"]
+    t = scheduler.next_publish_time("A", S, after=datetime.fromisoformat("2026-11-20T10:00:00+00:00"))
+    assert t.tzinfo.key == "Europe/Madrid" and (t.hour, t.minute) == (20, 0)
+
+
+def test_metadata_disclosure_and_limits():
+    idea = {"title": "Leonida", "needs": json.dumps(["leonida"]), "category": "C"}
+    m = build_metadata(write_template(idea, "short", S), "short", True, S)
+    assert "RECREACIÓN IA" in m["description"] and m["contains_synthetic_media"] is True
+    assert len(m["title"]) <= 100 and sum(len(t) for t in m["tags"]) <= 500
+    assert "Fuentes" in m["description"]
+
+
+@pytest.mark.slow
+def test_end_to_end_render_is_blocked_with_test_scenes(tmp_path: Path):
+    """Monta un Short real (voz de tono + escenas procedurales). Debe renderizar bien y QC
+    debe BLOQUEARLO por contener escenas de prueba."""
+    idea = {"title": "Leonida vs Florida real", "needs": json.dumps(["leonida", "regions", "protagonists", "release_date"]),
+            "category": "C"}
+    script = write_template(idea, "short", S)
+    vdir = tmp_path / "voice"
+    vdir.mkdir()
+    for i, b in enumerate(script["beats"]):  # voz de prueba: tono con duración realista
+        d = max(1.2, len(b["narration"].split()) / 2.7)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"sine=f={180+i*20}:d={d}",
+                        "-af", "volume=0.3,tremolo=f=6:d=0.7", str(vdir / f"beat_{i:02d}.wav")], check=True)
+    from marcius3r import voice
+    vo = voice.synthesize(script, tmp_path, S)
+    shots = scenes.plan_shots(script, vo, "short", S)
+    clips = scenes.gather_clips(script, shots, tmp_path, "short", S, allow_test=True)
+    info = editor.render(script, vo, clips, tmp_path, "short", S, final_quality=False)
+    out = Path(info["output"])
+    assert out.exists() and info["has_audio"]
+    meta = build_metadata(script, "short", True, S)
+    report = qc.run_qc(out, script, info, "short", S, meta)
+    assert (report["metrics"]["width"], report["metrics"]["height"]) == (1080, 1920)
+    assert any("PRUEBA" in b for b in report["blockers"]), report
+    assert report["metrics"]["freeze_ratio"] < 0.12
+    assert abs(report["metrics"]["lufs"] - (-14)) < 2.0
+    frame = thumbnail.best_frame([c["path"] for c in clips], tmp_path)
+    th = thumbnail.make_thumbnail(frame, script["thumbnail_text"], tmp_path / "t.jpg", S, True)
+    assert th.stat().st_size < 2_000_000

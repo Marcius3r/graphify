@@ -1,0 +1,10 @@
+[Unit]
+Description=MARCIUS3R: ejecutar cada día a las 10:17 (Europe/Madrid)
+
+[Timer]
+OnCalendar=*-*-* 10:17:00 Europe/Madrid
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

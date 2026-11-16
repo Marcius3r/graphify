@@ -1,0 +1,11 @@
+[Unit]
+Description=MARCIUS3R ciclo diario (investigar, producir, publicar, analizar)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/marcius3r
+ExecStart=%h/marcius3r/.venv/bin/python -m marcius3r daily
+TimeoutStartSec=3h
+Nice=5
