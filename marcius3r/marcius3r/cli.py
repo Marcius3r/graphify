@@ -15,7 +15,8 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("produce", help="crear y montar un vídeo")
     p.add_argument("--format", choices=["short", "long"], default="short")
     p.add_argument("--idea", type=int)
-    p.add_argument("--template", action="store_true", help="guion sin IA (pruebas)")
+    p.add_argument("--template", action="store_true", help="guion sin IA (plantilla con hechos verificados)")
+    p.add_argument("--script", help="usar un guion JSON ya escrito (p.ej. samples/sample_01_leonida.json)")
     p.add_argument("--allow-test-scenes", action="store_true", help="usar escenas procedurales de PRUEBA (nunca publicables)")
     p = sub.add_parser("resume", help="continuar un vídeo (p.ej. tras recibir los clips)")
     p.add_argument("id", type=int)
@@ -43,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
         from .research import run_research
         print(json.dumps(run_research(), ensure_ascii=False, indent=2))
     elif a.cmd == "produce":
-        vid = pipeline.create(a.format, a.idea, template=a.template)
+        vid = pipeline.create(a.format, a.idea, template=a.template, script_path=a.script)
         print(f"vídeo {vid}: {pipeline.advance(vid, allow_test=a.allow_test_scenes)}")
         print(pipeline.get_video(vid)["workdir"])
     elif a.cmd == "resume":

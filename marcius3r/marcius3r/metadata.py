@@ -6,6 +6,7 @@ from .research import verified_facts
 DISCLOSURE = ("⚠️ Las escenas marcadas como «RECREACIÓN IA» están generadas con inteligencia artificial "
               "con fines ilustrativos: NO son imágenes oficiales de GTA 6 ni gameplay real. "
               "Las escenas marcadas como «GAMEPLAY» son capturas propias del juego.")
+CREDITS = "🛠️ Creado con herramientas abiertas: WanGP (Wan2GP), LTX-2, OmniVoice y ACE-Step."
 LEGAL = ("Canal de fans no afiliado a Rockstar Games ni Take-Two Interactive. "
          "Grand Theft Auto y GTA son marcas de Take-Two Interactive.")
 
@@ -31,7 +32,7 @@ def build_metadata(script: dict, fmt: str, synthetic: bool, settings: dict) -> d
     desc_parts = [script.get("description", "").strip(), "",
                   "🔔 Suscríbete a MARCIUS3R para descubrir cada día un secreto nuevo de GTA 6.", ""]
     if synthetic:
-        desc_parts += [DISCLOSURE, ""]
+        desc_parts += [DISCLOSURE, CREDITS, ""]
     if used:
         desc_parts += ["📚 Fuentes:"] + [f"• {u}" for u in used] + [""]
     desc_parts += [LEGAL, "", " ".join(hashtags)]

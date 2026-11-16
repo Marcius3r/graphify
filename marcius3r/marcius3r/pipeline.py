@@ -2,7 +2,7 @@
 → QC → miniatura → metadatos → (aprobación) → programar → analizar → mejorar.
 
 Estados de un vídeo:
-  scripted → voiced → scenes_pending (esperando clips del agente) → rendered
+  scripted → (voice_pending) → voiced → scenes_pending (esperando clips generados fuera) → rendered
   → qc_failed | ready → approved → scheduled → published   (o failed)
 Nada se sube a YouTube si el QC tiene un solo bloqueo.
 """
@@ -48,13 +48,23 @@ def credits_this_month() -> float:
 
 
 # ---------------------------------------------------------------- producción
-def create(fmt: str = "short", idea_id: int | None = None, template: bool = False, settings: dict | None = None) -> int:
+def create(fmt: str = "short", idea_id: int | None = None, template: bool = False, settings: dict | None = None,
+           script_path: str | None = None) -> int:
     settings = settings or load_settings()
+    if script_path and not idea_id:  # la idea es el propio guion
+        title = json.loads(Path(script_path).read_text())["title"]
+        with db() as con:
+            idea_id = con.execute("INSERT INTO ideas(title,category,angle,needs,source_urls,tier,score,status,created_at)"
+                                  " VALUES(?,?,?,?,?,?,?,?,?)", (title, "C", "", "[]", "[]", "oficial", 0, "new", iso())).lastrowid
     if idea_id:
         with db() as con:
             idea = dict(con.execute("SELECT * FROM ideas WHERE id=?", (idea_id,)).fetchone())
     else:
         idea = pick_idea(fmt)
+        if not idea:
+            from .research import seed_idea_bank
+            seed_idea_bank()
+            idea = pick_idea(fmt)
     if not idea:
         raise StepError("no hay ideas nuevas: ejecuta `marcius3r research`")
     with db() as con:
@@ -67,7 +77,14 @@ def create(fmt: str = "short", idea_id: int | None = None, template: bool = Fals
     mark_idea(idea["id"], "in_production")
     log_event(vid, "info", "select", f"idea #{idea['id']} [{idea['category']}/{idea['tier']}]: {idea['title']}")
     try:
-        script = write_template(idea, fmt, settings) if template else write_script(idea, fmt, settings)
+        if script_path:
+            from .script_writer import validate_script
+            script = json.loads(Path(script_path).read_text())
+            problems = validate_script(script, fmt, settings)
+            if problems:
+                raise StepError("guion inválido: " + "; ".join(problems))
+        else:
+            script = write_template(idea, fmt, settings) if template else write_script(idea, fmt, settings)
     except Exception as e:
         _update(vid, status="failed")
         mark_idea(idea["id"], "new")
@@ -88,8 +105,15 @@ def advance(vid: int, allow_test: bool = False, settings: dict | None = None) ->
     fmt, workdir = v["format"], Path(v["workdir"])
     script = json.loads(v["script_json"])
     try:
-        if v["status"] in ("scripted", "voiced", "scenes_pending", "rendered", "qc_failed"):
-            vo = voice.synthesize(script, workdir, settings, vid)
+        if v["status"] in ("scripted", "voice_pending", "voiced", "scenes_pending", "rendered", "qc_failed", "failed"):
+            try:
+                vo = voice.synthesize(script, workdir, settings, vid)
+            except StepError as e:
+                voice.write_voice_manifest(script, workdir, settings)
+                _update(vid, status="voice_pending")
+                log_event(vid, "warn", "voice", f"sin motor de voz disponible; tareas listas en {workdir}/generation_tasks.json "
+                                                f"(cuaderno Kaggle/Colab → descomprime en voice/): {e}")
+                return "voice_pending"
             (workdir / "voice.json").write_text(json.dumps(vo, indent=2))
             _update(vid, status="voiced")
             shots = scenes.plan_shots(script, vo, fmt, settings)
@@ -98,9 +122,9 @@ def advance(vid: int, allow_test: bool = False, settings: dict | None = None) ->
                 clips = scenes.gather_clips(script, shots, workdir, fmt, settings, vid, allow_test=allow_test)
             except StepError as e:
                 missing = [s["file"] for s in shots if not (workdir / s["file"]).exists()]
-                if missing and "higgsfield_agent" in settings["providers"]["video"]["order"]:
+                if missing and "external" in settings["providers"]["video"]["order"]:
                     _update(vid, status="scenes_pending")
-                    log_event(vid, "info", "scenes", f"esperando {len(missing)} clips (manifest listo): {e}")
+                    log_event(vid, "info", "scenes", f"esperando {len(missing)} clips: genera {workdir}/generation_tasks.json con Wan2GP y copia a clips/ ({e})")
                     return "scenes_pending"
                 raise
             info = editor.render(script, vo, clips, workdir, fmt, settings, vid)
@@ -196,7 +220,7 @@ def daily(settings: dict | None = None) -> dict:
         return {"budget_exhausted": True}
     # 0) reanudar vídeos pendientes (p.ej. clips que el agente ya entregó)
     with db() as con:
-        pending = [r["id"] for r in con.execute("SELECT id FROM videos WHERE status IN ('scenes_pending','voiced','scripted')")]
+        pending = [r["id"] for r in con.execute("SELECT id FROM videos WHERE status IN ('scenes_pending','voice_pending','voiced','scripted')")]
     for vid in pending:
         try:
             advance(vid, settings=settings)
@@ -209,7 +233,7 @@ def daily(settings: dict | None = None) -> dict:
         log_event(None, "error", "research", str(e))
     # 4-9) producir el Short del día si no hay ya uno listo
     with db() as con:
-        ready = con.execute("SELECT COUNT(*) c FROM videos WHERE format='short' AND status IN ('ready','approved','scenes_pending')").fetchone()["c"]
+        ready = con.execute("SELECT COUNT(*) c FROM videos WHERE format='short' AND status IN ('ready','approved','scenes_pending','voice_pending')").fetchone()["c"]
     if ready == 0:
         try:
             vid = create("short", settings=settings)

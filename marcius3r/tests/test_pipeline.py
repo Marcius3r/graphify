@@ -96,6 +96,40 @@ def test_end_to_end_render_is_blocked_with_test_scenes(tmp_path: Path):
     assert any("PRUEBA" in b for b in report["blockers"]), report
     assert report["metrics"]["freeze_ratio"] < 0.12
     assert abs(report["metrics"]["lufs"] - (-14)) < 2.0
+    assert info["audio"]["native_ambience"] is True
     frame = thumbnail.best_frame([c["path"] for c in clips], tmp_path)
     th = thumbnail.make_thumbnail(frame, script["thumbnail_text"], tmp_path / "t.jpg", S, True)
     assert th.stat().st_size < 2_000_000
+
+
+def test_wan2gp_tasks_follow_open_generative_ai_format():
+    from marcius3r import wan2gp
+    t = wan2gp.video_task("city at night", 5, "9:16", "ltx2_25_22B_distilled", seed=3)
+    assert t["model_type"] == "ltx2_25_22B_distilled" and t["resolution"] == "704x1280"
+    assert (t["video_length"] - 1) % 8 == 0 and 110 <= t["video_length"] <= 130
+    w = wan2gp.video_task("x", 5, "16:9", "t2v_1.3B", seed=3)
+    assert w["resolution"] == "832x480" and (w["video_length"] - 1) % 4 == 0
+    v = wan2gp.tts_task("Hola", {"language": "spanish", "voice_tags": "male, young adult"})
+    assert v["model_type"] == "omnivoice" and v["model_mode"] == "spanish" and v["audio_prompt_type"] == ""
+    m = wan2gp.music_task("synthwave", 40)
+    assert m["prompt"] == "[Instrumental]" and m["duration_seconds"] == 42
+
+
+def test_kaggle_runner_compiles():
+    import base64
+    from marcius3r.kaggle_gpu import RUNNER, WAN2GP_COMMIT
+    code = RUNNER.format(tasks_b64=base64.b64encode(b"[]").decode(), files_b64=base64.b64encode(b"{}").decode(),
+                         commit=WAN2GP_COMMIT, profile=4)
+    compile(code, "run.py", "exec")
+
+
+def test_scenes_without_gpu_fall_back_to_pending(tmp_path):
+    """Sin Wan2GP ni Kaggle, gather_clips falla con mensaje claro (el pipeline lo deja en scenes_pending)."""
+    idea = {"title": "Leonida", "needs": json.dumps(["leonida"]), "category": "C"}
+    script = write_template(idea, "short", S)
+    vo = [{"duration": 2.0, "pause": 0.1} for _ in script["beats"]]
+    shots = scenes.plan_shots(script, vo, "short", S)
+    scenes.write_manifest(shots, tmp_path, S)
+    assert (tmp_path / "generation_tasks.json").exists()
+    with pytest.raises(core.StepError):
+        scenes.gather_clips(script, shots, tmp_path, "short", S)

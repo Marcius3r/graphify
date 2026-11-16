@@ -2,9 +2,11 @@
 
 Fuentes (por orden en settings.providers.video.order):
 - gameplay_library  → tus capturas legítimas de GTA 6 (etiquetadas). Marca "GAMEPLAY".
-- muapi             → API de MuAPI (backend de Open-Generative-AI): Seedance/Kling/Wan. Marca "RECREACIÓN IA".
-- higgsfield_agent  → clips generados por el agente Claude con Higgsfield (MCP) y depositados en
-                      workdir/clips/beat_XX.mp4 a partir de workdir/generation_manifest.json.
+- wan2gp            → motor local GRATUITO de Open-Generative-AI (LTX-2.5 con sonido / Wan / Hunyuan),
+                      todas las tomas en una sola ejecución. Marca "RECREACIÓN IA".
+- kaggle            → el mismo Wan2GP en la GPU gratuita de Kaggle (si no tienes GPU).
+- external          → clips ya presentes en workdir/clips/ (generados en otra máquina con el manifest).
+- muapi             → nube de Open-Generative-AI (MuAPI, DE PAGO, opcional). Marca "RECREACIÓN IA".
 - test_motion       → SOLO PRUEBAS: vídeo procedural con FFmpeg para validar el montaje.
                       Un vídeo con escenas test_motion NUNCA puede publicarse (QC lo bloquea).
 
@@ -23,10 +25,13 @@ import requests
 import yaml
 
 from .core import ROOT, StepError, add_cost, load_secrets, log_event
-from .media import ffprobe_duration, motion_score, run, video_stream
+from .media import ffprobe_duration, has_audio, motion_score, run, video_stream
 
-LABEL = {"gameplay_library": "GAMEPLAY", "muapi": "RECREACIÓN IA", "higgsfield_agent": "RECREACIÓN IA",
+AI = "RECREACIÓN IA"
+LABEL = {"gameplay_library": "GAMEPLAY", "muapi": AI, "wan2gp": AI, "kaggle": AI, "external": AI,
          "test_motion": "PRUEBA — NO PUBLICAR"}
+NEGATIVE = ("static image, slideshow, still photo, text, watermark, logo, subtitles, blurry, deformed hands, "
+            "extra limbs, distorted face, low quality, jpeg artifacts")
 
 STYLE_SUFFIX = ("cinematic, photorealistic, dynamic camera movement, natural motion, people and cars moving, "
                 "humid tropical air, neon reflections, film grain, shallow depth of field, no text, no logos")
@@ -48,13 +53,20 @@ def plan_shots(script: dict, voice: list[dict], fmt: str, settings: dict) -> lis
     return shots
 
 
+def wan2gp_tasks(shots: list[dict], settings: dict) -> list[dict]:
+    from .wan2gp import video_task
+    cfg = settings["providers"]["video"]["wan2gp"]
+    return [video_task(sh["prompt"], sh["seconds"], sh["aspect_ratio"], cfg["model"],
+                       seed=random.Random(sh["prompt"]).randint(1, 2**31 - 1), negative=NEGATIVE) for sh in shots]
+
+
 def write_manifest(shots: list[dict], workdir: Path, settings: dict) -> Path:
-    hcfg = settings["providers"]["video"]["higgsfield"]
-    manifest = {"provider": "higgsfield", "model": hcfg["model"], "resolution": hcfg["resolution"],
-                "instructions": "Genera cada toma (texto→vídeo, sin audio) y guarda el mp4 en workdir/<file>.",
-                "shots": shots}
+    """Manifest portable: con él se pueden generar las tomas en cualquier máquina con Wan2GP
+    (`python wgp.py --process generation_tasks.json`) y copiarlas a workdir/clips/."""
+    tasks = wan2gp_tasks(shots, settings)
     p = workdir / "generation_manifest.json"
-    p.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+    p.write_text(json.dumps({"engine": "wan2gp", "shots": shots, "tasks": tasks}, ensure_ascii=False, indent=2))
+    (workdir / "generation_tasks.json").write_text(json.dumps(tasks, ensure_ascii=False, indent=2))
     return p
 
 
@@ -118,12 +130,28 @@ def _test_motion(shot: dict, out: Path, settings: dict, fmt: str) -> Path:
     run(["ffmpeg", "-y", "-loglevel", "error",
          "-f", "lavfi", "-i", f"color=c={c1}:s={w}x{h}:d={d}:r={fps}",
          "-f", "lavfi", "-i", f"mandelbrot=s=360x360:r={fps}:start_scale={2.0 + seed % 7 / 10}:end_scale=0.3",
+         "-f", "lavfi", "-i", f"anoisesrc=d={d}:c=brown:a=0.08",
          "-filter_complex",
          f"[1:v]hue=h=t*40,scale={w}:{w}[m];[0:v][m]overlay=y=(H-h)/2+60*sin(t*2):shortest=1,"
          f"drawbox=x='mod(t*{w//2}+{seed},{w})':y=ih*0.72:w=180:h=8:color={c2}@0.9:t=fill,"
-         f"drawbox=x='{w}-mod(t*{w//3}+{seed},{w})':y=ih*0.78:w=120:h=6:color=white@0.8:t=fill",
-         "-t", str(d), "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out)])
+         f"drawbox=x='{w}-mod(t*{w//3}+{seed},{w})':y=ih*0.78:w=120:h=6:color=white@0.8:t=fill[v]",
+         "-map", "[v]", "-map", "2:a", "-t", str(d), "-c:v", "libx264", "-preset", "veryfast",
+         "-pix_fmt", "yuv420p", "-c:a", "aac", str(out)])
     return out
+
+
+def _batch_wan2gp(pending: list[dict], workdir: Path, settings: dict, video_id: int | None, remote: bool) -> None:
+    from . import wan2gp
+    tasks = wan2gp_tasks(pending, settings)
+    if remote:
+        from .kaggle_gpu import run_remote
+        paths = run_remote(tasks, workdir / "wan2gp_out", settings, "scenes", video_id)
+    else:
+        paths = wan2gp.run(tasks, workdir / "wan2gp_out", settings["providers"]["wan2gp"], "scenes", video_id)
+    for sh, src in zip(pending, paths):
+        dest = workdir / sh["file"]
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(Path(src).read_bytes())
 
 
 def gather_clips(script: dict, shots: list[dict], workdir: Path, fmt: str, settings: dict,
@@ -133,36 +161,51 @@ def gather_clips(script: dict, shots: list[dict], workdir: Path, fmt: str, setti
     (workdir / "clips").mkdir(parents=True, exist_ok=True)
     order = list(settings["providers"]["video"]["order"]) + (["test_motion"] if allow_test else [])
     used: set[str] = set()
+    got: dict[str, tuple[Path, str]] = {}
+    errors: list[str] = []
+    # 1) clips ya presentes (generados fuera) y gameplay propio, toma a toma
+    for sh in shots:
+        dest = workdir / sh["file"]
+        if dest.exists() and dest.stat().st_size > 10_000:
+            got[sh["file"]] = (dest, LABEL["external"])
+        elif "gameplay_library" in order:
+            g = _gameplay(sh, script["beats"][sh["beat"]], settings, used)
+            if g:
+                got[sh["file"]] = (g, LABEL["gameplay_library"])
+    # 2) proveedores por lotes / por toma para lo que falta
+    for prov in order:
+        pending = [sh for sh in shots if sh["file"] not in got]
+        if not pending:
+            break
+        try:
+            if prov in ("wan2gp", "kaggle"):
+                from . import wan2gp
+                if prov == "wan2gp" and not wan2gp.available(settings["providers"]["wan2gp"]):
+                    errors.append("wan2gp: no instalado en esta máquina")
+                    continue
+                _batch_wan2gp(pending, workdir, settings, video_id, remote=(prov == "kaggle"))
+                for sh in pending:
+                    got[sh["file"]] = (workdir / sh["file"], LABEL[prov])
+            elif prov == "muapi":
+                for sh in pending:
+                    got[sh["file"]] = (_muapi(sh, workdir / sh["file"], settings, secrets, video_id), LABEL[prov])
+            elif prov == "test_motion":
+                for sh in pending:
+                    got[sh["file"]] = (_test_motion(sh, workdir / sh["file"], settings, fmt), LABEL[prov])
+        except Exception as e:  # noqa: BLE001 - probamos el siguiente proveedor
+            errors.append(f"{prov}: {e}")
+    missing = [sh["file"] for sh in shots if sh["file"] not in got]
+    if missing:
+        raise StepError(f"faltan {len(missing)} clips ({missing[0]}…): {' | '.join(errors) or 'sin proveedores'}")
     out = []
-    for shot in shots:
-        dest = workdir / shot["file"]
-        beat = script["beats"][shot["beat"]]
-        got, label, errors = None, None, []
-        if dest.exists() and dest.stat().st_size > 10_000:  # depositado por el agente (Higgsfield)
-            got, label = dest, LABEL["higgsfield_agent"]
-        for prov in order:
-            if got:
-                break
-            try:
-                if prov == "gameplay_library":
-                    got = _gameplay(shot, beat, settings, used)
-                elif prov == "muapi":
-                    got = _muapi(shot, dest, settings, secrets, video_id)
-                elif prov == "test_motion":
-                    got = _test_motion(shot, dest, settings, fmt)
-                label = LABEL.get(prov) if got else None
-            except Exception as e:  # noqa: BLE001
-                errors.append(f"{prov}: {e}")
-        if not got:
-            raise StepError(f"sin clip para {shot['file']}: {' | '.join(errors) or 'ningún proveedor disponible'}")
-        vs = video_stream(got)
-        if not vs:
-            raise StepError(f"{got} no contiene vídeo")
-        mscore = motion_score(got)
+    for sh in shots:
+        path, label = got[sh["file"]]
+        if not video_stream(path):
+            raise StepError(f"{path} no contiene vídeo")
+        mscore = motion_score(path)
         if mscore < 0.6:
-            raise StepError(f"{got} parece una imagen estática (movimiento {mscore:.2f}); se rechaza")
-        out.append({**shot, "path": str(got), "label": label, "motion": round(mscore, 2),
-                    "src_duration": ffprobe_duration(got)})
-    labels = {s["label"] for s in out}
-    log_event(video_id, "info", "scenes", f"{len(out)} tomas; fuentes: {', '.join(sorted(labels))}")
+            raise StepError(f"{path} parece una imagen estática (movimiento {mscore:.2f}); se rechaza")
+        out.append({**sh, "path": str(path), "label": label, "motion": round(mscore, 2),
+                    "src_duration": ffprobe_duration(path), "has_audio": has_audio(path)})
+    log_event(video_id, "info", "scenes", f"{len(out)} tomas; fuentes: {', '.join(sorted({o['label'] for o in out}))}")
     return out

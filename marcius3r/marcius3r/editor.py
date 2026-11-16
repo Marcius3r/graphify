@@ -51,6 +51,7 @@ def build_timeline(script: dict, voice: list[dict], clips: list[dict]) -> list[d
         for k, (s, d, off, kind) in enumerate(cuts):
             timeline.append({"beat": i, "part": k, "start": t, "end": t + d, "dur": d, "src": s["path"],
                              "src_duration": s["src_duration"], "offset": off, "kind": kind, "label": s["label"],
+                             "has_audio": s.get("has_audio", False),
                              "overlay_text": beat["overlay_text"] if k == 0 else "",
                              "role": beat["role"], "sfx": beat["sfx"] if k == 0 else ""})
             t += d
@@ -80,6 +81,16 @@ def render_cut(cut: dict, out: Path, fmt: str, settings: dict) -> Path:
           f"zoompan=z='{zexpr}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={W}x{H}:fps={fps},{GRADE}")
     run(["ffmpeg", "-y", "-loglevel", "error", *loop, "-ss", f"{cut['offset']:.3f}", "-i", cut["src"],
          "-t", f"{d:.3f}", "-vf", vf, "-an", *_enc(settings), "-r", str(fps), str(out)])
+    # sonido nativo del clip (LTX-2.5 genera motores, ciudad, pasos...) → capa de ambiente
+    wav = out.with_suffix(".wav")
+    if cut.get("has_audio"):
+        tempo = max(0.5, min(2.0, 1 / speed))
+        run(["ffmpeg", "-y", "-loglevel", "error", *loop, "-ss", f"{cut['offset']:.3f}", "-i", cut["src"],
+             "-vn", "-af", f"atempo={tempo:.4f},apad=whole_dur={d:.3f},afade=t=in:d=0.04,afade=t=out:st={max(0, d-0.06):.3f}:d=0.06",
+             "-t", f"{d:.3f}", "-ar", "48000", "-ac", "2", str(wav)])
+    else:
+        run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
+             "-t", f"{d:.3f}", str(wav)])
     return out
 
 
@@ -135,11 +146,29 @@ def pick_music(workdir: Path, settings: dict, dur: float, mood: str) -> tuple[Pa
     if tracks:
         meta = lib / "licenses.yaml"
         return random.Random(mood).choice(tracks), meta.exists()
+    # música original gratuita con ACE-Step 1.5 (Apache-2.0) vía Wan2GP
+    from . import wan2gp
+    mcfg = settings["providers"]["music"]
+    for prov in mcfg.get("order", []):
+        try:
+            task = wan2gp.music_task(f"{mood}, {mcfg.get('style', '')}".strip(", "), dur)
+            if prov == "wan2gp" and wan2gp.available(settings["providers"]["wan2gp"]):
+                src = wan2gp.run([task], workdir / "music_out", settings["providers"]["wan2gp"], "music")[0]
+            elif prov == "kaggle":
+                from .kaggle_gpu import run_remote
+                src = run_remote([task], workdir / "music_out", settings, "music")[0]
+            else:
+                continue
+            dest = workdir / f"music{Path(src).suffix}"
+            dest.write_bytes(Path(src).read_bytes())
+            return dest, True  # generada por nosotros: licencia Apache-2.0 del modelo
+        except Exception as e:  # noqa: BLE001
+            log_event(None, "warn", "music", f"{prov}: {e}")
     return synth_music_bed(workdir / "music_synth.wav", dur), False
 
 
 def build_audio(voice: list[dict], timeline: list[dict], workdir: Path, settings: dict, total: float,
-                mood: str) -> tuple[Path, dict]:
+                mood: str, ambience: Path | None = None) -> tuple[Path, dict]:
     adir = workdir / "audio"
     adir.mkdir(exist_ok=True)
     # 1) pista de voz con pausas naturales
@@ -179,17 +208,21 @@ def build_audio(voice: list[dict], timeline: list[dict], workdir: Path, settings
     music, licensed = pick_music(workdir, settings, total, mood)
     final = adir / "mix.wav"
     lufs = settings["qc"]["target_lufs"]
+    amb = ambience if ambience and ambience.exists() else None
+    amb_in = ["-i", str(amb)] if amb else ["-f", "lavfi", "-t", f"{total:.3f}", "-i", "anullsrc=r=48000:cl=stereo"]
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(voice_track), "-stream_loop", "-1", "-i", str(music),
-         "-i", str(fx_track), "-filter_complex",
-         f"[0]aformat=channel_layouts=stereo,asplit=2[vo][key];"
+         "-i", str(fx_track), *amb_in, "-filter_complex",
+         f"[0]aformat=channel_layouts=stereo,asplit=3[vo][key][key2];"
          f"[1]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.42,atrim=0:{total:.3f},"
          f"afade=t=out:st={max(0, total-1.2):.3f}:d=1.2[mu];"
          f"[mu][key]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=300[duck];"
-         f"[vo][duck][2]amix=inputs=3:normalize=0:duration=first,"
+         f"[3]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.55[am];"
+         f"[am][key2]sidechaincompress=threshold=0.05:ratio=6:attack=15:release=250[amd];"
+         f"[vo][duck][2][amd]amix=inputs=4:normalize=0:duration=first,"
          f"loudnorm=I={lufs}:TP=-1.5:LRA=11",
          "-ar", "48000", "-t", f"{total:.3f}", str(final)])
     return final, {"music": str(music), "music_licensed": licensed, "music_synth": "music_synth" in music.name,
-                   "sfx_events": n}
+                   "sfx_events": n, "native_ambience": bool(amb)}
 
 
 # ---------------------------------------------------------------- render final
@@ -208,7 +241,15 @@ def render(script: dict, voice: list[dict], clips: list[dict], workdir: Path, fm
     raw = workdir / "video_raw.mp4"
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(cdir / "list.txt"),
          "-c", "copy", str(raw)])
-    audio, audio_info = build_audio(voice, timeline, workdir, settings, total, script.get("music_mood", ""))
+    ambience = None
+    if any(c.get("has_audio") for c in timeline):
+        alist = cdir / "alist.txt"
+        alist.write_text("\n".join(f"file '{(cdir / f'cut_{k:03d}.wav').as_posix()}'" for k in range(len(timeline))) + "\n")
+        ambience = workdir / "audio" / "ambience.wav"
+        ambience.parent.mkdir(exist_ok=True)
+        run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(alist),
+             "-ar", "48000", "-ac", "2", str(ambience)])
+    audio, audio_info = build_audio(voice, timeline, workdir, settings, total, script.get("music_mood", ""), ambience)
     ass = build_ass(script, timeline, fmt, settings, workdir / "subs.ass", total)
     # destellos neón en cada cambio de frase
     flashes = [c["start"] for c in timeline if c["part"] == 0 and c["start"] > 0.05]

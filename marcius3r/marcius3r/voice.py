@@ -4,9 +4,12 @@ Se sintetiza CADA beat por separado → conocemos su duración exacta y cada esc
 se corta a medida de su frase (sincronía perfecta voz-imagen).
 
 Proveedores (en orden de settings.providers.voice.order):
-- voicestudio      → VoiceStudio local (API compatible OpenAI /v1/audio/speech). Gratis, local.
-- higgsfield_agent → audios generados por el agente Claude vía Higgsfield (se depositan en workdir/voice/).
-- elevenlabs       → API de ElevenLabs (de pago) como respaldo.
+- wan2gp     → OmniVoice dentro de Wan2GP (motor local de Open-Generative-AI). Gratis. Todas las
+               frases en un solo lote. Clona tu voz desde una referencia de 3-10 s (castellano).
+- kaggle     → lo mismo en la GPU gratuita de Kaggle.
+- voicestudio→ VoiceStudio local (mismo modelo OmniVoice, API compatible OpenAI). Gratis, CPU o GPU.
+- elevenlabs → API de ElevenLabs (de pago, opcional).
+- external   → archivos voice/beat_XX.wav ya presentes (grabados por ti o generados fuera).
 """
 from __future__ import annotations
 
@@ -69,6 +72,27 @@ def synthesize(script: dict, workdir: Path, settings: dict, video_id: int | None
     vdir = workdir / "voice"
     vdir.mkdir(parents=True, exist_ok=True)
     result = []
+    # lote Wan2GP/Kaggle para todas las frases que falten
+    missing = [i for i in range(len(script["beats"])) if _agent_file(i, vdir) is None]
+    for prov in vcfg["order"]:
+        if not missing or prov not in ("wan2gp", "kaggle"):
+            continue
+        try:
+            from . import wan2gp
+            tasks = [wan2gp.tts_task(script["beats"][i]["narration"], vcfg["wan2gp"], seed=7) for i in missing]
+            if prov == "kaggle":
+                from .kaggle_gpu import run_remote
+                paths = run_remote(tasks, workdir / "tts_out", settings, "tts", video_id)
+            else:
+                if not wan2gp.available(settings["providers"]["wan2gp"]):
+                    continue
+                paths = wan2gp.run(tasks, workdir / "tts_out", settings["providers"]["wan2gp"], "tts", video_id)
+            for i, src in zip(missing, paths):
+                subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-ar", "48000",
+                                str(vdir / f"beat_{i:02d}.wav")], check=True)
+            missing = []
+        except Exception as e:  # noqa: BLE001
+            log_event(video_id, "warn", "voice", f"{prov}: {e}")
     for i, beat in enumerate(script["beats"]):
         final = vdir / f"beat_{i:02d}.clean.wav"
         raw = vdir / f"beat_{i:02d}.raw.wav"
@@ -107,3 +131,19 @@ def clean_voice(src: Path, out: Path) -> None:
           "alimiter=limit=0.95")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-af", af,
                     "-ar", "48000", "-ac", "1", str(out)], check=True)
+
+
+def write_voice_manifest(script: dict, workdir: Path, settings: dict) -> None:
+    """Tareas OmniVoice (Wan2GP) para generar la voz en otra máquina o en Kaggle/Colab."""
+    import json
+    from . import wan2gp
+    cfg = settings["providers"]["voice"]["wan2gp"]
+    tasks = [wan2gp.tts_task(b["narration"], cfg, seed=7) for b in script["beats"]]
+    for t in tasks:  # la referencia viaja junto al manifest
+        if t.get("audio_guide"):
+            t["audio_guide"] = "marcius3r_ref.wav"
+    shots = [{"file": f"voice/beat_{i:02d}.wav"} for i in range(len(tasks))]
+    (workdir / "generation_tasks.json").write_text(json.dumps(tasks, ensure_ascii=False, indent=2))
+    (workdir / "generation_manifest.json").write_text(json.dumps(
+        {"engine": "wan2gp", "stage": "voice", "unzip_to": "voice", "shots": shots, "tasks": tasks},
+        ensure_ascii=False, indent=2))

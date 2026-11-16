@@ -49,32 +49,50 @@ providers:
     engine: anthropic         # anthropic | template
     model: claude-opus-5-5
     effort: high
+  # Motor local GRATUITO de Open-Generative-AI (https://github.com/deepbeepmeep/Wan2GP)
+  wan2gp:
+    path: ~/Wan2GP             # carpeta donde clonaste Wan2GP (con su venv)
+    python: null               # por defecto <path>/venv/bin/python
+    profile: 4                 # 4 = poca VRAM (8-12 GB); 3 = más rápido con 16-24 GB
+    attention: null            # p.ej. sage2 si lo instalaste
+  kaggle:                      # misma generación en la GPU gratuita de Kaggle (sin GPU propia)
+    machine_shape: NvidiaTeslaT4
+    profile: 4
+    timeout_minutes: 170
   voice:
-    order: [voicestudio, higgsfield_agent, elevenlabs]
+    order: [external, wan2gp, voicestudio, kaggle, elevenlabs]
+    wan2gp:
+      language: spanish
+      # Recomendado: 3-10 s de TU voz en castellano, limpia (WAV). Con referencia → acento de España fiable.
+      reference_audio: library/voice/marcius3r_ref.wav
+      reference_transcript: ""          # vacío = Wan2GP la transcribe con Whisper
+      voice_tags: "male, young adult, moderate pitch"   # si no hay referencia (acento no garantizado)
+      steps: 32
     voicestudio:
       url: http://127.0.0.1:3900
       model: omnivoice
-      voice: "marcius3r-es"     # perfil diseñado/clonado dentro de VoiceStudio
-      instructions: "Hombre joven, español de España (castellano peninsular), creador de contenido gaming, enérgico, cercano, pausas naturales, sin acento latino."
+      voice: "marcius3r-es"
+      instructions: "Hombre joven, español de España (castellano peninsular), creador de contenido gaming, enérgico, cercano, pausas naturales."
       speed: 1.05
     elevenlabs:
-      voice_id: ""              # pega aquí un voice_id es-ES masculino de tu cuenta
+      voice_id: ""
       model_id: eleven_multilingual_v2
   video:
-    order: [gameplay_library, muapi, higgsfield_agent]
+    # gameplay propio > Wan2GP local > Kaggle GPU gratis > clips generados fuera (manifest)
+    # muapi = nube de Open-Generative-AI (DE PAGO): añádela al final solo si la quieres.
+    order: [gameplay_library, wan2gp, kaggle, external]
     gameplay_library:
-      path: library/gameplay    # tus capturas legítimas, con etiquetas en library/gameplay/index.yaml
+      path: library/gameplay
+    wan2gp:
+      model: ltx2_25_22B_distilled   # vídeo+sonido 720p, 8 pasos. Ligero: t2v_1.3B (480p, 8 GB)
     muapi:
       base_url: https://api.muapi.ai
-      endpoint: seedance-2.5-t2v    # verifícalo en https://api.muapi.ai/openapi.json
-      resolution: 720p
-    higgsfield:
-      model: seedance_2_0_mini       # 5 créditos / clip 5 s 9:16 720p (medido 2026-11-16)
-      premium_model: kling3_0_turbo  # 7,5 créditos / clip
+      endpoint: seedance-2.5-t2v
       resolution: 720p
   music:
-    library: library/music          # música con licencia (o generada) en mp3/wav
-    higgsfield_model: elevenlabs_music_v2
+    library: library/music
+    order: [wan2gp, kaggle]          # ACE-Step 1.5 (Apache-2.0), instrumental original
+    style: "dark cinematic synthwave trap, 80s tropical neon, punchy drums, deep 808 bass, no vocals"
   sfx:
     library: library/sfx
 
