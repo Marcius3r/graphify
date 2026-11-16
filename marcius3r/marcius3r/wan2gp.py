@@ -70,7 +70,8 @@ def music_task(style: str, seconds: float, seed: int = 11) -> dict:
 
 def _cmd(cfg: dict, tasks_file: Path, out_dir: Path) -> list[str]:
     folder = Path(os.path.expanduser(cfg["path"]))
-    py = cfg.get("python") or str(folder / "venv" / "bin" / "python")
+    default = folder / "venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    py = cfg.get("python") or str(default)
     cmd = [py, "wgp.py", "--process", str(tasks_file), "--output-dir", str(out_dir)]
     if cfg.get("profile") is not None:
         cmd += ["--profile", str(cfg["profile"])]
