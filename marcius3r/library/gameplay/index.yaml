@@ -1,7 +1,8 @@
-# Tus capturas LEGÍTIMAS de GTA 6 (grabadas por ti tras el lanzamiento, sin spoilers de final,
-# sin cinemáticas completas — ver política de Rockstar). Una entrada por clip:
+# Biblioteca de clips REALES. Una entrada por clip (mp4 vertical u horizontal; se reencuadra solo):
 # - file: vicecity_noche_trafico.mp4
 #   tags: [night, city, traffic, neon, cars, street]
-#   captured: 2026-11-20
-#   notes: "capturado en PS5 propia"
+#   source: own            # own = capturado por ti (etiqueta GAMEPLAY) | official = tráiler/captura de Rockstar
+#   label: GAMEPLAY        # opcional: GAMEPLAY | TRÁILER OFICIAL | IMAGEN OFICIAL
+# Los clips `source: official` solo se usan si activas providers.video.gameplay_library.allow_official_footage
+# (riesgo de reclamaciones de copyright / contenido reutilizado: decisión del dueño del canal).
 []

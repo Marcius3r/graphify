@@ -122,7 +122,7 @@ def build_ass(script: dict, timeline: list[dict], fmt: str, settings: dict, out:
     for seg in timeline:
         lab = seg.get("label")
         if lab:
-            color = c["neon_purple"] if "IA" in lab else (c["electric_blue"] if lab == "GAMEPLAY" else "#FF3030")
+            color = (c["neon_purple"] if "RECREACIÓN IA" in lab else "#FF3030" if "PRUEBA" in lab else c["electric_blue"])
             lines.append(f"Dialogue: 3,{_t(seg['start'])},{_t(seg['end'])},Label,,0,0,0,,"
                          r"{\3c" + _ass_color(color) + "&}" + f" {lab} ")
     lines.append(f"Dialogue: 3,{_t(0)},{_t(total)},Mark,,0,0,0,,MARCIUS3R")

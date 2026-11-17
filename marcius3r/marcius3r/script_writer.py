@@ -11,7 +11,11 @@ import re
 from .core import StepError, load_secrets, load_settings
 from .research import verified_facts
 
-WORDS_PER_SECOND = 2.7  # castellano enérgico de creador gaming
+WORDS_PER_SECOND = 2.7  # valor por defecto; se sobreescribe con channel.words_per_second
+
+
+def wps(settings: dict) -> float:
+    return float(settings.get("channel", {}).get("words_per_second", WORDS_PER_SECOND))
 
 BEAT_SCHEMA = {
     "type": "object",
@@ -24,8 +28,10 @@ BEAT_SCHEMA = {
         "sfx": {"type": "string"},
         "fact_ids": {"type": "array", "items": {"type": "string"}},
         "claim_type": {"type": "string", "enum": ["confirmado", "rumor", "teoria", "opinion", "ninguno"]},
+        "footage_tags": {"type": "array", "items": {"type": "string"}},
     },
-    "required": ["role", "narration", "scene_prompt", "camera", "overlay_text", "sfx", "fact_ids", "claim_type"],
+    "required": ["role", "narration", "scene_prompt", "camera", "overlay_text", "sfx", "fact_ids", "claim_type",
+                 "footage_tags"],
     "additionalProperties": False,
 }
 
@@ -72,6 +78,16 @@ FÓRMULA QUE FUNCIONA (Reels virales de curiosidades en español, p.ej. 45 s y 5
 - Cierra el ending con una PREGUNTA PERSONAL fácil de responder («¿con quién vas a jugarlo?», «¿cuál vas a
   explorar primero?»), no una pregunta genérica: eso dispara los comentarios.
 - caption_hook: 1-2 líneas en minúscula, cercanas, con 1 emoji (texto del post). comment_question: esa pregunta personal.
+ESTILO VIRAL DEL CANAL (estilo_viral.md):
+- Formato estrella «3 COSAS de GTA 6 que…»: 25-35 s, 6 beats = gancho de 2 s → anuncio («la tercera es una locura»)
+  → 1/3 → 2/3 → 3/3 → pregunta. overlay_text con contador («1/3 · 6 ESTRELLAS»). Lo más fuerte al FINAL y anunciado
+  al principio. Ritmo: un corte cada 1,5-2,5 s.
+- Ganchos que funcionan: contrario a lo esperado/polémico, advertencia («NO compres GTA 6 sin saber esto»), detalle
+  oculto («Fíjate BIEN»), número pequeño, «¿Qué pasa si…?», POV («POV: son las 23:59 del 18»), GTA 5 vs GTA 6.
+- Pregunta final CERRADA de dos opciones («¿Estándar o Ultimate?»). Nunca pedir suscripción en el ending.
+- footage_tags: 2-4 etiquetas en inglés para buscar clips reales en la biblioteca (night, city, police, car…).
+- Evita: «80 h de historia» (era una partida de un desarrollador con secundarias), el «truco de Nueva Zelanda» (no
+  garantizado) y cualquier clip viral de GTA 6 hecho con IA presentado como real.
 GUÍA DE PUBLICACIÓN DEL CANAL (obligatoria):
 - title: empieza EXACTAMENTE por «GTA 6» y justo después la palabra GANCHO en MAYÚSCULAS (al hacer scroll solo se
   ven las 2 primeras palabras), 40-60 caracteres, curiosidad sin contarlo todo, termina con UN emoji.
@@ -95,7 +111,7 @@ SYSTEM = SYSTEM_ES  # compatibilidad
 
 
 def target_words(fmt: str, settings: dict) -> int:
-    return int(settings["formats"][fmt]["target_seconds"] * WORDS_PER_SECOND)
+    return int(settings["formats"][fmt]["target_seconds"] * wps(settings))
 
 
 def build_prompt(idea: dict, fmt: str, settings: dict) -> str:
@@ -159,11 +175,11 @@ def write_template(idea: dict, fmt: str, settings: dict) -> dict:
     beats = [
         {"role": "hook", "narration": "Hay un detalle de GTA 6 que casi nadie ha visto.", "overlay_text": "NADIE LO VIO",
          "scene_prompt": "Night aerial shot gliding over a neon-lit tropical coastal city, palm trees, traffic streaks",
-         "camera": "fast drone push-in", "sfx": "deep boom whoosh", "fact_ids": [], "claim_type": "ninguno"},
+         "camera": "fast drone push-in", "sfx": "deep boom whoosh", "fact_ids": [], "claim_type": "ninguno", "footage_tags": []},
         {"role": "intro", "narration": f"Hoy te cuento {idea['title'].lower()}, solo con lo que está confirmado.",
          "overlay_text": "SOLO LO CONFIRMADO",
          "scene_prompt": "Sports car speeding along a beachfront boulevard at sunset, camera tracking alongside",
-         "camera": "tracking shot", "sfx": "engine rev", "fact_ids": [], "claim_type": "ninguno"},
+         "camera": "tracking shot", "sfx": "engine rev", "fact_ids": [], "claim_type": "ninguno", "footage_tags": []},
     ]
     shots = [
         ("Crowded neon street at night, people walking, cars passing, light rain reflections", "steady glide", "city ambience"),
@@ -174,14 +190,14 @@ def write_template(idea: dict, fmt: str, settings: dict) -> dict:
     for i, f in enumerate(facts):
         p, cam, sfx = shots[i % len(shots)]
         beats.append({"role": "body" if i < 2 else "detail", "narration": f["text"], "overlay_text": f["id"].upper()[:18],
-                      "scene_prompt": p, "camera": cam, "sfx": sfx, "fact_ids": [f["id"]], "claim_type": "confirmado"})
+                      "scene_prompt": p, "camera": cam, "sfx": sfx, "fact_ids": [f["id"]], "claim_type": "confirmado", "footage_tags": []})
     beats.append({"role": "ending", "narration": "Y esto es solo el principio de lo que esconde Leonida.",
                   "overlay_text": "SOLO EL PRINCIPIO",
                   "scene_prompt": "Slow aerial pull-back from a city skyline at blue hour, lights turning on",
-                  "camera": "drone pull-back", "sfx": "riser", "fact_ids": [], "claim_type": "opinion"})
+                  "camera": "drone pull-back", "sfx": "riser", "fact_ids": [], "claim_type": "opinion", "footage_tags": []})
     beats.append({"role": "cta", "narration": settings["channel"]["cta"], "overlay_text": "SUSCRÍBETE",
                   "scene_prompt": "Neon purple and electric blue light streaks racing through a dark tunnel",
-                  "camera": "fast forward motion", "sfx": "whoosh", "fact_ids": [], "claim_type": "ninguno"})
+                  "camera": "fast forward motion", "sfx": "whoosh", "fact_ids": [], "claim_type": "ninguno", "footage_tags": []})
     hook_title = f"GTA 6 NADIE sabe esto: {idea['title']}"
     if len(hook_title) > 57:
         hook_title = hook_title[:56].rsplit(" ", 1)[0]
@@ -213,7 +229,7 @@ def validate_script(script: dict, fmt: str, settings: dict) -> list[str]:
         if re.search(r"\b(leak|filtrad)", b["narration"], re.I):
             problems.append("menciona material filtrado")
     words = sum(len(b["narration"].split()) for b in script["beats"])
-    secs = words / WORDS_PER_SECOND
+    secs = words / wps(settings)
     f = settings["formats"][fmt]
     if not (f["min_seconds"] * 0.8 <= secs <= f["max_seconds"] * 1.05):
         problems.append(f"duración estimada {secs:.0f}s fuera de rango")

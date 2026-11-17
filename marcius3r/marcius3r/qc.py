@@ -71,7 +71,7 @@ def run_qc(video_path: Path, script: dict, render_info: dict, fmt: str, settings
     labels = render_info.get("labels", [])
     if any("PRUEBA" in l for l in labels):
         blockers.append("contiene escenas de PRUEBA (test_motion): prohibido publicar")
-    m["synthetic"] = any("IA" in l for l in labels)
+    m["synthetic"] = any("RECREACIÓN IA" in l for l in labels)
     # audio
     ld = loudness(video_path)
     if ld:

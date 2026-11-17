@@ -29,6 +29,7 @@ def _hex(h: str) -> tuple[int, int, int]:
 def best_frame(clips: list[str], workdir: Path, n_per_clip: int = 3) -> Path:
     """Elige el fotograma con más contraste + nitidez."""
     best, best_s = None, -1
+    clips = [c for c in clips if Path(c).exists()]
     for ci, clip in enumerate(clips[:8]):
         for k in range(n_per_clip):
             p = workdir / f"cand_{ci}_{k}.png"

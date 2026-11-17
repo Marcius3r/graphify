@@ -32,7 +32,11 @@ def normalize_hashtags(script: dict, fmt: str) -> list[str]:
     return (base + topic)[: 5 if fmt == "short" else 4]
 
 
-def build_metadata(script: dict, fmt: str, synthetic: bool, settings: dict) -> dict:
+OFFICIAL_NOTICE = ("🎬 Incluye fragmentos de material oficial de Rockstar Games usados con fines informativos "
+                   "y de comentario; todos los derechos pertenecen a sus propietarios.")
+
+
+def build_metadata(script: dict, fmt: str, synthetic: bool, settings: dict, labels: list[str] | None = None) -> dict:
     facts = {f["id"]: f for f in verified_facts()}
     used = []
     for b in script["beats"]:
@@ -53,6 +57,8 @@ def build_metadata(script: dict, fmt: str, synthetic: bool, settings: dict) -> d
     desc_parts += [script.get("description", "").strip(), "", "🔎 " + ", ".join(keywords[:12]), ""]
     if synthetic:
         desc_parts += [DISCLOSURE, CREDITS, ""]
+    if any("OFICIAL" in l for l in (labels or [])):
+        desc_parts += [OFFICIAL_NOTICE, ""]
     if used:
         desc_parts += ["📚 Fuentes:"] + [f"• {u}" for u in used] + [""]
     desc_parts += [LEGAL, "", " ".join(hashtags)]

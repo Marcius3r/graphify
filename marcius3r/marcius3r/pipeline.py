@@ -128,10 +128,10 @@ def advance(vid: int, allow_test: bool = False, settings: dict | None = None) ->
                     return "scenes_pending"
                 raise
             info = editor.render(script, vo, clips, workdir, fmt, settings, vid)
-            synthetic = any("IA" in l for l in info["labels"])
+            synthetic = any("RECREACIÓN IA" in l for l in info["labels"])
             frame = thumbnail.best_frame([c["path"] for c in clips], workdir)
             thumb = thumbnail.make_thumbnail(frame, script["thumbnail_text"], workdir / "thumbnail.jpg", settings, synthetic)
-            meta = build_metadata(script, fmt, synthetic, settings)
+            meta = build_metadata(script, fmt, synthetic, settings, info["labels"])
             (workdir / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2))
             report = qc.run_qc(Path(info["output"]), script, info, fmt, settings, meta, vid)
             (workdir / "qc.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))

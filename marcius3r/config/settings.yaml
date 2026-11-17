@@ -4,6 +4,7 @@
 channel:
   name: MARCIUS3R
   language: es-ES
+  words_per_second: 3.6       # medido en la voz real del canal (sesión local)
   voice_accent: latam          # latam = español neutro (voz Gerardo) | es = castellano de España
   timezone: Europe/Madrid
   cta: "¿Tú qué opinas? Déjamelo en comentarios y suscríbete a MARCIUS3R para descubrir más secretos de GTA 6."
@@ -99,6 +100,9 @@ providers:
     order: [gameplay_library, wan2gp, kaggle, external]
     gameplay_library:
       path: library/gameplay
+      # Clips con `source: official` (tráileres/capturas de Rockstar) quedan BLOQUEADOS salvo que el dueño
+      # del canal lo active expresamente: riesgo de reclamaciones de copyright y de «contenido reutilizado».
+      allow_official_footage: false
     wan2gp:
       model: ltx2_25_22B_distilled   # vídeo+sonido 720p, 8 pasos. Ligero: t2v_1.3B (480p, 8 GB)
     muapi:

@@ -17,3 +17,12 @@ ideas:
   - {title: "13 años de espera: de GTA 5 a GTA 6", category: F, needs: [gta5_release, release_date, delays], angle: "Nostalgia + cuenta atrás; cierre: ¿con quién vas a jugarlo?", evergreen: false}
   - {title: "¿Ya estás preparado para GTA 6? Lo que tienes que saber antes de jugar", category: E, needs: [release_date, preload, physical_code, no_pc], angle: "Checklist del lanzamiento; cierre: ¿lo jugarás el primer día?", evergreen: false}
   - {title: "¿Sabías que el disco de GTA 6 no trae el juego?", category: C, needs: [physical_code], angle: "Gancho ¿sabías que...?; cierre: ¿físico o digital?", evergreen: true}
+  # Del documento estilo_viral.md del canal (verificar fuente y añadirla a facts.yaml antes de afirmar como confirmado)
+  - {title: "GTA 6 sale en 48 HORAS y nadie habla de ESTO", category: E, needs: [release_date, preload], angle: "Formato 3 COSAS; gancho advertencia", evergreen: false}
+  - {title: "NO compres GTA 6 hasta ver ESTO (Estándar vs Ultimate)", category: B, needs: [price_us, physical_code], angle: "Pregunta final: ¿Estándar o Ultimate?", evergreen: false}
+  - {title: "POV: llevas 13 AÑOS esperando y por fin es 19", category: F, needs: [gta5_release, release_date], angle: "POV emocional", evergreen: false}
+  - {title: "GTA 6 YA ESTÁ AQUÍ: 3 cosas que DEBES hacer la primera hora", category: A, needs: [release_date, regions], angle: "Formato 3 COSAS", evergreen: false}
+  - {title: "Los NPC de GTA 6 son DEMASIADO listos", category: A, needs: [], angle: "Solo con gameplay propio tras el lanzamiento", evergreen: true}
+  - {title: "El mapa de GTA 6 es 2 veces el de GTA 5 (y 10 veces más interiores)", category: D, needs: [], angle: "Fuentes citadas: Kotaku, GameByte (añadir URL a facts.yaml)", evergreen: true}
+  - {title: "GTA 6 tendrá redes sociales DENTRO del juego", category: C, needs: [], angle: "Fuente citada: TheGamer (añadir URL)", evergreen: true}
+  - {title: "Mapa y póster GRATIS el 19 de noviembre", category: E, needs: [], angle: "Fuente citada: Rockstar Newswire (añadir URL)", evergreen: false}

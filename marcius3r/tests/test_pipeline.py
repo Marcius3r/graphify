@@ -156,3 +156,25 @@ def test_publishing_guide_title_hashtags_description():
     assert m["hashtags"][:2] == ["#Shorts", "#GTA6"] and 4 <= len(m["hashtags"]) <= 5
     assert "🔎" in m["description"] and "suscr" not in m["description"].lower()
     assert m["description"].strip().endswith(" ".join(m["hashtags"]))
+
+
+def test_official_footage_blocked_by_default_and_labels(tmp_path, monkeypatch):
+    import yaml as _y
+    lib = tmp_path / "lib"
+    lib.mkdir()
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=s=320x240:d=2",
+                    str(lib / "tr_000.mp4")], check=True)
+    (lib / "tr_000.mp4").rename(lib / "tr_000.mp4")
+    (lib / "own.mp4").write_bytes((lib / "tr_000.mp4").read_bytes())
+    (lib / "index.yaml").write_text(_y.safe_dump([
+        {"file": "tr_000.mp4", "tags": ["night", "city"], "source": "official", "label": "TRÁILER OFICIAL"},
+        {"file": "own.mp4", "tags": ["night", "city"], "source": "own"}]))
+    st = json.loads(json.dumps(S))
+    st["providers"]["video"]["gameplay_library"]["path"] = str(lib)
+    beat = {"scene_prompt": "night city", "narration": "x", "footage_tags": ["night", "city"]}
+    g = scenes._gameplay({"beat": 0}, beat, st, set())
+    assert g[0].name == "own.mp4" and g[1] == "GAMEPLAY"
+    st["providers"]["video"]["gameplay_library"]["allow_official_footage"] = True
+    g2 = scenes._gameplay({"beat": 0, "library_file": "tr_000.mp4"}, beat, st, set())
+    assert g2[1] == "TRÁILER OFICIAL"
+    assert "RECREACIÓN IA" not in g2[1]  # «OFICIAL» no cuenta como sintético

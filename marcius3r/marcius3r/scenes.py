@@ -44,6 +44,12 @@ def plan_shots(script: dict, voice: list[dict], fmt: str, settings: dict) -> lis
     shots = []
     for i, (beat, v) in enumerate(zip(script["beats"], voice)):
         need = v["duration"] + v["pause"]
+        if beat.get("footage"):  # clips reales pedidos por nombre en el guion
+            for k, fname in enumerate(beat["footage"]):
+                shots.append({"beat": i, "part": k, "seconds": need / len(beat["footage"]), "aspect_ratio": aspect,
+                              "prompt": beat["scene_prompt"], "library_file": fname,
+                              "file": f"clips/beat_{i:02d}_{k}.mp4"})
+            continue
         n = max(1, math.ceil(need / (clip_len * 0.95)))
         for k in range(n):
             prompt = beat["scene_prompt"] if k == 0 else f"{beat['scene_prompt']} Different angle, closer shot."
@@ -71,24 +77,47 @@ def write_manifest(shots: list[dict], workdir: Path, settings: dict) -> Path:
 
 
 # ---------------------------------------------------------------- proveedores
-def _gameplay(shot: dict, beat: dict, settings: dict, used: set[str]) -> Path | None:
-    lib = ROOT / settings["providers"]["video"]["gameplay_library"]["path"]
+def _library(settings: dict) -> tuple[Path, list[dict]]:
+    cfg = settings["providers"]["video"]["gameplay_library"]
+    lib = ROOT / cfg["path"]
     idx = lib / "index.yaml"
-    if not idx.exists():
+    entries = (yaml.safe_load(idx.read_text()) or []) if idx.exists() else []
+    allow_official = bool(cfg.get("allow_official_footage", False))
+    ok = [e for e in entries if (lib / e["file"]).exists() and (allow_official or e.get("source") != "official")]
+    return lib, ok
+
+
+def _label_of(entry: dict) -> str:
+    return entry.get("label") or ("IMAGEN OFICIAL" if entry.get("source") == "official" else "GAMEPLAY")
+
+
+def _gameplay(shot: dict, beat: dict, settings: dict, used: set[str]) -> tuple[Path, str] | None:
+    lib, entries = _library(settings)
+    if not entries:
         return None
-    entries = yaml.safe_load(idx.read_text()) or []
-    words = set(re.findall(r"[a-z]+", (beat["scene_prompt"] + " " + beat["narration"]).lower()))
+    if shot.get("library_file"):
+        e = next((e for e in entries if e["file"] == shot["library_file"]), None)
+        if e:
+            used.add(e["file"])
+            return lib / e["file"], _label_of(e)
+    tags = {t.lower() for t in beat.get("footage_tags", [])}
+    words = set(re.findall(r"[a-z]+", (beat["scene_prompt"] + " " + beat["narration"]).lower())) | tags
     best, best_s = None, 0
     for e in entries:
         if e["file"] in used:
             continue
-        s = len(words & {t.lower() for t in e.get("tags", [])})
+        et = {t.lower() for t in e.get("tags", [])}
+        s = len(words & et) + 2 * len(tags & et)
         if s > best_s:
             best, best_s = e, s
-    if not best or best_s < 2:
-        return None
+    if best is None or best_s < 2:
+        # si el guion pidió clips reales concretos y se agotaron, otro clip real antes que IA
+        if shot.get("library_file") or tags:
+            best = next((e for e in entries if e["file"] not in used), None)
+        if best is None:
+            return None
     used.add(best["file"])
-    return lib / best["file"]
+    return lib / best["file"], _label_of(best)
 
 
 def _muapi(shot: dict, out: Path, settings: dict, secrets: dict, video_id: int | None) -> Path:
@@ -171,7 +200,7 @@ def gather_clips(script: dict, shots: list[dict], workdir: Path, fmt: str, setti
         elif "gameplay_library" in order:
             g = _gameplay(sh, script["beats"][sh["beat"]], settings, used)
             if g:
-                got[sh["file"]] = (g, LABEL["gameplay_library"])
+                got[sh["file"]] = g
     # 2) proveedores por lotes / por toma para lo que falta
     for prov in order:
         pending = [sh for sh in shots if sh["file"] not in got]
