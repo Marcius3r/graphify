@@ -49,7 +49,7 @@ Se probó en esta sesión:
 - **FFmpeg** para el montaje.
 - **faster-whisper** (MIT), opcional, para el control de pronunciación.
 - **Pillow** para las miniaturas.
-- **Biblioteca de audio de YouTube** como alternativa musical.
+- Música: solo ACE-Step (original). La guía del canal excluye la biblioteca de audio de YouTube.
 
 ## Entorno de la sesión de desarrollo
 - 4 CPU, 15 GB de RAM, **sin GPU**, FFmpeg 6.1 y Docker.

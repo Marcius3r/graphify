@@ -125,7 +125,8 @@ schedule:
   slots:
     A: "20:00"   # prime time España
     B: "23:30"   # compromiso ES noche / LATAM tarde
-    C: "03:00"   # prime time México/Colombia (publicación programada)
+    C: "02:00"   # guía del canal: probar 1-3 h (prime time México/Colombia)
+    D: "01:15"   # guía del canal: probar 1-3 h
   exploration_rate: 0.25
   min_samples_per_slot: 5
 

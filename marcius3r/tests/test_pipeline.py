@@ -142,3 +142,17 @@ def test_voice_design_tasks_are_original_descriptions():
     assert t["model_type"] == "qwen3_tts_voicedesign" and t["model_mode"] == "spanish"
     assert "audio_guide" not in t  # diseño por descripción, sin audio de nadie
     assert len(d["variants"]) >= 3
+
+
+def test_publishing_guide_title_hashtags_description():
+    from marcius3r.metadata import build_metadata
+    from marcius3r.script_writer import title_problems
+    assert title_problems("GTA 6 SEIS zonas del mapa que casi nadie conoce 🗺️") == []
+    assert title_problems("Las zonas de GTA 6 que nadie conoce del mapa 🗺️")  # no empieza por GTA 6
+    assert title_problems("GTA 6 seis zonas del mapa que casi nadie conoce 🗺️")  # gancho no en mayúsculas
+    assert title_problems("GTA 6 SEIS zonas del mapa que casi nadie conoce")  # sin emoji
+    s = json.load(open(Path(__file__).resolve().parent.parent / "samples" / "sample_01_leonida.json"))
+    m = build_metadata(s, "short", True, S)
+    assert m["hashtags"][:2] == ["#Shorts", "#GTA6"] and 4 <= len(m["hashtags"]) <= 5
+    assert "🔎" in m["description"] and "suscr" not in m["description"].lower()
+    assert m["description"].strip().endswith(" ".join(m["hashtags"]))

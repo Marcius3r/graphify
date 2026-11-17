@@ -42,10 +42,11 @@ SCRIPT_SCHEMA = {
         "hashtags": {"type": "array", "items": {"type": "string"}},
         "tags": {"type": "array", "items": {"type": "string"}},
         "caption_hook": {"type": "string"},
+        "keywords": {"type": "array", "items": {"type": "string"}},
         "comment_question": {"type": "string"},
     },
     "required": ["title", "title_alternatives", "thumbnail_text", "thumbnail_scene", "music_mood",
-                 "beats", "description", "hashtags", "tags", "caption_hook", "comment_question"],
+                 "beats", "description", "hashtags", "tags", "caption_hook", "comment_question", "keywords"],
     "additionalProperties": False,
 }
 
@@ -70,7 +71,14 @@ FÓRMULA QUE FUNCIONA (Reels virales de curiosidades en español, p.ej. 45 s y 5
 - Una línea emocional que conecte con el jugador (espera, nostalgia, hype del lanzamiento), sin exagerar datos.
 - Cierra el ending con una PREGUNTA PERSONAL fácil de responder («¿con quién vas a jugarlo?», «¿cuál vas a
   explorar primero?»), no una pregunta genérica: eso dispara los comentarios.
-- caption_hook: 1-2 líneas en minúscula, cercanas, con 1 emoji (texto del post). comment_question: esa pregunta personal."""
+- caption_hook: 1-2 líneas en minúscula, cercanas, con 1 emoji (texto del post). comment_question: esa pregunta personal.
+GUÍA DE PUBLICACIÓN DEL CANAL (obligatoria):
+- title: empieza EXACTAMENTE por «GTA 6» y justo después la palabra GANCHO en MAYÚSCULAS (al hacer scroll solo se
+  ven las 2 primeras palabras), 40-60 caracteres, curiosidad sin contarlo todo, termina con UN emoji.
+  Ej.: «GTA 6 NADIE vio este detalle del mapa 🤯».
+- hashtags: SOLO 2 del tema, sin #Shorts ni #GTA6 (se añaden solos). Ej.: #ViceCity, #JasonYLucia, #GTA6Policia.
+- keywords: 6-10 palabras clave de búsqueda (sin #).
+- description: resumen breve (2-3 frases). NUNCA escribas «suscríbete» en la descripción."""
 
 
 SYSTEM_LATAM = SYSTEM_ES.replace(
@@ -174,9 +182,14 @@ def write_template(idea: dict, fmt: str, settings: dict) -> dict:
     beats.append({"role": "cta", "narration": settings["channel"]["cta"], "overlay_text": "SUSCRÍBETE",
                   "scene_prompt": "Neon purple and electric blue light streaks racing through a dark tunnel",
                   "camera": "fast forward motion", "sfx": "whoosh", "fact_ids": [], "claim_type": "ninguno"})
-    return {"title": f"GTA 6: {idea['title']}"[:70], "title_alternatives": [], "thumbnail_text": "NADIE LO VIO",
+    hook_title = f"GTA 6 NADIE sabe esto: {idea['title']}"
+    if len(hook_title) > 57:
+        hook_title = hook_title[:56].rsplit(" ", 1)[0]
+    hook_title = (hook_title + " del juego" if len(hook_title) < 38 else hook_title) + " 🤯"
+    return {"title": hook_title, "title_alternatives": [], "thumbnail_text": "NADIE LO VIO",
             "thumbnail_scene": beats[0]["scene_prompt"], "music_mood": "dark synthwave trap",
-            "beats": beats, "description": f"{idea['title']}.", "hashtags": ["#GTA6", "#GTAVI", "#Shorts"],
+            "beats": beats, "description": f"{idea['title']}.", "hashtags": ["#ViceCity", "#Leonida"],
+            "keywords": ["GTA 6", "GTA VI", "Leonida", "Vice City", "curiosidades GTA 6", "lanzamiento GTA 6"],
             "tags": ["GTA 6", "GTA VI", "Leonida", "Vice City"],
             "caption_hook": "¿ya estás preparado para GTA 6? 🎮", "comment_question": "¿Con quién vas a jugarlo?"}
 
@@ -204,9 +217,25 @@ def validate_script(script: dict, fmt: str, settings: dict) -> list[str]:
     f = settings["formats"][fmt]
     if not (f["min_seconds"] * 0.8 <= secs <= f["max_seconds"] * 1.05):
         problems.append(f"duración estimada {secs:.0f}s fuera de rango")
-    if len(script["title"]) > 100:
-        problems.append("título > 100 caracteres (límite YouTube)")
+    problems += title_problems(script["title"])
     return problems
+
+
+EMOJI_END = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF][\uFE0F]?$")
+
+
+def title_problems(title: str) -> list[str]:
+    p = []
+    words = title.split()
+    if not title.startswith("GTA 6 "):
+        p.append("el título debe empezar por «GTA 6»")
+    elif len(words) < 3 or not (words[2].isupper() and len(re.sub(r"\W", "", words[2])) >= 2):
+        p.append("tras «GTA 6» debe ir la palabra GANCHO en mayúsculas")
+    if not (40 <= len(title) <= 60):
+        p.append(f"título de {len(title)} caracteres (debe tener 40-60)")
+    if not EMOJI_END.search(title.strip()):
+        p.append("el título debe terminar con un emoji")
+    return p
 
 
 def full_narration(script: dict) -> str:

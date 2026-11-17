@@ -79,7 +79,7 @@ Usa solo tu voz o una que tengas derecho a clonar. Sin referencia, se usa `voice
 | **Verificar el canal** | Miniaturas personalizadas | Gratis. YouTube Studio → verificación por teléfono. |
 | **Guiones** | Escribir cada día | **Opción 1:** `ANTHROPIC_API_KEY`, de pago (unos céntimos por guion). **Opción 2:** gratis con `providers.script.engine: template` (plantilla solo con hechos verificados, menos creativa). |
 | **GPU** | Generar vídeo, voz y música | Tu GPU o Kaggle, gratis (ver §2). |
-| Música propia (opcional) | Banda sonora alternativa | Pistas de la Biblioteca de audio de YouTube (gratis y monetizable) en `library/music/`, con su entrada en `licenses.yaml`. |
+| Música propia (opcional) | Banda sonora alternativa | Solo música original o con licencia propia en `library/music/` + `licenses.yaml`. **Guía del canal: nada de música de la biblioteca de YouTube.** Por defecto se genera con ACE-Step. |
 
 La **nube** de Open-Generative-AI (MuAPI) también está integrada (`muapi` en `providers.video.order`), pero **es de pago y está desactivada**.
 
@@ -111,7 +111,8 @@ No hay una hora mágica: se prueban tres franjas y decide Analytics.
 |---|---|---|---|---|---|
 | A | 20:00 | 13:00 | 14:00 | 16:00 | Prime time en España |
 | B | 23:30 | 16:30 | 17:30 | 19:30 | Noche en España, tarde en LATAM |
-| C | 03:00 | 20:00 | 21:00 | 23:00 | Prime time en México y Colombia (programada) |
+| C | 02:00 | 19:00 | 20:00 | 22:00 | Prueba 1-3 h (guía del canal) |
+| D | 01:15 | 18:15 | 19:15 | 21:15 | Prueba 1-3 h (guía del canal) |
 
 Primero se publican al menos 5 vídeos en cada franja. Después, el 75 % va a la mejor y el 25 % sigue explorando. La recompensa es: vistas a las 48 h × (1 + % visto).
 
