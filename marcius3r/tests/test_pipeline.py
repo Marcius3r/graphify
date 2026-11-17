@@ -171,6 +171,7 @@ def test_official_footage_blocked_by_default_and_labels(tmp_path, monkeypatch):
         {"file": "own.mp4", "tags": ["night", "city"], "source": "own"}]))
     st = json.loads(json.dumps(S))
     st["providers"]["video"]["gameplay_library"]["path"] = str(lib)
+    st["providers"]["video"]["gameplay_library"]["allow_official_footage"] = False
     beat = {"scene_prompt": "night city", "narration": "x", "footage_tags": ["night", "city"]}
     g = scenes._gameplay({"beat": 0}, beat, st, set())
     assert g[0].name == "own.mp4" and g[1] == "GAMEPLAY"
