@@ -79,6 +79,38 @@ facts:
     sources: ["https://www.rockstargames.com/gta-v", "https://es.wikipedia.org/wiki/Grand_Theft_Auto_V"]
     verified_live: false
 
+  # ---- preview de prensa: prensa que cita previews o declaraciones de Rockstar. Decir SIEMPRE «según <medio>».
+  - id: most_preordered
+    text: "Según PlayStation y Xbox, GTA 6 es el juego más reservado de la historia de sus tiendas."
+    status: preview_prensa
+    sources: ["https://insider-gaming.com/gta-6-most-pre-ordered-game-playstation-xbox/"]
+    verified_live: false
+  - id: collector_box
+    text: "Según Vandal, la caja de coleccionista cuesta 399,99 euros y no incluye el juego."
+    status: preview_prensa
+    sources: ["Vandal (URL pendiente de añadir)"]
+    verified_live: false
+  - id: car_theft
+    text: "Según la preview de prensa recogida por Notebookcheck, robar un coche ya no es pulsar un botón: hay que forzar puertas o romper la ventana, algunos coches no arrancan y los de lujo llevan GPS."
+    status: preview_prensa
+    sources: ["https://www.notebookcheck.net/Rockstar-is-ending-one-button-car-theft-in-GTA-6.1381985.0.html"]
+    verified_live: false
+  - id: romance_optional
+    text: "Según Rockstar en declaraciones a TechRadar, la relación entre Jason y Lucia florece si la cuidas, pero es opcional."
+    status: preview_prensa
+    sources: ["TechRadar (URL pendiente de añadir)"]
+    verified_live: false
+  - id: criminal_profile
+    text: "Según la preview de la revista Edge recogida por GameByte, la policía registra aspecto, ropa, armas y cámaras, usa perros y bandas de pinchos, y hay un Perfil Criminal de Profesional a Irredimible."
+    status: preview_prensa
+    sources: ["https://www.gamebyte.com/gta-6-details-map-npcs-criminal-profile/"]
+    verified_live: false
+  - id: six_stars
+    text: "Según GamesRadar, el nivel de búsqueda llega a 6 estrellas y la policía te identifica por la cara, la ropa y el coche."
+    status: preview_prensa
+    sources: ["https://www.gamesradar.com/games/grand-theft-auto/gta-6-wanted-system-goes-up-to-6-stars-and-lets-police-track-your-face-your-clothes-and-your-car/"]
+    verified_live: false
+
 # Cosas que NO se deben presentar como hechos
 caution:
   - "Material filtrado (p.ej. 'Cyberleek'): no se muestra, no se describe como real. Take-Two ha enviado DMCA."
