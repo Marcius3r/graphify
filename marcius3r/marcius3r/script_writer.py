@@ -237,7 +237,7 @@ def validate_script(script: dict, fmt: str, settings: dict) -> list[str]:
     return problems
 
 
-EMOJI_END = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF][\uFE0F]?$")
+EMOJI_END = re.compile("[\U0001F000-\U0001FAFF\u2300-\u23FF\u2600-\u27BF\u2B00-\u2BFF][\uFE0F]?$")
 
 
 def title_problems(title: str) -> list[str]:
