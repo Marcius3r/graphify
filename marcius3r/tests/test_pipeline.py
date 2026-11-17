@@ -150,6 +150,7 @@ def test_publishing_guide_title_hashtags_description():
     assert title_problems("GTA 6 SEIS zonas del mapa que casi nadie conoce 🗺️") == []
     assert title_problems("Las zonas de GTA 6 que nadie conoce del mapa 🗺️")  # no empieza por GTA 6
     assert title_problems("GTA 6 seis zonas del mapa que casi nadie conoce 🗺️")  # gancho no en mayúsculas
+    assert title_problems("GTA 6 SALE a esta hora EXACTA en España ⏰") == []
     assert title_problems("GTA 6 SEIS zonas del mapa que casi nadie conoce")  # sin emoji
     s = json.load(open(Path(__file__).resolve().parent.parent / "samples" / "sample_01_leonida.json"))
     m = build_metadata(s, "short", True, S)
