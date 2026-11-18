@@ -37,6 +37,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--kaggle", action="store_true", help="usar la GPU gratuita de Kaggle")
     p = sub.add_parser("voice-pick", help="fijar la candidata N como voz del canal")
     p.add_argument("n", type=int)
+    p = sub.add_parser("recap-transcribe", help="transcribir un directo (encargo del streamer)")
+    p.add_argument("video")
+    p.add_argument("--model", default="medium")
+    p = sub.add_parser("recap-render", help="renderizar resumen de directo desde edl.json")
+    p.add_argument("video")
+    p.add_argument("edl")
+    p.add_argument("--vertical", action="store_true")
+    p.add_argument("--music")
     p = sub.add_parser("dashboard", help="panel web local")
     p.add_argument("--port", type=int, default=8787)
     p = sub.add_parser("ideas", help="listar ideas")
@@ -90,6 +98,18 @@ def main(argv: list[str] | None = None) -> int:
             print("Escúchalas y ejecuta: python -m marcius3r voice-pick <N>")
         else:
             print("voz del canal fijada:", vmod.pick_candidate(a.n, core.load_settings(), cand))
+    elif a.cmd == "recap-transcribe":
+        from pathlib import Path
+        from .stream_recap import transcribe
+        v = Path(a.video)
+        print(transcribe(v, v.with_suffix(".transcript.json"), a.model))
+    elif a.cmd == "recap-render":
+        from pathlib import Path
+        from .stream_recap import render
+        v, e = Path(a.video), Path(a.edl)
+        out = render(v, json.loads(e.read_text(encoding="utf-8")), e.parent / "render", core.load_settings(),
+                     vertical=a.vertical, music=Path(a.music) if a.music else None)
+        print(out)
     elif a.cmd == "dashboard":
         from .dashboard import serve
         serve(a.port)
