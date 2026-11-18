@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
         from .stream_recap import render
         v, e = Path(a.video), Path(a.edl)
         out = render(v, json.loads(e.read_text(encoding="utf-8")), e.parent / "render", core.load_settings(),
-                     vertical=a.vertical, music=Path(a.music) if a.music else None)
+                     vertical=a.vertical, music=Path(a.music) if a.music else None, base=e.parent)
         print(out)
     elif a.cmd == "dashboard":
         from .dashboard import serve
