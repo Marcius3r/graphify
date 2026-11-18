@@ -15,6 +15,8 @@ Flujo:
    - "bridge" en cada segmento: rótulo de contexto («Tras media hora intentando escapar…») que explica lo
                                  que pasó en la parte que se salta, para que la historia se entienda.
    - "silence_cut": segundos mínimos de silencio que se recortan (por defecto 2.5; 0 = no recortar).
+   - "min_minutes": duración mínima del resumen (p.ej. 35). Si el montaje sale más corto, se detiene ANTES
+                    del render final e indica cuántos minutos faltan para ampliar bloques.
 3) render(video, edl) → resumen 16:9 (1920x1080) y, con vertical=True, versión 9:16 para Shorts:
    - teaser inicial del mejor momento, rótulo de capítulo en cada bloque, cortes de silencios largos,
      punch-in alterno (zoom 1.0/1.12) para dinamismo, subtítulos en castellano grandes, crédito al streamer,
@@ -132,6 +134,11 @@ def render(video: Path, edl: dict, workdir: Path, settings: dict, vertical: bool
         s0, s1 = snap_to_sentences(seg["start"], seg["end"], transcript)
         for k, (a, b) in enumerate(_speech_islands(video, s0, s1, min_sil)):
             pieces.append((a, b, seg["chapter"] if k == 0 else None, False, seg.get("bridge") if k == 0 else None))
+    est = sum(p[1] - p[0] for p in pieces)
+    min_min = float(edl.get("min_minutes", 0))
+    if min_min and est < min_min * 60:
+        raise RuntimeError(f"El resumen dura {est/60:.1f} min y el mínimo es {min_min:.0f} min: faltan "
+                           f"{min_min - est/60:.1f} min. Amplía los bloques o añade capítulos.")
     # 2) render de cada pieza normalizada
     if vertical:  # vídeo horizontal centrado sobre fondo desenfocado
         base = (f"split[a][b];[a]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},boxblur=30:3,"
