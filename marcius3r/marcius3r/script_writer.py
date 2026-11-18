@@ -70,7 +70,13 @@ REGLAS INQUEBRANTABLES:
 5. scene_prompt en INGLÉS, 1-2 frases, cinematográfico, vertical si es Short. camera: tipo de movimiento.
 6. overlay_text: 1-4 palabras MAYÚSCULAS. sfx: efecto en inglés (p.ej. "engine rev", "whoosh", "city ambience").
 7. Estructura obligatoria de beats: 1 hook (0-3 s, curiosidad máxima), 1 intro, varios body/detail, 1 ending, 1 cta.
-8. El cta debe ser exactamente el CTA del canal.
+8. El beat cta es la PREGUNTA CERRADA de dos opciones (máx. 10 palabras), p.ej. «¿Estándar o Ultimate? Te leo.».
+   PROHIBIDO pedir suscripción, «dale like» o «comenta» largo: el final largo hace que la gente deslice.
+RETENCIÓN (Shorts):
+- La primera frase ES el gancho; nada de «hola», «en este vídeo», «hoy os traigo». El dato más fuerte se anuncia en el
+  segundo 0 y se revela al final.
+- Bucle: la última frase debe enlazar con la primera para que al repetirse suene continuo.
+- Frases de 4-9 palabras; cada beat aporta un dato nuevo; cero relleno.
 9. Escribe números con letra cuando se lean ("diecinueve de noviembre").
 10. Título < 70 caracteres, sin clickbait falso. Descripción con fuentes al final y aviso de recreación IA.
 FÓRMULA QUE FUNCIONA (Reels virales de curiosidades en español, p.ej. 45 s y 59K likes):
@@ -219,6 +225,8 @@ def validate_script(script: dict, fmt: str, settings: dict) -> list[str]:
         problems.append("el primer beat debe ser el gancho")
     if roles[-1:] != ["cta"]:
         problems.append("el último beat debe ser la llamada a la acción")
+    elif len(script["beats"][-1]["narration"].split()) > 12 or re.search(r"suscr[ií]b", script["beats"][-1]["narration"], re.I):
+        problems.append("el CTA debe ser una pregunta corta (≤12 palabras) y sin pedir suscripción")
     for b in script["beats"]:
         for fid in b["fact_ids"]:
             if fid not in known:

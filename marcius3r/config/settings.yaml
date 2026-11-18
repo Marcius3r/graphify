@@ -7,7 +7,7 @@ channel:
   words_per_second: 3.6       # medido en la voz real del canal (sesión local)
   voice_accent: latam          # latam = español neutro (voz Gerardo) | es = castellano de España
   timezone: Europe/Madrid
-  cta: "¿Tú qué opinas? Déjamelo en comentarios y suscríbete a MARCIUS3R para descubrir más secretos de GTA 6."
+  cta: "¿Tú qué dices? Te leo en comentarios."   # CTA corto: el largo con «suscríbete» hundía la retención final
 
 brand:
   colors:
@@ -22,9 +22,9 @@ formats:
     width: 1080
     height: 1920
     fps: 30
-    min_seconds: 25
-    max_seconds: 59          # < 60 s para máxima compatibilidad Shorts
-    target_seconds: 45         # referencia: Reel viral @lo_sabias_ya (45,3 s, 59K likes)
+    min_seconds: 18
+    max_seconds: 50
+    target_seconds: 28         # canal nuevo: 20-35 s → más % visto y más repeticiones (bucle)
     clip_seconds: 5
     subtitle_style: big      # palabra a palabra, grande, centro-bajo
   long:
@@ -38,7 +38,7 @@ formats:
     subtitle_style: classic
 
 production:
-  daily_shorts: 1
+  daily_shorts: 3            # semana de lanzamiento: 3 al día (más pruebas en el feed)
   long_every_n_days: 7       # 1 vídeo largo semanal al principio
   require_manual_approval: true   # ← se pone a false SOLO cuando apruebes la muestra
   max_credits_per_short: 60

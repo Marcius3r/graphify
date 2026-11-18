@@ -115,6 +115,11 @@ def build_ass(script: dict, timeline: list[dict], fmt: str, settings: dict, out:
         if not ov or seg.get("part", 0) != 0:
             continue
         y = int(H * (0.24 if short else 0.18))
+        if seg["start"] < 0.05:  # gancho: texto completo desde el PRIMER fotograma (sin animación de entrada)
+            hook_end = max(c["end"] for c in timeline if c["beat"] == seg["beat"])
+            lines.append(f"Dialogue: 2,{_t(0)},{_t(hook_end)},Punch,,0,0,0,,"
+                         + r"{\an5\pos(" + f"{W//2},{y}" + r")\bord10\3c" + blue + "&}" + ov.upper())
+            continue
         anim = (r"{\an5\pos(" + f"{W//2},{y}" + r")\fscx40\fscy40\t(0,140,\fscx112\fscy112)\t(140,240,\fscx100\fscy100)\fad(0,180)\bord9\3c"
                 + blue + "&}")
         lines.append(f"Dialogue: 2,{_t(seg['start'])},{_t(min(seg['start'] + 1.6, seg['end']))},Punch,,0,0,0,,{anim}{ov.upper()}")
