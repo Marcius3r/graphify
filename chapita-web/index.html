@@ -3,9 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Chapas NFC para perros impresas en 3D en dos colores. Diseña la tuya y resérvala por WhatsApp.">
+<meta name="description" content="Chapa NFC para perros impresa en 3D en dos colores y sellada con resina. Si se pierde, quien lo encuentre acerca el móvil y le aparece tu teléfono. Desde 6,90 €.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Chapita">
+<meta property="og:title" content="Chapita · Si se pierde, un toque en su chapa y vuelve a casa">
+<meta property="og:description" content="Chapa NFC para perros, impresa en 3D en dos colores. Sin batería y sin app. Diseña la tuya por 6,90 €.">
+<meta property="og:url" content="https://chapita-opal.vercel.app/">
+<meta property="og:image" content="https://chapita-opal.vercel.app/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://chapita-opal.vercel.app/">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#234536">
-<link rel="icon" href="/admin/icon-192.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/apple-touch-icon.png" type="image/png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -342,6 +354,17 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 .pay-banner{position:fixed;left:16px;right:16px;top:calc(var(--hdr,64px) + 10px);z-index:60;max-width:640px;margin:0 auto;padding:14px 46px 14px 16px;border-radius:14px;background:#7a2e27;color:#fff;font:500 15px/1.4 var(--text);box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .pay-banner.ok{background:var(--green);color:var(--green-ink)}
 .pay-banner button{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;background:transparent;color:inherit;font-size:22px;cursor:pointer}
+.legal-ok{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--slate);line-height:1.45}
+.legal-ok input{margin-top:3px;width:18px;height:18px;accent-color:var(--green);flex:none}
+.legal-ok a{color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:480px){.row2{grid-template-columns:1fr}}
+.trk-steps{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.trk-steps li{position:relative;padding:0 0 16px 30px;color:var(--slate);font-size:14px}
+.trk-steps li::before{content:'';position:absolute;left:6px;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:var(--paper)}
+.trk-steps li:not(:last-child)::after{content:'';position:absolute;left:12px;top:18px;bottom:0;width:2px;background:var(--line)}
+.trk-steps li.ok::before{background:var(--green);border-color:var(--green)}
+.trk-steps li b{display:block;color:var(--ink);font-weight:600}
+footer a{color:inherit}
 .field{display:grid;gap:6px;min-width:0}
 .field input,.field textarea{width:100%;min-width:0}
 .field label{font-size:14px;font-weight:600}
@@ -408,7 +431,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 
 <header class="topbar"><div class="wrap top">
   <a class="brand" href="#inicio">Chapita</a>
-  <nav aria-label="Secciones"><a href="#por-dentro">Por dentro</a><a href="#disena">Diseña la tuya</a><a href="#coleccion">Colección</a><a href="#dudas">Preguntas</a></nav>
+  <nav aria-label="Secciones"><a href="#por-dentro">Por dentro</a><a href="#disena">Diseña la tuya</a><a href="#coleccion">Colección</a><a href="#dudas">Preguntas</a><a href="#mi-pedido" id="trkOpen">Mi pedido</a></nav>
   <a class="btn sm" href="#disena">Reservar</a>
 </div></header>
 
@@ -601,6 +624,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
     </div>
     <div class="field"><label>Unidades</label><div class="qty"><button type="button" id="q-minus" aria-label="Quitar una">−</button><output id="q-val">1</output><button type="button" id="q-plus" aria-label="Añadir una">+</button></div></div>
     <div class="field"><label for="r-notes">Notas</label><textarea id="r-notes" rows="2" maxlength="400" placeholder="Opcional"></textarea></div>
+    <label class="legal-ok"><input type="checkbox" id="r-legal" required> He leído y acepto la <a href="/privacidad.html" target="_blank" rel="noopener">política de privacidad</a> y las <a href="/condiciones.html" target="_blank" rel="noopener">condiciones de compra</a>.</label>
     <div class="total-line"><span>Total sin envío</span><b id="r-total">6,90 €</b></div>
     <p class="msg" id="r-msg" aria-live="polite"></p>
     <p class="muted" style="font-size:14px">Se abrirá WhatsApp con tu pedido escrito. Solo tienes que pulsar enviar. Te contestamos con la fecha de entrega y cómo pagar.</p>
@@ -610,6 +634,17 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 </dialog>
 
 
+<dialog id="trk" aria-labelledby="trk-t">
+  <form class="dlg" id="trkForm">
+    <h2 id="trk-t">Mi pedido</h2>
+    <p class="muted" style="margin:0">Escribe el código que te dimos al reservar y el teléfono con el que lo hiciste.</p>
+    <div class="row2"><div class="field"><label for="trkRef">Código del pedido</label><input id="trkRef" placeholder="CH-1234" autocomplete="off" required maxlength="8" style="text-transform:uppercase"></div>
+    <div class="field"><label for="trkTel">Teléfono</label><input id="trkTel" type="tel" autocomplete="tel" required maxlength="20"></div></div>
+    <p class="msg" id="trkMsg" aria-live="polite"></p>
+    <ol class="trk-steps" id="trkSteps" hidden></ol>
+    <div class="dlg-actions"><button class="btn ghost" type="button" id="trkClose">Cerrar</button><button class="btn" type="submit">Consultar</button></div>
+  </form>
+</dialog>
 <dialog id="orderView" aria-labelledby="ov-t">
   <div class="dlg">
     <h2 id="ov-t">Pedido <span id="ovCode"></span></h2>
@@ -640,7 +675,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 </section>
 <button class="owner-fab" type="button" id="ownerBtn" hidden>Reservas</button>
 
-<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><a href="mailto:garciatellomarc@gmail.com">garciatellomarc@gmail.com</a><span>Envíos: próximamente</span></div></footer>
+<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><a href="mailto:garciatellomarc@gmail.com">garciatellomarc@gmail.com</a><a href="#mi-pedido" class="trk-link">Consultar mi pedido</a><a href="/privacidad.html">Privacidad</a><a href="/condiciones.html">Condiciones de compra</a></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" integrity="sha384-wagZhIFgY4hD+7awjQjR4e2E294y6J2HSnd8eTNc15ZubTeQeVRZwhQJ+W6hnBsf" crossorigin="anonymous"></script>
@@ -779,6 +814,7 @@ $('resForm').addEventListener('submit',e=>e.preventDefault());
 const API_PAGAR='https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/pagar';
 fetch(API_PAGAR).then(r=>r.json()).then(j=>{if(j&&j.activo){$('r-pay').hidden=false;$('r-pay-note').hidden=false;$('r-wa').classList.add('ghost');}}).catch(()=>{});
 $('r-pay').addEventListener('click',async()=>{
+  if(!$('r-legal').checked){$('r-msg').className='msg err';$('r-msg').textContent='Acepta la política de privacidad y las condiciones para continuar.';$('r-legal').focus();return;}
   const o=currentOrder(), canal=canalSel(), email=$('r-email').value.trim();
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono.';return;}
   if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para recibir la confirmación.';$('r-email').focus();return;}
@@ -801,6 +837,7 @@ $('r-wa').addEventListener('click',async e=>{
   if(enviando) return;
   const o=currentOrder();
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono para que podamos confirmarte el pedido.';(o.nombre?$('r-tel'):$('r-name')).focus();return;}
+  if(!$('r-legal').checked){$('r-msg').className='msg err';$('r-msg').textContent='Acepta la política de privacidad y las condiciones para continuar.';$('r-legal').focus();return;}
   const canal=canalSel(), email=$('r-email').value.trim();
   if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para que te enviemos el resumen y los avisos.';$('r-email').focus();return;}
   enviando=true;$('r-wa').setAttribute('aria-busy','true');$('r-msg').className='msg';$('r-msg').textContent='Guardando tu reserva…';
@@ -818,6 +855,30 @@ $('r-wa').addEventListener('click',async e=>{
     }else{$('r-msg').className='msg err';$('r-msg').textContent=err.message;}
   }finally{enviando=false;$('r-wa').removeAttribute('aria-busy');}
 });
+
+
+// ---------- Mi pedido: el cliente consulta el estado con su código y su teléfono ----------
+(function(){
+  const API='https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/estado-pedido', d=$('trk');
+  const open=e=>{if(e)e.preventDefault();$('trkMsg').textContent='';d.showModal();$('trkRef').focus();};
+  document.querySelectorAll('a[href="#mi-pedido"]').forEach(a=>a.addEventListener('click',open));
+  if(location.hash==='#mi-pedido') setTimeout(open,300);
+  $('trkClose').onclick=()=>d.close();
+  const f=x=>x?new Date(x).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'';
+  $('trkForm').addEventListener('submit',async e=>{
+    e.preventDefault(); const m=$('trkMsg'), ol=$('trkSteps'); m.className='msg'; m.textContent='Buscando…'; ol.hidden=true;
+    try{
+      const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:$('trkRef').value,telefono:$('trkTel').value})});
+      const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'No se pudo consultar');
+      const malo=['rechazado','cancelado'].includes(j.estado), pag=j.pago==='pagado';
+      const pasos=[['Reserva recibida',f(j.creado),true],['Pago confirmado',pag?f(j.confirmado):'Pendiente: haz el Bizum con el concepto '+j.ref,pag],
+        ['En preparación','',['en_preparacion','enviado','completado'].includes(j.estado)],['Enviado',f(j.enviado)||(j.entrega_estimada?'Entrega estimada: como muy tarde el '+f(j.entrega_estimada):''),['enviado','completado'].includes(j.estado)],['Entregado',f(j.completado),j.estado==='completado']];
+      m.className=malo?'msg err':'msg ok';
+      m.textContent=malo?`El pedido ${j.ref} está ${j.estado}. Si tienes dudas, escríbenos.`:`${j.ref} · ${j.unidades} × ${j.producto} · ${j.colores} · ${(j.importe_cents/100).toLocaleString('es-ES',{minimumFractionDigits:2})} €`;
+      ol.innerHTML=''; if(!malo){pasos.forEach(([t,sub,ok])=>{const li=document.createElement('li');li.className=ok?'ok':'';const b=document.createElement('b');b.textContent=t;li.appendChild(b);if(sub){const sp=document.createElement('span');sp.textContent=sub;li.appendChild(sp);}ol.appendChild(li);});ol.hidden=false;}
+    }catch(err){m.className='msg err';m.textContent=err.message;}
+  });
+})();
 
 // ---------- Vista de un pedido (se abre desde el enlace "Ver diseño" del WhatsApp) ----------
 const fechaEntrega=()=>new Date(Date.now()+2*864e5).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
@@ -927,7 +988,7 @@ function human(){bubble('bot',`Claro. Escríbenos por WhatsApp (${WA_SHOW}) o po
 // Reserva guiada
 const PROMPT={nombre:'¡Genial! Vamos a reservar tu Chapa Huella. ¿Cómo te llamas?',tel:'¿Cuál es tu teléfono? Te confirmaremos el pedido por WhatsApp.',perro:'¿Cómo se llama tu perro? (si prefieres no decirlo, escribe «no»)',canal:'¿Cómo prefieres que te avisemos del pedido: por WhatsApp o por correo?',email:'Perfecto. Escríbeme tu correo.',uds:'¿Cuántas chapas quieres?'};
 function startReserve(){flow='nombre';draft={};bubble('bot',PROMPT.nombre);chips(['Cancelar']);}
-function summary(){return `Este es tu pedido:\n• ${draft.unidades} × Chapa Huella\n• Color principal: ${colorName(state.a)}\n• Color de fondo: ${colorName(state.b)}${draft.perro?'\n• Para '+draft.perro:''}\n• Nombre: ${draft.nombre} · Tel: ${draft.telefono}${draft.canal==='email'?'\n• Avisos por correo: '+draft.email:'\n• Avisos por WhatsApp'}\n• Total: ${eur(draft.unidades*PRICE)} (sin envío)\n\n¿Lo confirmo? Si quieres otros colores, dímelo (por ejemplo «azul con fondo blanco»).`;}
+function summary(){return `Este es tu pedido:\n• ${draft.unidades} × Chapa Huella\n• Color principal: ${colorName(state.a)}\n• Color de fondo: ${colorName(state.b)}${draft.perro?'\n• Para '+draft.perro:''}\n• Nombre: ${draft.nombre} · Tel: ${draft.telefono}${draft.canal==='email'?'\n• Avisos por correo: '+draft.email:'\n• Avisos por WhatsApp'}\n• Total: ${eur(draft.unidades*PRICE)} (sin envío)\n\n¿Lo confirmo? Al confirmar aceptas la política de privacidad y las condiciones de compra (enlaces al pie de la web). Si quieres otros colores, dímelo (por ejemplo «azul con fondo blanco»).`;}
 async function stepReserve(raw){
   const t=norm(raw).trim();
   if(has(t,'cancel','dejalo','no quiero','olvida')){flow=null;bubble('bot','Sin problema, he cancelado la reserva. ¿Te ayudo con algo más?');chips(MAIN_CHIPS);return;}
