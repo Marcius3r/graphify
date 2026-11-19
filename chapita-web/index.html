@@ -368,6 +368,17 @@ footer a{color:inherit}
 .seg{display:flex;gap:8px}.seg label{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;cursor:pointer;font-weight:500}
 .seg label:has(input:checked){border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}.seg input{accent-color:var(--green);width:18px;height:18px;min-height:0;padding:0;margin:0;border:0;flex:none;appearance:auto;-webkit-appearance:radio;background:none;box-shadow:none}
 .lbl{font-size:14px;font-weight:600}
+.brand .by{font:500 12px/1 var(--text);color:var(--slate);letter-spacing:.02em;margin-left:6px;vertical-align:middle}
+.encargos{scroll-margin-top:90px}
+.enc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:start}
+.enc-list{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:14px}
+.enc-list li{padding-left:26px;position:relative;color:var(--slate);font-size:15px;line-height:1.5}
+.enc-list li::before{content:'';position:absolute;left:4px;top:8px;width:10px;height:10px;border-radius:3px;background:var(--green);transform:rotate(45deg)}
+.enc-list b{display:block;color:var(--ink);font-weight:600}
+.enc-how{margin-top:22px;font-size:15px}
+.enc-form{display:grid;gap:14px;padding:26px;border-radius:24px;background:var(--paper);border:1px solid var(--line)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+@media (max-width:860px){.enc-grid{grid-template-columns:1fr;gap:28px}}
 .field{display:grid;gap:6px;min-width:0}
 .field input:not([type=radio]):not([type=checkbox]),.field textarea{width:100%;min-width:0}
 .field label{font-size:14px;font-weight:600}
@@ -434,8 +445,8 @@ footer a{color:inherit}
 </style>
 
 <header class="topbar"><div class="wrap top">
-  <a class="brand" href="#inicio">Chapita</a>
-  <nav aria-label="Secciones"><a href="#por-dentro">Por dentro</a><a href="#disena">Diseña la tuya</a><a href="#coleccion">Colección</a><a href="#dudas">Preguntas</a><a href="#mi-pedido" id="trkOpen">Mi pedido</a></nav>
+  <a class="brand" href="#inicio">Chapita <small class="by">by VoxelHub</small></a>
+  <nav aria-label="Secciones"><a href="#por-dentro">Por dentro</a><a href="#disena">Diseña la tuya</a><a href="#coleccion">Colección</a><a href="#encargos">Encargos</a><a href="#dudas">Preguntas</a><a href="#mi-pedido" id="trkOpen">Mi pedido</a></nav>
   <a class="btn sm" href="#disena">Reservar</a>
 </div></header>
 
@@ -598,6 +609,35 @@ footer a{color:inherit}
   </ol>
 </section>
 
+<section class="wrap sec encargos" id="encargos">
+  <div class="enc-grid">
+    <div class="enc-copy">
+      <h2>¿Tienes una idea? La imprimimos</h2>
+      <p class="sub">En <b>VoxelHub</b> diseñamos e imprimimos en 3D piezas por encargo, en plástico de color sólido y con acabados cuidados.</p>
+      <ul class="enc-list">
+        <li><b>Regalos con nombre</b>Llaveros, placas y detalles personalizados.</li>
+        <li><b>Figuras y decoración</b>Para casa, eventos o colecciones.</li>
+        <li><b>Piezas y repuestos</b>Soportes, clips, tapas y piezas que ya no se venden.</li>
+        <li><b>Prototipos y pequeñas tiradas</b>Para tiendas, marcas y emprendedores.</li>
+      </ul>
+      <p class="muted enc-how">Nos cuentas tu idea, te respondemos con precio y plazo en menos de 24 horas, lo imprimimos y te lo entregamos. Si tienes una foto o un dibujo, mándanoslo por <a href="https://wa.me/34627157395?text=Hola%20VoxelHub%2C%20quiero%20un%20encargo%3A" target="_blank" rel="noopener">WhatsApp</a>.</p>
+    </div>
+    <form class="enc-form" id="encForm" novalidate>
+      <div class="field"><label for="e-nombre">Nombre</label><input id="e-nombre" autocomplete="name" maxlength="80" required></div>
+      <div class="field"><label for="e-contacto">Teléfono o correo</label><input id="e-contacto" autocomplete="email" maxlength="120" required placeholder="Para enviarte el presupuesto"></div>
+      <div class="field"><label for="e-idea">¿Qué quieres que imprimamos?</label><textarea id="e-idea" rows="4" maxlength="2000" required placeholder="Por ejemplo: un llavero con el nombre «Lucía» en rosa y blanco"></textarea></div>
+      <div class="two"><div class="field"><label for="e-medidas">Medidas aproximadas</label><input id="e-medidas" maxlength="200" placeholder="Opcional"></div>
+      <div class="field"><label for="e-color">Color</label><input id="e-color" maxlength="120" placeholder="Opcional"></div></div>
+      <div class="two"><div class="field"><label for="e-cantidad">Cantidad</label><input id="e-cantidad" type="number" min="1" max="1000" value="1"></div>
+      <div class="field"><label for="e-fecha">¿Para cuándo?</label><input id="e-fecha" maxlength="40" placeholder="Opcional"></div></div>
+      <input type="text" id="e-web" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+      <label class="legal-ok"><input type="checkbox" id="e-ok"> Acepto la <a href="/privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</label>
+      <p class="msg" id="e-msg" aria-live="polite"></p>
+      <button class="btn" type="submit" id="e-send">Pedir presupuesto</button>
+    </form>
+  </div>
+</section>
+
 <section class="wrap sec" id="dudas" style="padding-top:0">
   <h2>Preguntas</h2>
   <div class="faq">
@@ -681,7 +721,7 @@ footer a{color:inherit}
 </section>
 <button class="owner-fab" type="button" id="ownerBtn" hidden>Reservas</button>
 
-<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><a href="mailto:garciatellomarc@gmail.com">garciatellomarc@gmail.com</a><a href="#mi-pedido" class="trk-link">Consultar mi pedido</a><a href="/privacidad.html">Privacidad</a><a href="/condiciones.html">Condiciones de compra</a></div></footer>
+<footer><div class="wrap"><span><b>VoxelHub · Impresiones 3D</b> · Chapita, chapas NFC para perros</span><a href="mailto:garciatellomarc@gmail.com">garciatellomarc@gmail.com</a><a href="#mi-pedido" class="trk-link">Consultar mi pedido</a><a href="/privacidad.html">Privacidad</a><a href="/condiciones.html">Condiciones de compra</a></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" integrity="sha384-wagZhIFgY4hD+7awjQjR4e2E294y6J2HSnd8eTNc15ZubTeQeVRZwhQJ+W6hnBsf" crossorigin="anonymous"></script>
@@ -891,6 +931,20 @@ $('r-wa').addEventListener('click',async e=>{
     }catch(err){m.className='msg err';m.textContent=err.message;}
   });
 })();
+
+
+// ---------- Encargos personalizados (VoxelHub) ----------
+$('encForm').addEventListener('submit',async e=>{
+  e.preventDefault(); const m=$('e-msg'), b=$('e-send'), v=id=>$(id).value.trim();
+  if(!v('e-nombre')||!v('e-contacto')||v('e-idea').length<10){m.className='msg err';m.textContent='Escribe tu nombre, cómo contactarte y qué quieres que imprimamos.';return;}
+  if(!$('e-ok').checked){m.className='msg err';m.textContent='Acepta la política de privacidad para enviar el encargo.';return;}
+  b.disabled=true;m.className='msg';m.textContent='Enviando…';
+  try{const r=await fetch('https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/encargo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:v('e-nombre'),contacto:v('e-contacto'),idea:v('e-idea'),medidas:v('e-medidas'),color:v('e-color'),cantidad:v('e-cantidad'),fecha:v('e-fecha'),web:$('e-web').value,acepto:true})});
+    const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'No se pudo enviar');
+    m.className='msg ok';m.textContent=`¡Recibido! Tu encargo ${j.ref||''} ya nos ha llegado. Te contestamos con precio y plazo en menos de 24 horas.`;$('encForm').reset();
+  }catch(err){m.className='msg err';m.textContent=err.message+'. También puedes escribirnos por WhatsApp.';}
+  b.disabled=false;
+});
 
 // ---------- Vista de un pedido (se abre desde el enlace "Ver diseño" del WhatsApp) ----------
 const fechaEntrega=()=>new Date(Date.now()+2*864e5).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
