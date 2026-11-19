@@ -200,7 +200,7 @@ dialog::backdrop{background:rgba(10,14,12,.5)}
         <div class="chat">
           <div class="chat-h"><div><b id="chName"></b><div class="muted small" id="chSub"></div></div><button class="btn ghost" type="button" id="chBack" style="min-height:40px">Volver</button></div>
           <div class="log" id="chLog"></div>
-          <div class="sug" id="chAi"><button type="button" id="chSuggest">Que la IA me proponga una respuesta</button></div>
+          <div class="sug" id="chAi"><button type="button" id="chSuggest">Proponer una respuesta</button></div>
           <form class="compose" id="chForm"><textarea id="chText" rows="1" placeholder="Escribe tu respuesta" aria-label="Respuesta"></textarea><button class="btn" type="submit">Enviar</button></form>
         </div>
       </div>
@@ -214,7 +214,7 @@ dialog::backdrop{background:rgba(10,14,12,.5)}
           <button type="button">¿Cuántas reservas hemos recibido esta semana?</button>
           <button type="button">Busca el pedido de Toby</button>
         </div>
-        <form class="compose" id="iaForm"><textarea id="iaText" rows="1" placeholder="Escribe a la IA de Chapita" aria-label="Mensaje para la IA"></textarea><button class="btn" type="submit" id="iaBtn">Enviar</button></form>
+        <form class="compose" id="iaForm"><textarea id="iaText" rows="1" placeholder="Escribe una orden" aria-label="Orden para el asistente"></textarea><button class="btn" type="submit" id="iaBtn">Enviar</button></form>
       </div>
     </section>
 
@@ -250,7 +250,7 @@ const cName = (k) => COLORS[k]?.[0] ?? k;
 const EST = { nueva_reserva:"Nueva reserva", pendiente_revision:"Pendiente de revisión", aceptado:"Aceptado", rechazado:"Rechazado", pendiente_pago:"Pendiente de pago", pago_confirmado:"Pago confirmado", en_preparacion:"En preparación", enviado:"Enviado", completado:"Completado", cancelado:"Cancelado", incidencia:"Incidencia" };
 const badgeCls = (o) => ["rechazado","cancelado","incidencia"].includes(o.estado) ? "bad" : ["pago_confirmado","completado","enviado"].includes(o.estado) ? "ok" : "";
 
-let ORDERS = [], MSGS = [], NOTIFS = [], ADMIN = "", filtro = "todos", convSel = null, iaHist = [];
+let ORDERS = [], MSGS = [], NOTIFS = [], ADMIN = "", filtro = "todos", convSel = null;
 
 // ---------- toast / diálogo ----------
 let toastT; function toast(t) { $("toast").textContent = t; $("toast").hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $("toast").hidden = true, 3200); }
@@ -308,7 +308,7 @@ function go(t) {
   for (const [x] of TABS) $("t" + x).hidden = x !== t;
   document.querySelectorAll(".nav-b").forEach((b) => b.setAttribute("aria-current", b.dataset.t === t ? "page" : "false"));
   if (t === "Ajustes") renderSettings();
-  if (t === "IA" && !iaHist.length) iaWelcome();
+  if (t === "IA" && !$("iaLog").children.length) iaWelcome();
   try { localStorage.setItem("chapita-tab", t); } catch {}
 }
 
@@ -455,51 +455,99 @@ $("chForm").addEventListener("submit", async (e) => {
   const o = ORDERS.find((x) => x.cliente_telefono === convSel);
   try { await api("enviar_mensaje", o ? { order_id: o.id, texto } : { telefono: convSel, texto }); $("chText").value = ""; toast("Mensaje en cola de envío"); setTimeout(loadAll, 1500); } catch (er) { toast("No se pudo enviar: " + er.message); }
 });
-$("chSuggest").onclick = async () => {
-  const c = convList().find((x) => x.tel === convSel); if (!c) return;
-  $("chSuggest").disabled = true; $("chSuggest").textContent = "Pensando…";
-  try {
-    const r = await iaCall([{ role: "user", content: `Redacta (sin enviarla) una respuesta breve y cercana para el cliente con teléfono ${convSel}${c.order ? ", pedido " + c.order.ref : ""}. Consulta su conversación y su pedido antes. Devuelve solo el texto del mensaje.` }]);
-    $("chText").value = r.respuesta || ""; $("chText").focus();
-  } catch (e) { toast(e.message); }
-  $("chSuggest").disabled = false; $("chSuggest").textContent = "Que la IA me proponga una respuesta";
-};
-
-// ---------- Chat IA ----------
-async function iaCall(mensajes) {
-  const { data, error } = await sb.functions.invoke("admin-ia", { body: { mensajes } });
-  if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch {} throw new Error(m); }
-  return data;
+function plantilla(o, nombre) {
+  const n = (nombre || o?.cliente_nombre || "").split(" ")[0]; const h = n ? `¡Hola ${n}! ` : "¡Hola! ";
+  if (!o) return h + "Gracias por escribir a Chapita 🐾 ¿En qué te puedo ayudar?";
+  const r = o.ref, tot = eur(o.importe_cents);
+  if (o.pago !== "pagado" && !["cancelado", "rechazado"].includes(o.estado)) return `${h}Tu pedido ${r} está reservado 🐾 Para empezar a fabricarlo, haz un Bizum de ${tot} al 627 157 395 con el concepto ${r}. En cuanto lo recibamos te confirmamos la fecha de entrega.`;
+  return ({ pago_confirmado: `${h}Hemos recibido tu pago ✅ Tu pedido ${r} entra en producción y te llegará como mucho en 2 días.`,
+    en_preparacion: `${h}Tu pedido ${r} ya se está fabricando 🛠️ Te avisamos en cuanto salga.`,
+    enviado: `${h}¡Tu pedido ${r} ya está en camino! 📦`,
+    completado: `${h}Esperamos que tu perro luzca su Chapita 🐶 ¡Gracias por confiar en nosotros!`,
+    rechazado: `${h}Sentimos no poder hacer tu pedido ${r}${o.motivo ? " (" + o.motivo + ")" : ""}. Si quieres, te ayudamos a buscar otra opción.`,
+    cancelado: `${h}Tu pedido ${r} ha quedado cancelado. Si quieres hacer otro, aquí estamos.` })[o.estado] || `${h}Sobre tu pedido ${r}: `;
 }
+$("chSuggest").textContent = "Proponer una respuesta";
+$("chSuggest").onclick = () => { const c = convList().find((x) => x.tel === convSel); if (!c) return; $("chText").value = plantilla(c.order, c.nombre); $("chText").focus(); };
+
+// ---------- Asistente del panel (funciona solo, con tus datos reales; sin IA externa ni créditos) ----------
+const nrm = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 function iaBubble(cls, html) { const d = document.createElement("div"); d.className = "bub " + cls; d.innerHTML = html; $("iaLog").appendChild(d); $("iaLog").scrollTop = $("iaLog").scrollHeight; return d; }
-function iaWelcome() { iaBubble("in", "Hola. Soy la IA de Chapita. Puedo buscar pedidos, contarte cómo va el negocio y enviar mensajes a tus clientes cuando me lo pidas. Para confirmar pagos, cancelar o rechazar te pediré que lo confirmes tú."); }
-async function iaSend(texto) {
-  if (!texto.trim()) return; iaBubble("out", esc(texto)); iaHist.push({ role: "user", content: texto });
-  $("iaText").value = ""; $("iaBtn").disabled = true; const wait = iaBubble("in", "Pensando…");
-  try {
-    const r = await iaCall(iaHist);
-    wait.innerHTML = esc(r.respuesta); iaHist.push({ role: "assistant", content: r.respuesta });
-    for (const a of r.acciones || []) iaBubble("in", "✓ " + esc(a));
-    for (const p of r.pendientes || []) {
-      const box = document.createElement("div"); box.className = "prop";
-      box.innerHTML = `<b>Necesita tu confirmación</b><span>${esc(p.etiqueta)}${p.motivo ? " · " + esc(p.motivo) : ""}</span><div class="acts"><button class="btn ghost" type="button">Descartar</button><button class="btn" type="button">Confirmar</button></div>`;
-      const [no, si] = box.querySelectorAll("button");
-      no.onclick = () => { box.remove(); };
-      si.onclick = async () => { si.disabled = true; try {
-        if (p.accion === "confirmar_pago") await api("confirmar_pago", { order_id: p.order_id });
-        else if (p.accion === "aceptar") await api("aceptar", { order_id: p.order_id });
-        else if (p.accion === "rechazar") await api("rechazar", { order_id: p.order_id, motivo: p.motivo || "" });
-        else await api("cambiar_estado", { order_id: p.order_id, estado: p.estado, motivo: p.motivo || undefined });
-        box.innerHTML = `<b>Hecho</b><span>${esc(p.etiqueta)}</span>`; loadAll();
-      } catch (e) { toast("No se pudo: " + e.message); si.disabled = false; } };
-      $("iaLog").appendChild(box);
-    }
-    if (r.acciones?.length) setTimeout(loadAll, 1500);
-  } catch (e) { wait.innerHTML = esc(e.message); }
-  $("iaBtn").disabled = false; $("iaLog").scrollTop = $("iaLog").scrollHeight;
+const AYUDA = `Puedes pedirme, por ejemplo:<br>• <b>pendientes de pago</b> · <b>reservas nuevas</b> · <b>en preparación</b><br>• <b>resumen</b>, <b>hoy</b>, <b>esta semana</b> o <b>este mes</b><br>• <b>busca Toby</b>, <b>busca 612345678</b> o <b>CH-1234</b><br>• <b>confirma pago CH-1234</b> · <b>acepta CH-1234</b> · <b>rechaza CH-1234 sin stock</b><br>• <b>enviado CH-1234</b> · <b>completado CH-1234</b> · <b>cancela CH-1234</b><br>• <b>escribe a CH-1234: tu mensaje</b><br>• <b>mensajes sin leer</b>`;
+function iaWelcome() { iaBubble("in", "Hola. Soy el asistente de Chapita: consulto tus pedidos reales y hago cambios cuando me lo pides. Antes de confirmar pagos, rechazar, cancelar o escribir a un cliente te pediré que lo confirmes.<br><br>" + AYUDA); }
+function iaList(titulo, list) {
+  const d = iaBubble("in", `<b>${esc(titulo)}</b>`);
+  if (!list.length) { d.insertAdjacentHTML("beforeend", "<br>Ninguno."); return; }
+  list.slice(0, 15).forEach((o) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn ghost"; b.style.cssText = "display:block;width:100%;text-align:left;margin-top:8px";
+    b.textContent = `${o.ref} · ${o.cliente_nombre} · ${o.unidades} × ${eur(o.importe_cents)} · ${EST[o.estado] || o.estado}${o.pago === "pagado" ? " · pagado" : ""}`; b.onclick = () => openOrder(o.id); d.appendChild(b); });
+  if (list.length > 15) d.insertAdjacentHTML("beforeend", `<br><span class="muted small">Y ${list.length - 15} más: míralos en Pedidos.</span>`);
+}
+const activo = (o) => !["cancelado", "rechazado"].includes(o.estado);
+function resumen(desde, etiqueta) {
+  const l = ORDERS.filter((o) => !desde || new Date(o.created_at) >= desde);
+  const pag = l.filter((o) => o.pago === "pagado"), pend = l.filter((o) => o.pago !== "pagado" && activo(o));
+  const sum = (a) => a.reduce((s, o) => s + (o.importe_cents || 0), 0), uds = (a) => a.reduce((s, o) => s + (o.unidades || 0), 0);
+  iaBubble("in", `<b>${esc(etiqueta)}</b><br>Reservas: ${l.length} (${uds(l)} chapas)<br>Cobrado: ${eur(sum(pag))} en ${pag.length} pedidos<br>Pendiente de cobro: ${eur(sum(pend))} en ${pend.length} pedidos<br>Cancelados o rechazados: ${l.filter((o) => !activo(o)).length}`);
+}
+function buscarRef(t) { const m = t.match(/ch[-\s]?(\d{4})/i); return m ? ORDERS.find((o) => o.ref.toUpperCase() === "CH-" + m[1]) : null; }
+function propuesta(texto, fn, ok) {
+  const box = document.createElement("div"); box.className = "prop";
+  box.innerHTML = `<b>Necesita tu confirmación</b><span>${texto}</span><div class="acts"><button class="btn ghost" type="button">Descartar</button><button class="btn" type="button">Confirmar</button></div>`;
+  const [no, si] = box.querySelectorAll("button");
+  no.onclick = () => box.remove();
+  si.onclick = async () => { si.disabled = true; try { await fn(); box.innerHTML = `<b>Hecho</b><span>${esc(ok)}</span>`; loadAll(); } catch (e) { toast("No se pudo: " + e.message); si.disabled = false; } };
+  $("iaLog").appendChild(box); $("iaLog").scrollTop = $("iaLog").scrollHeight;
+}
+function iaSend(texto) {
+  texto = String(texto || "").trim(); if (!texto) return; iaBubble("out", esc(texto)); $("iaText").value = "";
+  const t = nrm(texto), o = buscarRef(texto), now = new Date();
+  const has = (...w) => w.some((x) => t.includes(x));
+  // Acciones sobre un pedido concreto
+  if (o && has("escribe", "manda", "envia mensaje", "enviale", "dile", "mensaje a")) {
+    const msg = texto.split(/:\s*/).slice(1).join(": ").trim() || texto.replace(/^.*?ch[-\s]?\d{4}\s*/i, "").trim();
+    if (!msg) return iaBubble("in", `¿Qué le escribo a ${esc(o.cliente_nombre)}? Usa: <b>escribe a ${o.ref}: tu mensaje</b>`);
+    return propuesta(`Enviar a ${esc(o.cliente_nombre)} (${o.ref}) por WhatsApp:<br>«${esc(msg)}»`, () => api("enviar_mensaje", { order_id: o.id, texto: msg }), "Mensaje en cola de envío");
+  }
+  if (o && has("confirma") && has("pago", "bizum", "pagado")) {
+    if (o.pago === "pagado") return iaBubble("in", `${o.ref} ya está pagado.`);
+    return propuesta(`¿Has comprobado en tu banco un Bizum de <b>${eur(o.importe_cents)}</b> con el concepto <b>${o.ref}</b>? Se marcará como pagado y se avisará a ${esc(o.cliente_nombre)}.`, () => api("confirmar_pago", { order_id: o.id }), `Pago de ${o.ref} confirmado`);
+  }
+  if (o && has("rechaza")) {
+    const motivo = texto.replace(/^.*?ch[-\s]?\d{4}\s*[:,-]?\s*/i, "").replace(/^(por|porque)\s+/i, "").trim();
+    if (!motivo) return iaBubble("in", `Dime el motivo: <b>rechaza ${o.ref} sin stock de ese color</b>`);
+    return propuesta(`Rechazar ${o.ref} de ${esc(o.cliente_nombre)}. Motivo: «${esc(motivo)}». Se le avisará por WhatsApp.`, () => api("rechazar", { order_id: o.id, motivo }), `${o.ref} rechazado`);
+  }
+  if (o && has("acepta")) return propuesta(`Aceptar ${o.ref} de ${esc(o.cliente_nombre)} y avisarle (aceptar no confirma el pago).`, () => api("aceptar", { order_id: o.id }), `${o.ref} aceptado`);
+  const est = has("cancela") ? "cancelado" : has("preparacion", "fabricando") ? "en_preparacion" : has("enviado", "en camino") ? "enviado" : has("completado", "entregado") ? "completado" : null;
+  if (o && est) { const motivo = est === "cancelado" ? texto.replace(/^.*?ch[-\s]?\d{4}\s*[:,-]?\s*/i, "").trim() : "";
+    return propuesta(`Pasar ${o.ref} de ${esc(o.cliente_nombre)} a «${EST[est]}» y avisarle por WhatsApp.${motivo ? " Motivo: «" + esc(motivo) + "»" : ""}`, () => api("cambiar_estado", { order_id: o.id, estado: est, motivo: motivo || undefined }), `${o.ref} → ${EST[est]}`); }
+  if (o) { iaList(`Pedido ${o.ref}`, [o]); return; }
+  // Consultas
+  if (has("ayuda", "que puedes", "comandos", "como funciona")) return iaBubble("in", AYUDA);
+  if (has("sin leer", "mensajes")) { const cs = convList().filter((c) => c.unread); return iaBubble("in", cs.length ? `<b>Conversaciones con mensajes sin leer</b><br>${cs.map((c) => `• ${esc(c.nombre)} (${c.unread}): ${esc(c.last.texto.slice(0, 80))}`).join("<br>")}` : "No tienes mensajes sin leer."); }
+  if (has("pendiente") && has("pago", "cobr", "bizum")) return iaList("Pendientes de pago", ORDERS.filter((o) => o.pago !== "pagado" && activo(o)));
+  if (has("nuev")) return iaList("Reservas nuevas", ORDERS.filter((o) => o.estado === "nueva_reserva"));
+  if (has("revis")) return iaList("Pendientes de revisar", ORDERS.filter((o) => o.estado === "pendiente_revision"));
+  if (has("preparacion", "fabricar")) return iaList("En preparación", ORDERS.filter((o) => o.estado === "en_preparacion"));
+  if (has("enviad")) return iaList("Enviados", ORDERS.filter((o) => o.estado === "enviado"));
+  if (has("pagad", "cobrad")) return iaList("Pagados", ORDERS.filter((o) => o.pago === "pagado"));
+  if (has("incidencia")) return iaList("Incidencias", ORDERS.filter((o) => o.estado === "incidencia"));
+  if (has("hoy")) return resumen(new Date(now.getFullYear(), now.getMonth(), now.getDate()), "Hoy");
+  if (has("ayer")) { const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1); const l = ORDERS.filter((o) => { const c = new Date(o.created_at); return c >= d && c < new Date(d.getTime() + 864e5); }); return iaList("Reservas de ayer", l); }
+  if (has("semana")) { const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return resumen(d, "Esta semana (desde el lunes)"); }
+  if (has("mes")) return resumen(new Date(now.getFullYear(), now.getMonth(), 1), "Este mes");
+  if (has("resumen", "como va", "estadistica", "total", "ventas", "ingres", "cuant")) return resumen(null, "Desde el principio");
+  if (has("ultim")) return iaList("Últimas reservas", ORDERS.slice(0, 10));
+  // Búsqueda por nombre, mascota o teléfono
+  const q = t.replace(/^(busca|buscar|encuentra|el pedido de|pedido de|pedidos de|de)\s+/g, "").replace(/^(el pedido de|pedido de|de)\s+/, "").trim(), qd = q.replace(/\D/g, "");
+  const hits = q.length >= 2 ? ORDERS.filter((o) => [o.cliente_nombre, o.perro, o.ref].some((v) => nrm(v).includes(q)) || (qd.length >= 3 && String(o.cliente_telefono).includes(qd))) : [];
+  if (hits.length) return iaList(`Resultados para «${q}»`, hits);
+  iaBubble("in", `No he encontrado nada para «${esc(texto)}».<br><br>` + AYUDA);
 }
 $("iaForm").addEventListener("submit", (e) => { e.preventDefault(); iaSend($("iaText").value); });
+$("iaSug").innerHTML = ["Pendientes de pago", "Resumen de esta semana", "Reservas nuevas", "Ayuda"].map((x) => `<button type="button">${x}</button>`).join("");
 $("iaSug").querySelectorAll("button").forEach((b) => b.onclick = () => iaSend(b.textContent));
+$("iaText").placeholder = "Ej.: pendientes de pago, busca Toby, confirma pago CH-1234";
 for (const id of ["iaText", "chText"]) $(id).addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia("(pointer:fine)").matches) { e.preventDefault(); $(id).form.requestSubmit(); } });
 
 // ---------- Ajustes ----------
@@ -513,7 +561,7 @@ async function renderSettings() {
     <div class="setrow"><div><b>Cuenta</b><div class="muted small">${esc(ADMIN)}</div></div><button class="btn ghost" type="button" id="sOut">Cerrar sesión</button></div>
     <div class="setrow"><div><b>WhatsApp Business</b><div class="muted small">Envío y recepción de mensajes</div></div>${st(c.whatsapp && c.firma_whatsapp)}</div>
     <div class="setrow"><div style="min-width:0"><b>Webhook para Meta</b><div class="muted small">URL de devolución de llamada</div><code>${esc(c.webhook_url)}</code><div class="muted small" style="margin-top:6px">Identificador de verificación</div><code>${esc(c.verify_token)}</code></div></div>
-    <div class="setrow"><div><b>Chat IA</b><div class="muted small">API de Claude</div></div>${st(c.ia)}</div>
+    <div class="setrow"><div><b>Asistente</b><div class="muted small">Funciona solo, sin IA de pago ni créditos</div></div>${st(true)}</div>
     <div class="setrow"><div><b>Correo alternativo</b><div class="muted small">Si WhatsApp falla y el cliente dejó su correo</div></div>${st(c.email)}</div>
     <div class="setrow"><div><b>Avisos en este dispositivo</b><div class="muted small">Con la app abierta o en segundo plano</div></div>${notifOk ? st(true) : `<button class="btn ghost" type="button" id="sNotif">Activar avisos</button>`}</div>
     <div class="setrow"><div><b>Bizum</b><div class="muted small">Número que ve el cliente</div></div><code>${esc(c.bizum)}</code></div>`;
