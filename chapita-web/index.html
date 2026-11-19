@@ -132,16 +132,27 @@ a{color:inherit}
 .film .wrap{padding-block:104px}
 .film h2{font-size:clamp(40px,5vw,66px);max-width:16ch}
 .film .sub{color:var(--film-dim);max-width:46ch;margin-top:18px}
-.reels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:56px}
-@media (max-width:900px){.reels{grid-template-columns:1fr}}
-.reel{min-width:0}
-.frame{position:relative;aspect-ratio:4/5;border-radius:18px;border:1px solid var(--film-line);background:radial-gradient(80% 60% at 50% 40%,#283034,#151a1c);overflow:hidden;max-width:100%}
-.frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.frame .wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--film-dim);font-size:14px}
-.frame .wait svg{width:46px;height:46px}
-.reel h3{font-size:30px;margin-top:20px;display:flex;gap:12px;align-items:baseline}
-.reel h3 span{font-family:var(--text);font-size:14px;color:var(--film-dim)}
-.reel p{color:var(--film-dim);font-size:16px;margin-top:6px;max-width:36ch}
+
+/* Chapa por dentro (cutaway 3D) */
+.cut{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:center;margin-top:48px}
+.cut-stage{position:relative;aspect-ratio:1/1;border-radius:24px;background:radial-gradient(120% 90% at 50% 35%,#2a3236 0%,#171c1e 70%);overflow:hidden;touch-action:none}
+.cut-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.cut-stage canvas:active{cursor:grabbing}
+.cut-dots{position:absolute;inset:0;pointer-events:none}
+.cut-dots span{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--film-ink);color:var(--film);font:600 13px/26px var(--text);text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.35);transition:opacity .25s}
+.cut-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:var(--film-dim);font-size:13px;pointer-events:none;transition:opacity .4s}
+.cut-modes{display:flex;gap:8px;flex-wrap:wrap}
+.cut-modes button{font:500 14px/1 var(--text);padding:11px 16px;border-radius:999px;border:1px solid var(--film-line);background:transparent;color:var(--film-ink);cursor:pointer}
+.cut-modes button[aria-pressed="true"]{background:var(--film-ink);color:var(--film);border-color:var(--film-ink)}
+.cut-range{display:flex;flex-direction:column;gap:10px;margin-top:22px;color:var(--film-dim);font-size:14px}
+.cut-range input{width:100%;accent-color:var(--film-ink)}
+.cut-list{list-style:none;counter-reset:c;margin:26px 0 0;padding:0;display:grid;gap:14px}
+.cut-list li{counter-increment:c;position:relative;padding-left:40px;color:var(--film-dim);font-size:15px;line-height:1.5}
+.cut-list li::before{content:counter(c);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;background:var(--film-ink);color:var(--film);font:600 13px/26px var(--text);text-align:center}
+.cut-list b{display:block;color:var(--film-ink);font-weight:600}
+.cut-note{margin-top:22px;color:var(--film-dim);font-size:13px;line-height:1.55;border-top:1px solid var(--film-line);padding-top:16px}
+.cut.no3d{grid-template-columns:1fr}.cut.no3d .cut-stage,.cut.no3d .cut-modes,.cut.no3d .cut-range{display:none}
+@media (max-width:860px){.cut{grid-template-columns:1fr;gap:28px}}
 
 /* sections */
 .sec{padding-block:104px}
@@ -307,10 +318,23 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
   <div class="wrap">
     <h2>Así se hace por dentro</h2>
     <p class="sub">Plástico de color sólido impreso en 3D, el chip NFC dentro y una capa de resina transparente que lo sella todo.</p>
-    <div class="reels">
-      <article class="reel"><div class="frame" data-video="abrir"><div class="wait"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1"><circle cx="23" cy="23" r="22"/><path d="M19 15l12 8-12 8z"/></svg>Vídeo en preparación</div></div><h3><span>1</span>Se abre</h3><p>La chapa se separa en capas y aparece el chip en el centro.</p></article>
-      <article class="reel"><div class="frame" data-video="montar"><div class="wait"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1"><circle cx="23" cy="23" r="22"/><path d="M19 15l12 8-12 8z"/></svg>Vídeo en preparación</div></div><h3><span>2</span>Se monta</h3><p>La capa superior cubre el chip y la resina transparente lo sella.</p></article>
-      <article class="reel"><div class="frame" data-video="escanear"><div class="wait"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1"><circle cx="23" cy="23" r="22"/><path d="M19 15l12 8-12 8z"/></svg>Vídeo en preparación</div></div><h3><span>3</span>Se escanea</h3><p>Un móvil se acerca y aparecen los datos del perro y el teléfono de su familia.</p></article>
+    <div class="cut" id="cut">
+      <div class="cut-stage" id="cutStage"><canvas id="cut3d" aria-label="Chapa NFC por dentro, en 3D. Arrástrala para girarla."></canvas><div class="cut-dots" id="cutDots" aria-hidden="true"></div><p class="cut-hint" id="cutHint" hidden>Arrastra para girarla</p></div>
+      <div class="cut-side">
+        <div class="cut-modes" role="group" aria-label="Cómo verla">
+          <button type="button" data-m="0" aria-pressed="false">Cerrada</button><button type="button" data-m="1" aria-pressed="true">Por capas</button><button type="button" data-m="2" aria-pressed="false">En corte</button>
+        </div>
+        <label class="cut-range" for="cutSep">Separar capas<input type="range" id="cutSep" min="0" max="100" value="100"></label>
+        <ol class="cut-list">
+          <li><b>Resina transparente</b>Una capa fina que sella la chapa, la protege del agua y le da brillo.</li>
+          <li><b>Cara delantera</b>La huella y el borde en el color principal; el fondo, en el segundo color.</li>
+          <li><b>Cuerpo impreso en 3D</b>Plástico de color sólido, con un hueco en el centro para el chip.</li>
+          <li><b>Chip NFC con su antena</b>Una pegatina NFC muy fina: un microchip y una antena de cobre en espiral. No lleva batería; se activa con la energía del móvil al acercarlo.</li>
+          <li><b>Cara trasera</b>El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.</li>
+          <li><b>Anilla</b>La única pieza de metal, para colgarla del collar.</li>
+        </ol>
+        <p class="cut-note">Esquema orientativo: hemos separado y engrosado las capas para que se vean bien. Cómo se lee: al acercar el móvil a la chapa, la antena recibe su energía, el chip responde y en el móvil se abre la ficha del perro con el teléfono de su familia.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -958,11 +982,128 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     });
   });
 
-  window.tag3d={colors,face};
+  window.chapaGeo={outline,disc,ring,paw,nfc,ext,R,T,HOLE_Y,RH};
+  window.tag3d={colors:(a,b)=>{colors(a,b);if(window.cut3d)window.cut3d.colors(a,b);},face};
   colors(CMAP[state.a][2],CMAP[state.b][2]);
 })();
 </script>
 
+
+<script>
+// ---------- Chapa por dentro: vista por capas y en corte (Three.js) ----------
+(function(){
+  const box=document.getElementById('cut');
+  const G=window.chapaGeo;
+  if(typeof THREE==='undefined'||!THREE.OrbitControls||!G){box.classList.add('no3d');return;}
+  const stage=document.getElementById('cutStage'), cv=document.getElementById('cut3d');
+  let renderer; try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){box.classList.add('no3d');return;}
+  if(!renderer.getContext()){box.classList.add('no3d');return;}
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  renderer.outputEncoding=THREE.sRGBEncoding; renderer.setClearColor(0x000000,0); renderer.localClippingEnabled=true;
+  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(30,1,0.1,100);
+  (function(){ // estudio para los reflejos
+    const pm=new THREE.PMREMGenerator(renderer), sc=new THREE.Scene();
+    const g=new THREE.SphereGeometry(20,32,16),pos=g.attributes.position,col=[];
+    for(let i=0;i<pos.count;i++){const y=pos.getY(i)/20,v=0.18+0.45*(y*0.5+0.5);col.push(v,v,v);}
+    g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+    sc.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide})));
+    const b=(w,h,x,y,z,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(i,i,i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);sc.add(m);};
+    b(14,4,0,10,8,6);b(4,12,-12,2,6,3);b(4,12,12,1,-4,2.4);
+    scene.environment=pm.fromScene(sc,0.03).texture;pm.dispose();
+  })();
+  const k1=new THREE.DirectionalLight(0xffffff,1.5);k1.position.set(4,5,6);scene.add(k1);
+  const k2=new THREE.DirectionalLight(0xffffff,0.8);k2.position.set(-5,2,-6);scene.add(k2);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x707a76,0.4));
+
+  // Corte: un plano vertical que quita la mitad derecha
+  const clipA=new THREE.Plane(new THREE.Vector3(-1,0,0),0.02), clipB=new THREE.Plane(new THREE.Vector3(0,1,0),-0.1), clips=[];
+  const mk=(o)=>new THREE.MeshPhysicalMaterial(Object.assign({side:THREE.DoubleSide,clippingPlanes:clips,clipIntersection:true},o));
+  const matA=mk({roughness:0.55,clearcoat:0.6,clearcoatRoughness:0.15,envMapIntensity:0.4});
+  const matB=mk({roughness:0.55,clearcoat:0.6,clearcoatRoughness:0.15,envMapIntensity:0.4});
+  const resin=mk({color:0xffffff,roughness:0.03,transmission:0.92,thickness:0.08,transparent:true,opacity:0.32,clearcoat:1,envMapIntensity:1.2,depthWrite:false});
+  const inlay=mk({color:0xe9ecef,roughness:0.4,transparent:true,opacity:0.85});
+  const copper=new THREE.MeshStandardMaterial({color:new THREE.Color(0xc77a45).convertSRGBToLinear(),metalness:1,roughness:0.28,envMapIntensity:1.3,clippingPlanes:clips,clipIntersection:true});
+  const chipM=new THREE.MeshStandardMaterial({color:0x15181a,roughness:0.35,metalness:0.2,clippingPlanes:clips,clipIntersection:true});
+  const metal=new THREE.MeshStandardMaterial({color:new THREE.Color(0xdadde0).convertSRGBToLinear(),metalness:1,roughness:0.16,envMapIntensity:1.4,clippingPlanes:clips,clipIntersection:true});
+
+  const {outline,disc,ring,paw,nfc,ext,R,HOLE_Y,RH}=G, TAU=Math.PI*2;
+  const tag=new THREE.Group(); scene.add(tag);
+  const layer=(objs,z0,dz,anchor)=>{const g=new THREE.Group();objs.forEach(o=>g.add(o));tag.add(g);return {g,z0,dz,anchor};};
+  // 3 · Cuerpo con hueco para el chip y anilla
+  const body=outline(true); const pocket=new THREE.Path(); pocket.absarc(0,0,0.82,0,TAU,true); body.holes.push(pocket);
+  const bodyM=new THREE.Mesh(ext(body,0.2,0.03,128),matA); bodyM.position.z=-0.1;
+  const ringG=new THREE.Group(), tor=new THREE.TorusGeometry(0.4,0.034,20,96);
+  [-0.036,0.036].forEach(x=>{const m=new THREE.Mesh(tor,metal);m.position.x=x;ringG.add(m);});
+  ringG.rotation.y=Math.PI/2-0.8; ringG.position.set(0,HOLE_Y+0.38,0);
+  // 2 · Cara delantera: fondo (B) + borde y huella (A)
+  const fF=new THREE.Mesh(ext(disc(1.47),0.05,0,128),matB);
+  const fR=new THREE.Mesh(ext(ring(1.47,1.22),0.05,0.012,128),matA); fR.position.z=0.02;
+  const fP=new THREE.Mesh(ext(paw(),0.04,0.01,48),matA); fP.position.z=0.05;
+  // 1 · Resina delantera
+  const rF=new THREE.Mesh(ext(disc(1.5),0.035,0.01,128),resin);
+  // 4 · Pegatina NFC: lámina, antena de cobre en espiral y microchip
+  const inl=new THREE.Mesh(ext(disc(0.76),0.012,0,96),inlay); inl.position.z=-0.006;
+  class Spiral extends THREE.Curve{getPoint(t){const turns=6,a=t*turns*TAU,r=0.68-0.24*t;return new THREE.Vector3(r*Math.cos(a),r*Math.sin(a),0.012);}}
+  const coil=new THREE.Mesh(new THREE.TubeGeometry(new Spiral(),900,0.011,6,false),copper);
+  const chip=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.05),chipM); chip.position.z=0.03;
+  const bridge=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.03,0.012),copper); bridge.position.set(0.25,0,0.02);
+  // 5 · Cara trasera con el símbolo NFC (B)
+  const bB=new THREE.Mesh(ext(disc(1.47),0.05,0.01,128),matA); bB.position.z=-0.05;
+  const bN=new THREE.Mesh(ext(nfc(),0.03,0.006,24),matB); bN.position.z=-0.08;
+  const rB=new THREE.Mesh(ext(disc(1.5),0.035,0.01,128),resin); rB.position.z=-0.03;
+  const L=[
+    layer([rF],0.17,1.9,[0,1.5,0.2]),          // 1 resina
+    layer([fF,fR,fP],0.1,1.15,[0,1.35,0.1]),     // 2 cara delantera
+    layer([bodyM,ringG],0,0,[1.0,-1.1,0.1]),        // 3 cuerpo
+    layer([inl,coil,chip,bridge],0,-1.15,[0,0.74,0.02]), // 4 chip
+    layer([bB,bN],-0.1,-2.2,[0,1.35,-0.1]),     // 5 cara trasera
+    layer([rB],-0.17,-2.85,null),                // resina trasera (misma que 1)
+  ];
+  const ringAnchor=[0,HOLE_Y+0.78,0];
+  tag.rotation.set(0.05,0,0);
+
+  // Puntos numerados sobre cada capa
+  const dotsBox=document.getElementById('cutDots');
+  const dots=[0,1,2,3,4,5].map(i=>{const d=document.createElement('span');d.textContent=i+1;dotsBox.appendChild(d);return d;});
+
+  const controls=new THREE.OrbitControls(camera,cv);
+  controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;controls.enableZoom=false;controls.target.set(0,0.25,-0.5);
+  camera.position.set(6.4,2.4,6.4);
+  function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+    const d=12.5/Math.min(1,camera.aspect*1.05); camera.position.setLength(d); controls.update();}
+  let cur={sep:1,cut:0}, goal={sep:1,cut:0};
+  new ResizeObserver(resize).observe(stage);
+  const sepIn=document.getElementById('cutSep'), modes=[...document.querySelectorAll('.cut-modes button')];
+  function setMode(m){modes.forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.m===m)));
+    if(m===0){goal.sep=0;goal.cut=0;sepIn.value=0;} if(m===1){goal.sep=1;goal.cut=0;sepIn.value=100;} if(m===2){goal.sep=0.18;goal.cut=1;sepIn.value=18;}}
+  modes.forEach(b=>b.onclick=()=>setMode(+b.dataset.m));
+  sepIn.oninput=()=>{goal.sep=sepIn.value/100;};
+  const hint=document.getElementById('cutHint');hint.hidden=false;
+  controls.addEventListener('start',()=>{hint.style.opacity=0;auto=false;});
+  let auto=!reduce, visible=false, tmp=new THREE.Vector3();
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;},{rootMargin:'100px'}).observe(stage);
+  function frame(){
+    requestAnimationFrame(frame); if(!visible) return;
+    const k=reduce?1:0.09; cur.sep+=(goal.sep-cur.sep)*k; cur.cut+=(goal.cut-cur.cut)*k;
+    L.forEach(l=>{l.g.position.z=l.z0*0+l.dz*cur.sep;});
+    clips.length=0; if(cur.cut>0.5) clips.push(clipA,clipB);
+    if(auto) tag.rotation.y=Math.sin(performance.now()/2600)*0.35;
+    controls.update(); renderer.render(scene,camera);
+    // números
+    const w=stage.clientWidth,h=stage.clientHeight;
+    const pts=[L[0].anchor,L[1].anchor,L[2].anchor,L[3].anchor,L[4].anchor,ringAnchor];
+    pts.forEach((a,i)=>{
+      const grp=i===5?L[2].g:L[i].g; tmp.set(a[0],a[1],a[2]); grp.localToWorld(tmp); tmp.project(camera);
+      dots[i].style.left=((tmp.x+1)/2*w)+'px'; dots[i].style.top=((1-tmp.y)/2*h)+'px';
+      dots[i].style.opacity=(cur.sep>0.55||(i===5&&cur.cut<0.5))?1:0;
+    });
+  }
+  resize(); requestAnimationFrame(frame);
+  function colors(a,b){matA.color.set(a).convertSRGBToLinear();matB.color.set(b).convertSRGBToLinear();}
+  window.cut3d={colors};
+  if(typeof state!=='undefined'&&typeof CMAP!=='undefined') colors(CMAP[state.a][2],CMAP[state.b][2]);
+})();
+</script>
 
 </body>
 </html>
