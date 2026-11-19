@@ -154,6 +154,32 @@ a{color:inherit}
 .cut-note{margin-top:22px;color:var(--film-dim);font-size:13px;line-height:1.55;border-top:1px solid var(--film-line);padding-top:16px}
 .cut.no3d .cut-modes,.cut.no3d .cut-range{display:none}
 @media (max-width:860px){.cut{grid-template-columns:1fr;gap:28px}}
+
+/* Visor interactivo: pestañas, nombre y controles de reproducción */
+.cut-stage:focus-visible{outline:2px solid var(--film-ink);outline-offset:3px}
+.cut-tabs{position:absolute;top:14px;left:14px;display:flex;gap:6px;padding:4px;border-radius:999px;background:rgba(10,13,14,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.cut-tabs button{font:600 13px/1 var(--text);padding:9px 14px;border-radius:999px;border:0;background:transparent;color:var(--film-dim);cursor:pointer}
+.cut-tabs button small{font-weight:500;opacity:.75;margin-left:4px}
+.cut-tabs button[aria-pressed="true"]{background:var(--film-ink);color:var(--film)}
+.cut-name{position:absolute;top:62px;left:14px;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:999px;background:rgba(10,13,14,.55);color:var(--film-dim);font:500 13px/1 var(--text);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.cut-name input{width:120px;font:600 15px/1 var(--text);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border-radius:999px;border:1px solid var(--film-line);background:rgba(0,0,0,.25);color:var(--film-ink)}
+.player{position:absolute;left:12px;right:12px;bottom:12px;padding:10px 12px 12px;border-radius:20px;background:rgba(10,13,14,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08)}
+.p-cap{margin:0 0 8px 4px;color:var(--film-dim);font-size:13px;min-height:1.2em}
+.p-row{display:flex;align-items:center;gap:8px}
+.p-btn{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--film-line);background:transparent;color:var(--film-ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.p-btn svg{width:20px;height:20px}
+.p-btn.main{width:52px;height:52px;background:var(--film-ink);color:var(--film);border-color:var(--film-ink)}
+.p-btn.main svg{width:24px;height:24px}
+.p-btn[aria-pressed="true"]{border-color:var(--film-ink);background:rgba(255,255,255,.1)}
+.p-row input[type=range]{flex:1;min-width:0;accent-color:var(--film-ink);height:44px}
+.p-cut{flex:none;font:600 13px/1 var(--text);padding:0 14px;height:44px;border-radius:999px;border:1px solid var(--film-line);background:transparent;color:var(--film-ink);cursor:pointer}
+.p-cut[aria-pressed="true"]{background:var(--film-ink);color:var(--film)}
+.cut-hint{bottom:118px}
+@media (max-width:480px){.p-btn{width:40px;height:40px}.p-btn.main{width:46px;height:46px}.p-cut{padding:0 11px}.cut-tabs button{padding:8px 11px}}
+@media (max-width:860px){.cut-stage{aspect-ratio:4/5}}
+@media (max-width:480px){.cut-stage{aspect-ratio:3/4.3}}
+.chat-fab{transition:opacity .25s,transform .25s}
+.chat-fab.away{opacity:0;pointer-events:none;transform:translateY(12px)}
 /* Cabecera fija con accesos directos */
 .topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ground) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
 .topbar .top{padding-block:12px}
@@ -320,16 +346,27 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
         <div class="p-ctas"><a class="btn light" href="#disena">Diseña la tuya · 6,90 €</a><a class="btn line" href="#por-dentro">Cómo funciona por dentro</a></div>
         <ul class="p-facts"><li>Sin batería</li><li>Sin app</li><li>Android e iPhone</li><li>Entrega en 2 días tras el pago</li></ul>
       </div>
-      <div class="cut-stage" id="cutStage"><canvas id="cut3d" aria-label="Chapa NFC desmontándose en 3D. Arrástrala para girarla."></canvas><div class="cut-dots" id="cutDots" aria-hidden="true"></div><p class="cut-hint" id="cutHint" hidden>Arrastra para girarla</p></div>
+      <div class="cut-stage" id="cutStage" tabindex="0" aria-label="Visor 3D: arrastra para girar la chapa. Espacio para pausar, flechas para montar o desmontar.">
+        <canvas id="cut3d"></canvas><div class="cut-dots" id="cutDots" aria-hidden="true"></div>
+        <div class="cut-tabs" role="group" aria-label="Modelo"><button type="button" data-model="huella" aria-pressed="true">Huella</button><button type="button" data-model="hueso" aria-pressed="false">Hueso <small>próximamente</small></button></div>
+        <label class="cut-name" id="cutName" hidden>Nombre<input id="cutNameIn" maxlength="10" placeholder="TOBBY" autocomplete="off" spellcheck="false"></label>
+        <p class="cut-hint" id="cutHint" hidden>Arrastra para girarla 360°</p>
+        <div class="player">
+          <p class="p-cap" id="pCap" aria-live="polite">Montada</p>
+          <div class="p-row">
+            <button type="button" class="p-btn" id="pBack" aria-label="Rebobinar: montar la chapa" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M11.5 6.5v11L4 12zM20 6.5v11L12.5 12z" fill="currentColor"/></svg></button>
+            <button type="button" class="p-btn main" id="pPlay" aria-label="Reproducir"></button>
+            <button type="button" class="p-btn" id="pFwd" aria-label="Avanzar: desmontar la chapa" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12.5 6.5v11L20 12zM4 6.5v11L11.5 12z" fill="currentColor"/></svg></button>
+            <input type="range" id="pTime" min="0" max="1000" value="0" aria-label="Momento del desmontaje: de montada a desmontada">
+            <button type="button" class="p-cut" id="pCut" aria-pressed="false">Corte</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="cut" id="por-dentro">
       <div class="cut-head">
         <h2>Así es por dentro</h2>
         <p class="sub">Plástico de color sólido impreso en 3D, un chip NFC en el centro y resina transparente que lo sella todo.</p>
-        <div class="cut-modes" role="group" aria-label="Cómo verla">
-          <button type="button" data-m="0" aria-pressed="false">Cerrada</button><button type="button" data-m="1" aria-pressed="false">Por capas</button><button type="button" data-m="2" aria-pressed="false">En corte</button>
-        </div>
-        <label class="cut-range" for="cutSep">Separar capas<input type="range" id="cutSep" min="0" max="100" value="0"></label>
         <div class="how">
           <h3>Cómo funciona</h3>
           <ol class="how-steps">
@@ -339,15 +376,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
           </ol>
         </div>
       </div>
-      <ol class="cut-list">
-        <li><b>Resina transparente</b>Una capa fina que sella la chapa, la protege del agua y le da brillo.</li>
-        <li><b>Cara delantera</b>La huella y el borde en el color principal; el fondo, en el segundo color.</li>
-        <li><b>Cuerpo impreso en 3D</b>Plástico de color sólido, con un hueco en el centro para el chip.</li>
-        <li><b>Chip NFC con su antena</b>Una pegatina NFC muy fina: un microchip y una antena de cobre en espiral.</li>
-        <li><b>Cara trasera</b>El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.</li>
-        <li><b>Anilla</b>La única pieza de metal, para colgarla del collar.</li>
-        <li class="cut-note">Esquema orientativo: hemos separado y engrosado las capas para que se vean bien.</li>
-      </ol>
+      <ol class="cut-list" id="cutList"></ol>
     </div>
   </div>
 </section>
@@ -1041,17 +1070,17 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
 
 
 <script>
-// ---------- Chapa por dentro: vista por capas y en corte (Three.js) ----------
+// ---------- Visor 3D interactivo: desmontaje y montaje de las chapas (Three.js) ----------
 (function(){
   const box=document.getElementById('cut'), stage=document.getElementById('cutStage'), cv=document.getElementById('cut3d');
   const G=window.chapaGeo, fail=()=>{box.classList.add('no3d');stage.style.display='none';document.querySelector('.p-grid').style.gridTemplateColumns='1fr';};
   if(typeof THREE==='undefined'||!THREE.OrbitControls||!G){fail();return;}
   let renderer; try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){fail();return;}
   if(!renderer.getContext()){fail();return;}
-  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches, TAU=Math.PI*2;
   renderer.outputEncoding=THREE.sRGBEncoding; renderer.setClearColor(0x000000,0); renderer.localClippingEnabled=true;
   const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(30,1,0.1,100);
-  (function(){ // estudio para los reflejos
+  (function(){ // estudio de fotografía para los reflejos
     const pm=new THREE.PMREMGenerator(renderer), sc=new THREE.Scene();
     const g=new THREE.SphereGeometry(20,32,16),pos=g.attributes.position,col=[];
     for(let i=0;i<pos.count;i++){const y=pos.getY(i)/20,v=0.18+0.45*(y*0.5+0.5);col.push(v,v,v);}
@@ -1065,92 +1094,186 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
   const k2=new THREE.DirectionalLight(0xffffff,0.8);k2.position.set(-5,2,-6);scene.add(k2);
   scene.add(new THREE.HemisphereLight(0xffffff,0x707a76,0.4));
 
-  // Corte: un plano vertical que quita la mitad derecha
-  const clipA=new THREE.Plane(new THREE.Vector3(-1,0,0),0.02), clipB=new THREE.Plane(new THREE.Vector3(0,1,0),-0.1), clips=[];
-  const mk=(o)=>new THREE.MeshPhysicalMaterial(Object.assign({side:THREE.DoubleSide,clippingPlanes:clips,clipIntersection:true},o));
-  const matA=mk({roughness:0.55,clearcoat:0.6,clearcoatRoughness:0.15,envMapIntensity:0.4});
-  const matB=mk({roughness:0.55,clearcoat:0.6,clearcoatRoughness:0.15,envMapIntensity:0.4});
-  const resin=mk({color:0xffffff,roughness:0.03,transmission:0.92,thickness:0.08,transparent:true,opacity:0.32,clearcoat:1,envMapIntensity:1.2,depthWrite:false});
-  const inlay=mk({color:0xe9ecef,roughness:0.4,transparent:true,opacity:0.85});
-  const copper=new THREE.MeshStandardMaterial({color:new THREE.Color(0xc77a45).convertSRGBToLinear(),metalness:1,roughness:0.28,envMapIntensity:1.3,clippingPlanes:clips,clipIntersection:true});
-  const chipM=new THREE.MeshStandardMaterial({color:0x15181a,roughness:0.35,metalness:0.2,clippingPlanes:clips,clipIntersection:true});
-  const metal=new THREE.MeshStandardMaterial({color:new THREE.Color(0xdadde0).convertSRGBToLinear(),metalness:1,roughness:0.16,envMapIntensity:1.4,clippingPlanes:clips,clipIntersection:true});
+  // ---- Materiales (con plano de corte opcional: quita un cuarto de la chapa) ----
+  const clipA=new THREE.Plane(new THREE.Vector3(-1,0,0),0.02), clipB=new THREE.Plane(new THREE.Vector3(0,1,0),-0.05), clips=[];
+  const phys=(o)=>new THREE.MeshPhysicalMaterial(Object.assign({side:THREE.DoubleSide,clippingPlanes:clips,clipIntersection:true},o));
+  const std=(o)=>new THREE.MeshStandardMaterial(Object.assign({clippingPlanes:clips,clipIntersection:true},o));
+  const plast=(hex)=>phys({color:new THREE.Color(hex).convertSRGBToLinear(),roughness:0.5,clearcoat:0.7,clearcoatRoughness:0.12,envMapIntensity:0.45});
+  const resin=phys({color:0xffffff,roughness:0.03,transmission:0.92,thickness:0.08,transparent:true,opacity:0.3,clearcoat:1,envMapIntensity:1.2,depthWrite:false});
+  const inlay=phys({color:0xe9ecef,roughness:0.4,transparent:true,opacity:0.88});
+  const copper=std({color:new THREE.Color(0xc77a45).convertSRGBToLinear(),metalness:1,roughness:0.28,envMapIntensity:1.3});
+  const chipM=std({color:0x15181a,roughness:0.35,metalness:0.2});
+  const metal=std({color:new THREE.Color(0xdadde0).convertSRGBToLinear(),metalness:1,roughness:0.16,envMapIntensity:1.4});
+  const {outline,disc,ring,paw,nfc,ext,HOLE_Y}=G;
+  const mesh=(geo,mat,z=0)=>{const m=new THREE.Mesh(geo,mat);m.position.z=z;return m;};
+  const anilla=(y)=>{const g=new THREE.Group(),tor=new THREE.TorusGeometry(0.4,0.034,20,96);[-0.036,0.036].forEach(x=>{const m=new THREE.Mesh(tor,metal);m.position.x=x;g.add(m);});g.rotation.y=Math.PI/2-0.8;g.position.set(0,y,0);return g;};
+  class Spiral extends THREE.Curve{constructor(r0,r1,n){super();this.r0=r0;this.r1=r1;this.n=n;}getPoint(t){const a=t*this.n*TAU,r=this.r0-(this.r0-this.r1)*t;return new THREE.Vector3(r*Math.cos(a),r*Math.sin(a),0.012);}}
+  function rectCoil(w,h,turns,gap){const pts=[];for(let i=0;i<turns;i++){const x=w/2-i*gap,y=h/2-i*gap;pts.push([-x,y],[x,y],[x,-y],[-x,-y+gap]);}
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(([x,y])=>new THREE.Vector3(x,y,0.012)),false,'catmullrom',0.04),700,0.011,6,false);}
+  const rrect=(w,h,r)=>{const s=new THREE.Shape(),x=-w/2,y=-h/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s;};
+  const rrectPath=(w,h,r)=>{const p=new THREE.Path(),x=-w/2,y=-h/2;p.moveTo(x+r,y);p.quadraticCurveTo(x,y,x,y+r);p.lineTo(x,y+h-r);p.quadraticCurveTo(x,y+h,x+r,y+h);p.lineTo(x+w-r,y+h);p.quadraticCurveTo(x+w,y+h,x+w,y+h-r);p.lineTo(x+w,y+r);p.quadraticCurveTo(x+w,y,x+w-r,y);p.lineTo(x+r,y);return p;};
 
-  const {outline,disc,ring,paw,nfc,ext,R,HOLE_Y,RH}=G, TAU=Math.PI*2;
-  const tag=new THREE.Group(); scene.add(tag);
-  const layer=(objs,z0,dz,anchor)=>{const g=new THREE.Group();objs.forEach(o=>g.add(o));tag.add(g);return {g,z0,dz,anchor};};
-  // 3 · Cuerpo con hueco para el chip y anilla
-  const body=outline(true); const pocket=new THREE.Path(); pocket.absarc(0,0,0.82,0,TAU,true); body.holes.push(pocket);
-  const bodyM=new THREE.Mesh(ext(body,0.2,0.03,128),matA); bodyM.position.z=-0.1;
-  const ringG=new THREE.Group(), tor=new THREE.TorusGeometry(0.4,0.034,20,96);
-  [-0.036,0.036].forEach(x=>{const m=new THREE.Mesh(tor,metal);m.position.x=x;ringG.add(m);});
-  ringG.rotation.y=Math.PI/2-0.8; ringG.position.set(0,HOLE_Y+0.38,0);
-  // 2 · Cara delantera: fondo (B) + borde y huella (A)
-  const fF=new THREE.Mesh(ext(disc(1.47),0.05,0,128),matB);
-  const fR=new THREE.Mesh(ext(ring(1.47,1.22),0.05,0.012,128),matA); fR.position.z=0.02;
-  const fP=new THREE.Mesh(ext(paw(),0.04,0.01,48),matA); fP.position.z=0.05;
-  // 1 · Resina delantera
-  const rF=new THREE.Mesh(ext(disc(1.5),0.035,0.01,128),resin);
-  // 4 · Pegatina NFC: lámina, antena de cobre en espiral y microchip
-  const inl=new THREE.Mesh(ext(disc(0.76),0.012,0,96),inlay); inl.position.z=-0.006;
-  class Spiral extends THREE.Curve{getPoint(t){const turns=6,a=t*turns*TAU,r=0.68-0.24*t;return new THREE.Vector3(r*Math.cos(a),r*Math.sin(a),0.012);}}
-  const coil=new THREE.Mesh(new THREE.TubeGeometry(new Spiral(),900,0.011,6,false),copper);
-  const chip=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.05),chipM); chip.position.z=0.03;
-  const bridge=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.03,0.012),copper); bridge.position.set(0.25,0,0.02);
-  // 5 · Cara trasera con el símbolo NFC (B)
-  const bB=new THREE.Mesh(ext(disc(1.47),0.05,0.01,128),matA); bB.position.z=-0.05;
-  const bN=new THREE.Mesh(ext(nfc(),0.03,0.006,24),matB); bN.position.z=-0.08;
-  const rB=new THREE.Mesh(ext(disc(1.5),0.035,0.01,128),resin); rB.position.z=-0.03;
-  const L=[
-    layer([rF],0.17,1.9,[0,1.5,0.2]),          // 1 resina
-    layer([fF,fR,fP],0.1,1.15,[0,1.35,0.1]),     // 2 cara delantera
-    layer([bodyM,ringG],0,0,[1.0,-1.1,0.1]),        // 3 cuerpo
-    layer([inl,coil,chip,bridge],0,-1.15,[0,0.74,0.02]), // 4 chip
-    layer([bB,bN],-0.1,-2.2,[0,1.35,-0.1]),     // 5 cara trasera
-    layer([rB],-0.17,-2.85,null),                // resina trasera (misma que 1)
-  ];
-  const ringAnchor=[0,HOLE_Y+0.78,0];
-  tag.rotation.set(0.05,0,0);
-
-  // Puntos numerados sobre cada capa
-  const dotsBox=document.getElementById('cutDots');
-  const dots=[0,1,2,3,4,5].map(i=>{const d=document.createElement('span');d.textContent=i+1;dotsBox.appendChild(d);return d;});
-
-  const controls=new THREE.OrbitControls(camera,cv);
-  controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;controls.enableZoom=false;controls.target.set(0,0.25,-0.5);
-  camera.position.set(6.4,2.4,6.4);
-  function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
-    const d=12.5/Math.min(1,camera.aspect*1.05); camera.position.setLength(d); controls.update();}
-  let cur={sep:0,cut:0}, goal={sep:0,cut:0}, play=true;
-  new ResizeObserver(resize).observe(stage);
-  const sepIn=document.getElementById('cutSep'), modes=[...document.querySelectorAll('.cut-modes button')];
-  function setMode(m){play=false;const r=stage.getBoundingClientRect();if(r.bottom<80||r.top>innerHeight-120)stage.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});modes.forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.m===m)));
-    if(m===0){goal.sep=0;goal.cut=0;sepIn.value=0;} if(m===1){goal.sep=1;goal.cut=0;sepIn.value=100;} if(m===2){goal.sep=0.18;goal.cut=1;sepIn.value=18;}}
-  modes.forEach(b=>b.onclick=()=>setMode(+b.dataset.m));
-  sepIn.oninput=()=>{play=false;goal.sep=sepIn.value/100;};
-  const hint=document.getElementById('cutHint');hint.hidden=false;
-  controls.addEventListener('start',()=>{hint.style.opacity=0;auto=false;});
-  let auto=!reduce, visible=false, tmp=new THREE.Vector3();
-  new IntersectionObserver(es=>{visible=es[0].isIntersecting;},{rootMargin:'100px'}).observe(stage);
-  function frame(){
-    requestAnimationFrame(frame); if(!visible) return;
-    if(play&&!reduce){const t=performance.now()/1000; goal.sep=Math.min(1,Math.max(0,0.5-0.62*Math.cos(t*0.9))); sepIn.value=Math.round(goal.sep*100);} else if(play&&reduce){goal.sep=1;}
-    const k=reduce?1:0.09; cur.sep+=(goal.sep-cur.sep)*k; cur.cut+=(goal.cut-cur.cut)*k;
-    L.forEach(l=>{l.g.position.z=l.z0*0+l.dz*cur.sep;});
-    clips.length=0; if(cur.cut>0.5) clips.push(clipA,clipB);
-    if(auto) tag.rotation.y=Math.sin(performance.now()/2600)*0.35;
-    controls.update(); renderer.render(scene,camera);
-    // números
-    const w=stage.clientWidth,h=stage.clientHeight;
-    const pts=[L[0].anchor,L[1].anchor,L[2].anchor,L[3].anchor,L[4].anchor,ringAnchor];
-    pts.forEach((a,i)=>{
-      const grp=i===5?L[2].g:L[i].g; tmp.set(a[0],a[1],a[2]); grp.localToWorld(tmp); tmp.project(camera);
-      dots[i].style.left=((tmp.x+1)/2*w)+'px'; dots[i].style.top=((1-tmp.y)/2*h)+'px';
-      dots[i].style.opacity=(cur.sep>0.55||(i===5&&cur.cut<0.5))?1:0;
-    });
+  // ---- Contornos a partir de un dibujo (para la forma del hueso y las letras del nombre) ----
+  function trace(field,W,H,thr){ // marching squares con interpolación -> lazos cerrados (en píxeles)
+    const segs=[],v=(x,y)=>field[y*W+x];
+    const L=(a,b)=>(thr-a)/(b-a);
+    for(let y=0;y<H-1;y++)for(let x=0;x<W-1;x++){
+      const a=v(x,y),b=v(x+1,y),c=v(x+1,y+1),d=v(x,y+1);
+      const idx=(a>thr?8:0)|(b>thr?4:0)|(c>thr?2:0)|(d>thr?1:0); if(idx===0||idx===15) continue;
+      const T=[x+L(a,b),y],R=[x+1,y+L(b,c)],B=[x+L(d,c),y+1],Lf=[x,y+L(a,d)];
+      const P={1:[[Lf,B]],2:[[B,R]],3:[[Lf,R]],4:[[T,R]],5:[[Lf,T],[B,R]],6:[[T,B]],7:[[Lf,T]],8:[[T,Lf]],9:[[T,B]],10:[[T,R],[B,Lf]],11:[[T,R]],12:[[R,Lf]],13:[[R,B]],14:[[B,Lf]]}[idx];
+      P.forEach(s=>segs.push(s));
+    }
+    const key=p=>p[0].toFixed(3)+','+p[1].toFixed(3), map=new Map();
+    segs.forEach((s,i)=>{[0,1].forEach(e=>{const k=key(s[e]);if(!map.has(k))map.set(k,[]);map.get(k).push(i);});});
+    const used=new Uint8Array(segs.length), loops=[];
+    for(let i=0;i<segs.length;i++){ if(used[i]) continue; used[i]=1; const loop=[segs[i][0],segs[i][1]]; let cur=segs[i][1];
+      for(let guard=0;guard<200000;guard++){ const c=(map.get(key(cur))||[]).find(j=>!used[j]); if(c===undefined) break; used[c]=1; const s=segs[c]; const nx=key(s[0])===key(cur)?s[1]:s[0]; loop.push(nx); cur=nx; }
+      if(loop.length>8) loops.push(loop);
+    }
+    return loops.map(l=>{const out=[l[0]];for(const p of l){const q=out[out.length-1];if(Math.hypot(p[0]-q[0],p[1]-q[1])>1.6)out.push(p);}return out;});
   }
-  resize(); requestAnimationFrame(frame);
-  function colors(a,b){matA.color.set(a).convertSRGBToLinear();matB.color.set(b).convertSRGBToLinear();}
+  function inside(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const [xi,yi]=poly[i],[xj,yj]=poly[j];if(((yi>pt[1])!==(yj>pt[1]))&&(pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi))c=!c;}return c;}
+  function toShapes(loops,map){ // lazos -> THREE.Shape con agujeros (por anidamiento)
+    const depth=loops.map((l,i)=>loops.reduce((n,o,j)=>n+(j!==i&&inside(l[0],o)?1:0),0));
+    const shapes=[];
+    loops.forEach((l,i)=>{ if(depth[i]%2) return; const s=new THREE.Shape(l.map(p=>new THREE.Vector2(...map(p))));
+      loops.forEach((h,j)=>{ if(depth[j]===depth[i]+1&&inside(h[0],l)) s.holes.push(new THREE.Path(h.map(p=>new THREE.Vector2(...map(p))))); });
+      shapes.push(s); });
+    return shapes;
+  }
+  function boxBlur(f,W,H,r){const t=new Float32Array(f.length);for(let pass=0;pass<3;pass++){
+    for(let y=0;y<H;y++){let acc=0;for(let x=-r;x<=r;x++)acc+=f[y*W+Math.min(W-1,Math.max(0,x))];for(let x=0;x<W;x++){t[y*W+x]=acc/(2*r+1);acc+=f[y*W+Math.min(W-1,x+r+1)]-f[y*W+Math.max(0,x-r)];}}
+    for(let x=0;x<W;x++){let acc=0;for(let y=-r;y<=r;y++)acc+=t[Math.min(H-1,Math.max(0,y))*W+x];for(let y=0;y<H;y++){f[y*W+x]=acc/(2*r+1);acc+=t[Math.min(H-1,y+r+1)*W+x]-t[Math.max(0,y-r)*W+x];}}}}
+  function field(W,H,draw){const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,W,H);g.fillStyle='#fff';draw(g);
+    const d=g.getImageData(0,0,W,H).data,f=new Float32Array(W*H);for(let i=0;i<W*H;i++)f[i]=d[i*4]/255;return f;}
+
+  // Forma del hueso (fusión suave de cuatro círculos, el cuerpo y la pestaña del agujero)
+  const BS=0.0034, BW=1100, BH=600; // 1 px = BS unidades
+  const boneLoops=(()=>{const f=field(BW,BH,g=>{const U=1/BS,cx=BW/2,cy=BH/2,C=(x,y,r)=>{g.beginPath();g.arc(cx+x*U,cy-y*U,r*U,0,TAU);g.fill();};
+      [[-1.3,0.4],[1.3,0.4],[-1.3,-0.4],[1.3,-0.4]].forEach(([x,y])=>C(x,y,0.5)); g.fillRect(cx-1.3*U,cy-0.5*U,2.6*U,1.0*U); C(0,0.5,0.33);});
+    boxBlur(f,BW,BH,14); return trace(f,BW,BH,0.5);})();
+  const boneMap=p=>[(p[0]-BW/2)*BS,-(p[1]-BH/2)*BS];
+  const boneHole=0.15, boneHoleY=0.56;
+  function boneShape(withHole,grow=1){const s=toShapes(boneLoops,p=>{const q=boneMap(p);return [q[0]*grow,q[1]*grow];})[0];
+    if(withHole){const h=new THREE.Path();h.absarc(0,boneHoleY,boneHole,0,TAU,true);s.holes.push(h);}return s;}
+  function octa(w,h,c){const s=new THREE.Shape();s.moveTo(-w/2+c,h/2);s.lineTo(w/2-c,h/2);s.lineTo(w/2,h/2-c);s.lineTo(w/2,-h/2+c);s.lineTo(w/2-c,-h/2);s.lineTo(-w/2+c,-h/2);s.lineTo(-w/2,-h/2+c);s.lineTo(-w/2,h/2-c);s.closePath();return s;}
+  function octaRing(w,h,c,t){const s=octa(w,h,c),i=octa(w-2*t,h-2*t,c*0.8);s.holes.push(new THREE.Path(i.getPoints().reverse()));return s;}
+  function nameShapes(name){
+    const W=1400,H=300,f=field(W,H,g=>{g.font='italic 700 210px Georgia,"Times New Roman",serif';g.textAlign='center';g.textBaseline='middle';
+      let size=210; while(g.measureText(name).width>W-80&&size>60){size-=10;g.font=`italic 700 ${size}px Georgia,"Times New Roman",serif`;} g.fillText(name,W/2,H/2+8);});
+    boxBlur(f,W,H,1); const loops=trace(f,W,H,0.5); if(!loops.length) return [];
+    let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9; loops.forEach(l=>l.forEach(([x,y])=>{minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y);}));
+    const sc=Math.min(1.52/(maxx-minx),0.44/(maxy-miny)), cx=(minx+maxx)/2, cy=(miny+maxy)/2;
+    return toShapes(loops,p=>[(p[0]-cx)*sc,-(p[1]-cy)*sc-0.04]);
+  }
+
+  // ---- Modelos ----
+  function huella(){
+    const A=plast('#1446ff'),B=plast('#f5f5f0'), grp=new THREE.Group();
+    const body=outline(true); const pocket=new THREE.Path(); pocket.absarc(0,0,0.82,0,TAU,true); body.holes.push(pocket);
+    const L=[
+      {n:'Resina transparente',d:'Una capa fina que sella la chapa, la protege del agua y le da brillo.',objs:[mesh(ext(disc(1.5),0.035,0.01,128),resin,0.2)],dz:1.9,anchor:[0,1.5,0.2],dot:1},
+      {n:'Cara delantera',d:'La huella y el borde en el color principal; el fondo, en el segundo color.',objs:[mesh(ext(disc(1.47),0.05,0,128),B,0.1),mesh(ext(ring(1.47,1.22),0.05,0.012,128),A,0.12),mesh(ext(paw(),0.04,0.01,48),A,0.15)],dz:1.15,anchor:[0,1.35,0.15],dot:2},
+      {n:'Cuerpo impreso en 3D',d:'Plástico de color sólido, con un hueco en el centro para el chip.',objs:[mesh(ext(body,0.2,0.03,128),A,-0.1),anilla(HOLE_Y+0.38)],dz:0,anchor:[1.0,-1.1,0.1],dot:3},
+      {n:'Chip NFC con su antena',d:'Una pegatina NFC muy fina: un microchip y una antena de cobre en espiral. No lleva batería.',objs:[mesh(ext(disc(0.76),0.012,0,96),inlay,-0.006),mesh(new THREE.TubeGeometry(new Spiral(0.68,0.44,6),900,0.011,6,false),copper),mesh(new THREE.BoxGeometry(0.2,0.2,0.05),chipM,0.03)],dz:-1.15,anchor:[0,0.74,0.02],dot:4},
+      {n:'Cara trasera',d:'El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.',objs:[mesh(ext(disc(1.47),0.05,0.01,128),A,-0.15),mesh(ext(nfc(),0.03,0.006,24),B,-0.18)],dz:-2.2,anchor:[0,1.35,-0.1],dot:5},
+      {n:'',objs:[mesh(ext(disc(1.5),0.035,0.01,128),resin,-0.23)],dz:-2.85,anchor:null,dot:null},
+    ];
+    return {grp,L,A,B,order:[0,1,5,4,3],ringAnchor:[0,HOLE_Y+0.78,0],ringText:['Anilla','La única pieza de metal, para colgarla del collar.'],target:[0,-0.25,-0.45],dist:13,cam:[6.4,2.4,6.4]};
+  }
+  function hueso(){
+    const A=plast('#11b84a'),B=plast('#f3e2b3'), grp=new THREE.Group();
+    const body=boneShape(true); body.holes.push(rrectPath(1.5,0.66,0.12));
+    const pawG=(x,y,r,s)=>{const g=ext(paw(),0.04,0.01,32);g.scale(s,s,1);g.rotateZ(r);g.translate(x,y,0);return g;};
+    const deco=new THREE.Group(); const nameM=mesh(new THREE.BufferGeometry(),B,0.15); deco.add(nameM);
+    [pawG(-1.3,0.33,-0.25,0.38),pawG(1.3,-0.38,0.25,0.38)].forEach(g=>deco.add(mesh(g,B,0.15)));
+    const nfcG=ext(nfc(),0.03,0.006,24); nfcG.scale(0.62,0.62,1); nfcG.translate(0,-0.04,0);
+    const L=[
+      {n:'Resina transparente',d:'Sella el hueso por delante y por detrás, lo protege del agua y le da brillo.',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,0.21)],dz:2.1,anchor:[-1.3,0.9,0.28],dot:1},
+      {n:'Nombre y huellas',d:'El nombre de tu perro y dos huellas en relieve, en el segundo color.',objs:[deco],dz:1.45,anchor:[0.9,0.25,0.25],dot:2},
+      {n:'Cara delantera',d:'El hueso con su marco para el nombre, en el color principal.',objs:[mesh(ext(boneShape(true),0.05,0.012,24),A,0.1),mesh(ext(octaRing(1.92,0.74,0.16,0.07),0.04,0.01,8),A,0.15)],dz:0.8,anchor:[1.3,-0.95,0.15],dot:3},
+      {n:'Cuerpo impreso en 3D',d:'Plástico de color sólido, con un hueco en el centro para el chip.',objs:[mesh(ext(body,0.2,0.03,24),A,-0.1),anilla(boneHoleY+0.36)],dz:0,anchor:[-1.75,-0.4,0],dot:4},
+      {n:'Chip NFC con su antena',d:'Una pegatina NFC alargada: un microchip y una antena de cobre que da vueltas alrededor.',objs:[mesh(ext(rrect(1.4,0.58,0.1),0.012,0,12),inlay,-0.006),mesh(rectCoil(1.26,0.46,5,0.035),copper),mesh(new THREE.BoxGeometry(0.16,0.16,0.05),chipM,0.03)],dz:-1.05,anchor:[0,0.32,0.02],dot:5},
+      {n:'Cara trasera',d:'El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.',objs:[mesh(ext(boneShape(true),0.05,0.01,24),A,-0.15),mesh(nfcG,B,-0.18)],dz:-1.95,anchor:[1.3,0.9,-0.15],dot:6},
+      {n:'',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,-0.25)],dz:-2.6,anchor:null,dot:null},
+    ];
+    const setName=(t)=>{const s=nameShapes((t||'TOBBY').toUpperCase().slice(0,10));nameM.geometry.dispose();nameM.geometry=s.length?ext(s,0.045,0.012,6):new THREE.BufferGeometry();};
+    setName('TOBBY');
+    return {grp,L,A,B,order:[0,1,2,6,5,4],ringAnchor:[0,boneHoleY+0.76,0],ringText:['Anilla','La única pieza de metal, para colgarla del collar.'],target:[0,-0.45,-0.25],dist:13,cam:[5.6,2.3,6.6],setName};
+  }
+  const models={huella:huella(),hueso:hueso()};
+  Object.values(models).forEach(m=>{m.L.forEach(l=>{l.g=new THREE.Group();l.objs.forEach(o=>l.g.add(o));m.grp.add(l.g);});m.grp.visible=false;scene.add(m.grp);});
+  let M=models.huella; M.grp.visible=true;
+
+  // ---- Interfaz ----
+  const dotsBox=document.getElementById('cutDots'), list=document.getElementById('cutList'), cap=document.getElementById('pCap');
+  const bPlay=document.getElementById('pPlay'), bBack=document.getElementById('pBack'), bFwd=document.getElementById('pFwd'), time=document.getElementById('pTime'), bCut=document.getElementById('pCut');
+  const nameBox=document.getElementById('cutName'), nameIn=document.getElementById('cutNameIn');
+  let dots=[];
+  function buildUI(){
+    const items=M.L.filter(l=>l.dot).map(l=>[l.dot,l.n,l.d]); items.push([items.length+1,...M.ringText]);
+    list.innerHTML=''; items.forEach(([n,t,d])=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=t;li.append(b,document.createTextNode(d));list.appendChild(li);});
+    const note=document.createElement('li');note.className='cut-note';note.textContent='Esquema orientativo: las capas se separan y se ven más gruesas de lo que son para que se entiendan bien.';list.appendChild(note);
+    dotsBox.innerHTML=''; dots=items.map(([n])=>{const d=document.createElement('span');d.textContent=n;dotsBox.appendChild(d);return d;});
+    nameBox.hidden=!M.setName;
+  }
+  const controls=new THREE.OrbitControls(camera,cv);
+  controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;controls.enableZoom=false;controls.rotateSpeed=0.9;
+  camera.position.set(...models.huella.cam);
+  function fit(){controls.target.set(...M.target);const d=M.dist/Math.min(1,camera.aspect*1.05);const dir=camera.position.clone().sub(controls.target).normalize();camera.position.copy(controls.target).add(dir.multiplyScalar(d));controls.update();}
+  function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();fit();}
+  new ResizeObserver(resize).observe(stage);
+
+  // Línea de tiempo: 0 = montada, 1 = desmontada del todo
+  let t=0, dir=1, playing=false, cutOn=false, cutK=0, started=false, last=performance.now(), auto=!reduce;
+  const DUR=8; // segundos para desmontarla entera
+  const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
+  function progresses(){const n=M.order.length,W=0.34,step=n>1?(1-W)/(n-1):0;const p=new Array(M.L.length).fill(0);M.order.forEach((li,k)=>{p[li]=ease((t-k*step)/W);});return p;}
+  const ICON={play:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>',pause:'<svg viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/><rect x="13.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/></svg>'};
+  function ui(){bPlay.innerHTML=playing?ICON.pause:ICON.play;bPlay.setAttribute('aria-label',playing?'Pausa':'Reproducir');
+    bBack.setAttribute('aria-pressed',String(playing&&dir<0));bFwd.setAttribute('aria-pressed',String(playing&&dir>0));}
+  function caption(p){
+    if(t<=0.001){cap.textContent='Montada';return;} if(t>=0.999){cap.textContent='Desmontada: todas sus piezas';return;}
+    let cur=null; M.order.forEach(li=>{if(p[li]>0&&p[li]<1)cur=li;}); if(cur===null) M.order.forEach(li=>{if(p[li]>=1)cur=li;});
+    const l=M.L[cur]; const nm=l&&l.n?l.n:'Resina trasera';
+    cap.textContent=(dir<0&&playing?'Montando · ':'Desmontando · ')+nm;
+  }
+  const play=(d)=>{dir=d;if(d>0&&t>=1)t=0;if(d<0&&t<=0)t=1;playing=true;auto=false;ui();};
+  bFwd.onclick=()=>play(1); bBack.onclick=()=>play(-1);
+  bPlay.onclick=()=>{auto=false;if(playing){playing=false;ui();return;} if(t>=1)dir=-1; else if(t<=0)dir=1; playing=true; ui();};
+  time.oninput=()=>{auto=false;playing=false;t=time.value/1000;ui();};
+  bCut.onclick=()=>{cutOn=!cutOn;bCut.setAttribute('aria-pressed',String(cutOn));};
+  stage.addEventListener('keydown',e=>{if(e.target!==stage)return;if(e.key===' '){e.preventDefault();bPlay.click();}if(e.key==='ArrowRight'){e.preventDefault();play(1);}if(e.key==='ArrowLeft'){e.preventDefault();play(-1);}});
+  document.querySelectorAll('.cut-tabs button').forEach(b=>b.onclick=()=>{
+    const m=models[b.dataset.model]; if(m===M) return; M.grp.visible=false; M=m; M.grp.visible=true;
+    document.querySelectorAll('.cut-tabs button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    camera.position.set(...M.cam); buildUI(); fit(); t=0; dir=1; playing=!reduce; ui();
+  });
+  let nameT; nameIn.addEventListener('input',()=>{clearTimeout(nameT);nameT=setTimeout(()=>models.hueso.setName(nameIn.value.trim()),180);});
+  const hint=document.getElementById('cutHint');hint.hidden=false;
+  controls.addEventListener('start',()=>{hint.style.opacity=0;sway=false;});
+  let sway=!reduce, visible=false, tmp=new THREE.Vector3();
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting; if(visible&&!started){started=true; setTimeout(()=>{if(auto){playing=true;dir=1;ui();}},reduce?0:900);}},{rootMargin:'0px'}).observe(stage);
+
+  function frame(now){
+    requestAnimationFrame(frame); const dt=Math.min(0.05,(now-last)/1000); last=now; if(!visible) return;
+    if(playing){ t+=dir*dt/DUR; if(t>=1){t=1;playing=false;ui();} if(t<=0){t=0;playing=false;ui();} }
+    time.value=Math.round(t*1000);
+    cutK+=((cutOn?1:0)-cutK)*(reduce?1:0.15); clips.length=0; if(cutK>0.5) clips.push(clipA,clipB);
+    const p=progresses();
+    M.L.forEach((l,i)=>{l.g.position.z=l.dz*p[i];});
+    if(sway) M.grp.rotation.y=Math.sin(now/2600)*0.3;
+    controls.update(); renderer.render(scene,camera); caption(p);
+    const w=stage.clientWidth,h=stage.clientHeight; let di=0;
+    M.L.forEach((l,i)=>{ if(!l.dot) return; const d=dots[di++]; tmp.set(...l.anchor); l.g.localToWorld(tmp); tmp.project(camera);
+      d.style.left=((tmp.x+1)/2*w)+'px'; d.style.top=((1-tmp.y)/2*h)+'px'; d.style.opacity=(l.dz===0?t>0.6:p[i]>0.7)?1:0; });
+    const rd=dots[di]; if(rd){ const body=M.L.find(l=>l.dz===0); tmp.set(...M.ringAnchor); body.g.localToWorld(tmp); tmp.project(camera); rd.style.left=((tmp.x+1)/2*w)+'px'; rd.style.top=((1-tmp.y)/2*h)+'px'; rd.style.opacity=t>0.6?1:0; }
+  }
+  const fab=document.getElementById('chatOpen');
+  new IntersectionObserver(es=>{fab.classList.toggle('away',es[0].intersectionRatio>0.35);},{threshold:[0,0.35,0.6]}).observe(stage);
+  buildUI(); resize(); ui(); requestAnimationFrame(frame);
+  function colors(a,b){const m=models.huella;m.A.color.set(a).convertSRGBToLinear();m.B.color.set(b).convertSRGBToLinear();}
   window.cut3d={colors};
   if(typeof state!=='undefined'&&typeof CMAP!=='undefined') colors(CMAP[state.a][2],CMAP[state.b][2]);
 })();
