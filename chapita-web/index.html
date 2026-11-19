@@ -11,10 +11,11 @@
 <body>
 <!-- Intro en vídeo: se muestra como máximo una vez cada 5 horas por visitante -->
 <style>
-.intro-ov{position:fixed;inset:0;z-index:100;background:#05070a;display:grid;place-items:center;transition:opacity .7s ease}
+.intro-ov{position:fixed;inset:0;overflow:hidden;z-index:100;background:#05070a;display:grid;place-items:center;transition:opacity .7s ease}
 .intro-ov.out{opacity:0;pointer-events:none}
 .intro-ov video{width:100%;height:100%;object-fit:cover}
-@media (max-aspect-ratio:1/1){.intro-ov video{object-fit:contain}}
+@media (max-aspect-ratio:1/1){.intro-ov video{object-fit:contain;position:relative;z-index:1}.intro-ov::before{content:'';position:absolute;inset:-40px;background:url(/video/intro-poster.jpg) center/cover;filter:blur(28px) brightness(.45);transform:scale(1.15)}}
+.intro-ov-bar{z-index:2}
 .intro-ov-bar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;gap:12px;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .intro-ov-bar button{font:600 14px/1 'Instrument Sans',system-ui,sans-serif;padding:13px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(10,12,14,.55);color:#fff;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 html.intro-on,html.intro-on body{overflow:hidden}
@@ -28,7 +29,8 @@ html.intro-on,html.intro-on body{overflow:hidden}
   var KEY='chapita-intro-visto', CADA=5*3600e3, last=0;
   try{ last=+localStorage.getItem(KEY)||0; }catch(e){}
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(Date.now()-last<CADA||reduce) return;
+  var forzar=/[?&]intro\b/.test(location.search);
+  if(!forzar&&(Date.now()-last<CADA||reduce)) return;
   var box=document.getElementById('intro'), v=document.getElementById('introV'), done=false;
   try{ localStorage.setItem(KEY,String(Date.now())); }catch(e){}
   document.documentElement.classList.add('intro-on'); box.hidden=false;
