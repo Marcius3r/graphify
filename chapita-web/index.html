@@ -300,6 +300,10 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 .canal label{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:999px;border:1px solid var(--line);background:var(--ground);font-size:15px;cursor:pointer}
 .canal label:has(input:checked){border-color:var(--green);outline:1px solid var(--green)}
 .canal input{accent-color:var(--green);width:auto}
+.pay-note{font-size:13px;color:var(--slate);margin-top:10px}
+.pay-banner{position:fixed;left:16px;right:16px;top:calc(var(--hdr,64px) + 10px);z-index:60;max-width:640px;margin:0 auto;padding:14px 46px 14px 16px;border-radius:14px;background:#7a2e27;color:#fff;font:500 15px/1.4 var(--text);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.pay-banner.ok{background:var(--green);color:var(--green-ink)}
+.pay-banner button{position:absolute;right:8px;top:8px;width:32px;height:32px;border:0;background:transparent;color:inherit;font-size:22px;cursor:pointer}
 .field{display:grid;gap:6px;min-width:0}
 .field input,.field textarea{width:100%;min-width:0}
 .field label{font-size:14px;font-weight:600}
@@ -544,7 +548,8 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
     <div class="total-line"><span>Total sin envío</span><b id="r-total">6,90 €</b></div>
     <p class="msg" id="r-msg" aria-live="polite"></p>
     <p class="muted" style="font-size:14px">Se abrirá WhatsApp con tu pedido escrito. Solo tienes que pulsar enviar. Te contestamos con la fecha de entrega y cómo pagar.</p>
-    <div class="dlg-actions"><button class="btn ghost" type="button" id="r-cancel">Cerrar</button><a class="btn" id="r-wa" href="#" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a></div>
+    <div class="dlg-actions"><button class="btn ghost" type="button" id="r-cancel">Cerrar</button><a class="btn" id="r-wa" href="#" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a><button class="btn" type="button" id="r-pay" hidden>Pagar ahora</button></div>
+    <p class="pay-note" id="r-pay-note" hidden>Pago seguro con Stripe: tarjeta Visa o Mastercard, Apple Pay y Google Pay. Tu tarjeta se introduce en la página de Stripe; nosotros nunca la vemos.</p>
   </form>
 </dialog>
 
@@ -665,7 +670,7 @@ const colorName=k=>CMAP[k][1];
 function setQty(n){qty=Math.max(1,Math.min(50,n));$('q-val').textContent=qty;$('r-total').textContent=eur(qty*PRICE);}
 $('q-minus').onclick=()=>setQty(qty-1);$('q-plus').onclick=()=>setQty(qty+1);
 const canalSel=()=>(document.querySelector('input[name=canal]:checked')||{}).value||'whatsapp';
-function syncCanal(){const e=canalSel()==='email';$('r-email-f').hidden=!e;$('r-wa').textContent=e?'Reservar y recibir el resumen por correo':'Enviar pedido por WhatsApp';}
+function syncCanal(){const e=canalSel()==='email';$('r-email-f').hidden=!e;$('r-wa').textContent=e?'Reservar y pagar por Bizum (te llega por correo)':'Reservar y pagar por Bizum (por WhatsApp)';}
 document.querySelectorAll('input[name=canal]').forEach(r=>r.addEventListener('change',syncCanal));
 function openRes(){paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';syncCanal();$('dlg').showModal();}
 $('buy').addEventListener('click',openRes);
@@ -714,6 +719,24 @@ function updateWa(){$('r-wa').href=waLink(currentOrder());}
 $('q-minus').addEventListener('click',updateWa);$('q-plus').addEventListener('click',updateWa);
 $('buy').addEventListener('click',()=>{orderCode=newCode();updateWa();});
 $('resForm').addEventListener('submit',e=>e.preventDefault());
+// Pago online con Stripe: el botón solo aparece si Stripe está conectado de verdad (clave y webhook firmados).
+const API_PAGAR='https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/pagar';
+fetch(API_PAGAR).then(r=>r.json()).then(j=>{if(j&&j.activo){$('r-pay').hidden=false;$('r-pay-note').hidden=false;$('r-wa').classList.add('ghost');}}).catch(()=>{});
+$('r-pay').addEventListener('click',async()=>{
+  const o=currentOrder(), canal=canalSel(), email=$('r-email').value.trim();
+  if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono.';return;}
+  if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para recibir la confirmación.';$('r-email').focus();return;}
+  $('r-pay').disabled=true;$('r-msg').className='msg';$('r-msg').textContent='Abriendo el pago seguro…';
+  try{const r=await fetch(API_PAGAR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+    const j=await r.json().catch(()=>({})); if(!r.ok||!j.url) throw new Error(j.error||'No se pudo abrir el pago');
+    location.href=j.url;
+  }catch(err){$('r-msg').className='msg err';$('r-msg').textContent=err.message;$('r-pay').disabled=false;}
+});
+(function(){const q=new URLSearchParams(location.search),st=q.get('pago'),ref=q.get('ref');if(!st)return;
+  const d=document.createElement('div');d.className='pay-banner'+(st==='ok'?' ok':'');d.setAttribute('role','status');
+  d.textContent=st==='ok'?`¡Gracias! Hemos recibido tu pago del pedido ${ref||''}. En unos segundos te llegará la confirmación.`:`El pago del pedido ${ref||''} no se completó. Puedes intentarlo de nuevo o reservar con Bizum.`;
+  const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label','Cerrar');x.onclick=()=>d.remove();d.appendChild(x);document.body.appendChild(d);
+  history.replaceState(null,'',location.pathname+location.hash);})();
 // Reserva real: se guarda en el servidor de Chapita y se abre WhatsApp con el mensaje preparado.
 const API_PEDIDOS='https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/crear-pedido';
 let enviando=false;

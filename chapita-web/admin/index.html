@@ -184,6 +184,8 @@ dialog::backdrop{background:rgba(10,14,12,.5)}
 
     <section id="tInicio">
       <div class="stats" id="stats"></div>
+      <div class="sec-t"><span>Ventas</span></div>
+      <div class="ventas" id="ventas"></div>
       <div class="sec-t"><span>Avisos</span><button class="btn ghost" type="button" id="btnReadNotif" style="min-height:38px">Marcar como leídos</button></div>
       <div class="notif" id="notifs"></div>
     </section>
@@ -250,7 +252,7 @@ const cName = (k) => COLORS[k]?.[0] ?? k;
 const EST = { nueva_reserva:"Nueva reserva", pendiente_revision:"Pendiente de revisión", aceptado:"Aceptado", rechazado:"Rechazado", pendiente_pago:"Pendiente de pago", pago_confirmado:"Pago confirmado", en_preparacion:"En preparación", enviado:"Enviado", completado:"Completado", cancelado:"Cancelado", incidencia:"Incidencia" };
 const badgeCls = (o) => ["rechazado","cancelado","incidencia"].includes(o.estado) ? "bad" : ["pago_confirmado","completado","enviado"].includes(o.estado) ? "ok" : "";
 
-let ORDERS = [], MSGS = [], NOTIFS = [], ADMIN = "", filtro = "todos", convSel = null;
+let PAYS = [], ORDERS = [], MSGS = [], NOTIFS = [], ADMIN = "", filtro = "todos", convSel = null;
 
 // ---------- toast / diálogo ----------
 let toastT; function toast(t) { $("toast").textContent = t; $("toast").hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $("toast").hidden = true, 3200); }
@@ -314,16 +316,25 @@ function go(t) {
 
 // ---------- carga de datos (protegida por RLS: solo el administrador puede leer) ----------
 async function loadAll() {
-  const [o, m, n] = await Promise.all([
+  const [o, m, n, py] = await Promise.all([
     sb.from("orders").select("*").order("created_at", { ascending: false }).limit(500),
     sb.from("messages").select("*").order("created_at", { ascending: false }).limit(1000),
     sb.from("notificaciones").select("*").order("created_at", { ascending: false }).limit(60),
+    sb.from("payments").select("*").order("created_at", { ascending: false }).limit(300),
   ]);
   if (o.error) throw o.error;
-  ORDERS = o.data || []; MSGS = m.data || []; NOTIFS = n.data || [];
+  ORDERS = o.data || []; MSGS = m.data || []; NOTIFS = n.data || []; PAYS = py.data || [];
   renderAll(); abrirDesdeEnlace();
 }
-function renderAll() { renderStats(); renderNotifs(); renderOrders(); renderConvs(); if (convSel) renderChat(); updateDots(); }
+function renderVentas() {
+  const ok = PAYS.filter((p) => p.estado !== "reembolsado"), sum = (a) => a.reduce((s, p) => s + (p.importe_cents || 0), 0);
+  const mes = new Date(); mes.setDate(1); mes.setHours(0, 0, 0, 0);
+  const pend = ORDERS.filter((o) => o.pago !== "pagado" && !["cancelado", "rechazado"].includes(o.estado));
+  const via = (p) => p.pasarela === "stripe" ? "Tarjeta (Stripe)" : p.pasarela === "bizum_manual" ? "Bizum" : p.pasarela;
+  $("ventas").innerHTML = `<div class="stats"><div class="stat"><b>${eur(sum(ok))}</b><span>Cobrado en total</span></div><div class="stat"><b>${eur(sum(ok.filter((p) => new Date(p.created_at) >= mes)))}</b><span>Cobrado este mes</span></div><div class="stat"><b>${ok.length}</b><span>Pagos completados</span></div><div class="stat ${pend.length ? "alert" : ""}"><b>${pend.length}</b><span>Pedidos pendientes de pago (${eur(sum(pend.map((o) => ({ importe_cents: o.importe_cents }))))})</span></div></div>`
+    + (ok.length ? `<div class="notif">${ok.slice(0, 40).map((p) => { const o = ORDERS.find((x) => x.id === p.order_id); return `<div>${esc(p.referencia || o?.ref || "")} · ${esc(o?.cliente_nombre || "")} · <b>${eur(p.importe_cents)}</b> · ${esc(via(p))}<time>${fecha(p.created_at)}</time></div>`; }).join("")}</div>` : `<div class="muted">Todavía no hay pagos. Aquí aparecerá cada venta cobrada (Bizum confirmado por ti o tarjeta confirmada por Stripe).</div>`);
+}
+function renderAll() { renderVentas(); renderStats(); renderNotifs(); renderOrders(); renderConvs(); if (convSel) renderChat(); updateDots(); }
 let pedidoEnlace = (location.hash.match(/pedido=([0-9a-f-]{36})/) || [])[1] || null;
 function abrirDesdeEnlace() { if (!pedidoEnlace || !ORDERS.length) return; const id = pedidoEnlace; pedidoEnlace = null; history.replaceState(null, "", location.pathname); if (ORDERS.some((o) => o.id === id)) { go("Pedidos"); openOrder(id); } else toast("Ese pedido ya no existe"); }
 addEventListener("hashchange", () => { pedidoEnlace = (location.hash.match(/pedido=([0-9a-f-]{36})/) || [])[1] || null; abrirDesdeEnlace(); });
