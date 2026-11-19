@@ -266,6 +266,11 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 .dlg h2{font-size:38px}
 .dlg .mini{display:flex;align-items:center;gap:14px;padding:12px;border-radius:16px;background:var(--panel)}
 .dlg .mini canvas{width:64px;height:64px}
+.canal{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.canal legend{font-size:14px;font-weight:600;margin-bottom:8px;width:100%}
+.canal label{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:999px;border:1px solid var(--line);background:var(--ground);font-size:15px;cursor:pointer}
+.canal label:has(input:checked){border-color:var(--green);outline:1px solid var(--green)}
+.canal input{accent-color:var(--green);width:auto}
 .field{display:grid;gap:6px;min-width:0}
 .field input,.field textarea{width:100%;min-width:0}
 .field label{font-size:14px;font-weight:600}
@@ -493,7 +498,11 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
     <div class="field"><label for="r-name">Nombre</label><input id="r-name" name="nombre" autocomplete="name" required maxlength="80"></div>
     <div class="two">
       <div class="field"><label for="r-tel">Teléfono</label><input id="r-tel" name="telefono" type="tel" autocomplete="tel" required maxlength="30"></div>
-      <div class="field"><label for="r-email">Correo (opcional, para recibir los avisos también por email)</label><input id="r-email" name="email" type="email" autocomplete="email" maxlength="120" inputmode="email"></div>
+      <fieldset class="field canal"><legend>¿Cómo quieres que te avisemos?</legend>
+        <label><input type="radio" name="canal" value="whatsapp" checked> WhatsApp</label>
+        <label><input type="radio" name="canal" value="email"> Correo</label>
+      </fieldset>
+      <div class="field" id="r-email-f" hidden><label for="r-email">Tu correo</label><input id="r-email" name="email" type="email" autocomplete="email" maxlength="120" inputmode="email" placeholder="nombre@gmail.com"></div>
       <div class="field"><label for="r-dog">Nombre del perro</label><input id="r-dog" name="perro" maxlength="40"></div>
     </div>
     <div class="field"><label>Unidades</label><div class="qty"><button type="button" id="q-minus" aria-label="Quitar una">−</button><output id="q-val">1</output><button type="button" id="q-plus" aria-label="Añadir una">+</button></div></div>
@@ -536,7 +545,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 </section>
 <button class="owner-fab" type="button" id="ownerBtn" hidden>Reservas</button>
 
-<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><span>Envíos: próximamente</span></div></footer>
+<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><a href="mailto:voxelpego@gmail.com">voxelpego@gmail.com</a><span>Envíos: próximamente</span></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" integrity="sha384-wagZhIFgY4hD+7awjQjR4e2E294y6J2HSnd8eTNc15ZubTeQeVRZwhQJ+W6hnBsf" crossorigin="anonymous"></script>
@@ -621,7 +630,10 @@ dbP=cap('db'); userP=cap('user');
 const colorName=k=>CMAP[k][1];
 function setQty(n){qty=Math.max(1,Math.min(50,n));$('q-val').textContent=qty;$('r-total').textContent=eur(qty*PRICE);}
 $('q-minus').onclick=()=>setQty(qty-1);$('q-plus').onclick=()=>setQty(qty+1);
-function openRes(){paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';$('dlg').showModal();}
+const canalSel=()=>(document.querySelector('input[name=canal]:checked')||{}).value||'whatsapp';
+function syncCanal(){const e=canalSel()==='email';$('r-email-f').hidden=!e;$('r-wa').textContent=e?'Reservar y recibir el resumen por correo':'Enviar pedido por WhatsApp';}
+document.querySelectorAll('input[name=canal]').forEach(r=>r.addEventListener('change',syncCanal));
+function openRes(){paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';syncCanal();$('dlg').showModal();}
 $('buy').addEventListener('click',openRes);
 $('r-cancel').onclick=()=>$('dlg').close();
 
@@ -676,15 +688,18 @@ $('r-wa').addEventListener('click',async e=>{
   if(enviando) return;
   const o=currentOrder();
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono para que podamos confirmarte el pedido.';(o.nombre?$('r-tel'):$('r-name')).focus();return;}
+  const canal=canalSel(), email=$('r-email').value.trim();
+  if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para que te enviemos el resumen y los avisos.';$('r-email').focus();return;}
   enviando=true;$('r-wa').setAttribute('aria-busy','true');$('r-msg').className='msg';$('r-msg').textContent='Guardando tu reserva…';
   try{
-    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:$('r-email').value.trim(),perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
+    if(j.canal==='email'){$('r-msg').className='msg ok';$('r-msg').textContent=`¡Reserva ${j.ref} guardada! Te hemos enviado un correo a ${email} con el resumen y cómo pagar por Bizum (concepto ${j.ref}). Los siguientes avisos te llegarán por correo.`;return;}
     $('r-msg').className='msg ok';$('r-msg').textContent=`Reserva ${j.ref} guardada. Abriendo WhatsApp: solo tienes que pulsar enviar.`;
     setTimeout(()=>{location.href=j.whatsapp_url;},700);
   }catch(err){
-    if(err instanceof TypeError){ // sin conexión con el servidor (p. ej. vista previa): enlace directo de respaldo
+    if(err instanceof TypeError&&canal==='whatsapp'){ // sin conexión con el servidor (p. ej. vista previa): enlace directo de respaldo
       updateWa();$('r-msg').className='msg ok';$('r-msg').textContent=`Pedido ${o.code} listo. Abriendo WhatsApp…`;
       setTimeout(()=>{location.href=$('r-wa').href;},500);
     }else{$('r-msg').className='msg err';$('r-msg').textContent=err.message;}
@@ -791,23 +806,24 @@ function answer(raw){
   if(has(t,'envio','enviar','llega','tarda','plazo','entrega','cuando','dias','correos','domicilio')) return {r:'En cuanto recibimos tu Bizum te confirmamos el pedido por WhatsApp. La entrega es como mucho en 2 días desde la confirmación. El coste y la forma de envío te los confirmamos por WhatsApp.',c:['¿Cómo se paga?','Quiero reservar']};
   if(has(t,'pago','paga','bizum','tarjeta','paypal','transferencia','efectivo','apple pay')) return {r:`Se paga por Bizum al ${WA_SHOW}, poniendo como concepto el código de tu pedido (CH-…), que te damos al reservar. Cuando lo recibimos te lo confirmamos por WhatsApp.`,c:['Quiero reservar']};
   if(has(t,'devol','garantia','roto','defect','cambio')) return {r:'Si tu chapa llega con cualquier problema, escríbenos por WhatsApp y lo solucionamos.',c:['Hablar por WhatsApp']};
-  if(has(t,'whatsapp','humano','persona','hablar con','llamar','telefono de','contacto')) return 'human';
+  if(has(t,'whatsapp','correo','email','gmail','humano','persona','hablar con','llamar','telefono de','contacto')) return 'human';
   if(has(t,'personaliz','nombre del perro','grabar','grabado','letras','dibujo')) return {r:'La chapa lleva la huella delante y el símbolo NFC detrás, en los dos colores que elijas. El nombre de tu perro y tus datos van en la ficha que se abre al acercar el móvil. Si quieres algo especial, coméntalo en las notas al reservar.',c:['Quiero reservar']};
   return null;
 }
-function human(){bubble('bot',`Claro. Pulsa el botón y escríbenos directamente al WhatsApp de Chapita (${WA_SHOW}).`);linkBtn('Abrir WhatsApp',`https://wa.me/${WA}?text=${encodeURIComponent('Hola Chapita, tengo una pregunta:')}`);chips(MAIN_CHIPS);}
+function human(){bubble('bot',`Claro. Escríbenos por WhatsApp (${WA_SHOW}) o por correo a voxelpego@gmail.com.`);linkBtn('Abrir WhatsApp',`https://wa.me/${WA}?text=${encodeURIComponent('Hola Chapita, tengo una pregunta:')}`);linkBtn('Escribir un correo','mailto:voxelpego@gmail.com?subject='+encodeURIComponent('Pregunta sobre Chapita'));chips(MAIN_CHIPS);}
 // Reserva guiada
-const PROMPT={nombre:'¡Genial! Vamos a reservar tu Chapa Huella. ¿Cómo te llamas?',tel:'¿Cuál es tu teléfono? Te confirmaremos el pedido por WhatsApp.',perro:'¿Cómo se llama tu perro? (si prefieres no decirlo, escribe «no»)',email:'¿Quieres recibir los avisos también por correo? Escríbeme tu email, o «no».',uds:'¿Cuántas chapas quieres?'};
+const PROMPT={nombre:'¡Genial! Vamos a reservar tu Chapa Huella. ¿Cómo te llamas?',tel:'¿Cuál es tu teléfono? Te confirmaremos el pedido por WhatsApp.',perro:'¿Cómo se llama tu perro? (si prefieres no decirlo, escribe «no»)',canal:'¿Cómo prefieres que te avisemos del pedido: por WhatsApp o por correo?',email:'Perfecto. Escríbeme tu correo.',uds:'¿Cuántas chapas quieres?'};
 function startReserve(){flow='nombre';draft={};bubble('bot',PROMPT.nombre);chips(['Cancelar']);}
-function summary(){return `Este es tu pedido:\n• ${draft.unidades} × Chapa Huella\n• Color principal: ${colorName(state.a)}\n• Color de fondo: ${colorName(state.b)}${draft.perro?'\n• Para '+draft.perro:''}\n• Nombre: ${draft.nombre} · Tel: ${draft.telefono}${draft.email?'\n• Correo: '+draft.email:''}\n• Total: ${eur(draft.unidades*PRICE)} (sin envío)\n\n¿Lo confirmo? Si quieres otros colores, dímelo (por ejemplo «azul con fondo blanco»).`;}
+function summary(){return `Este es tu pedido:\n• ${draft.unidades} × Chapa Huella\n• Color principal: ${colorName(state.a)}\n• Color de fondo: ${colorName(state.b)}${draft.perro?'\n• Para '+draft.perro:''}\n• Nombre: ${draft.nombre} · Tel: ${draft.telefono}${draft.canal==='email'?'\n• Avisos por correo: '+draft.email:'\n• Avisos por WhatsApp'}\n• Total: ${eur(draft.unidades*PRICE)} (sin envío)\n\n¿Lo confirmo? Si quieres otros colores, dímelo (por ejemplo «azul con fondo blanco»).`;}
 async function stepReserve(raw){
   const t=norm(raw).trim();
   if(has(t,'cancel','dejalo','no quiero','olvida')){flow=null;bubble('bot','Sin problema, he cancelado la reserva. ¿Te ayudo con algo más?');chips(MAIN_CHIPS);return;}
   if(raw.includes('?')){const a=answer(raw);if(a&&typeof a==='object'){bubble('bot',a.r);bubble('bot','Seguimos con tu reserva. '+(PROMPT[flow]||'¿Lo confirmo?'));return;}}
   if(flow==='nombre'){const n=raw.trim().replace(/^(me llamo|soy|mi nombre es)\s+/i,'').slice(0,80);if(n.length<2){bubble('bot','Escríbeme tu nombre, por favor.');return;}draft.nombre=n;flow='tel';bubble('bot',`Encantado, ${n.split(' ')[0]}. `+PROMPT.tel);return;}
   if(flow==='tel'){const d=raw.replace(/\D/g,'');if(d.length<9||d.length>15){bubble('bot','Ese teléfono no parece correcto. Escríbelo con sus 9 cifras, por ejemplo 612 345 678.');return;}draft.telefono=raw.trim().slice(0,30);flow='perro';bubble('bot',PROMPT.perro);chips(['No','Cancelar']);return;}
-  if(flow==='perro'){draft.perro=/^(no|nada|-|prefiero no)$/.test(t)?'':raw.trim().replace(/^(se llama|es)\s+/i,'').slice(0,40);flow='email';bubble('bot',PROMPT.email);chips(['No','Cancelar']);return;}
-  if(flow==='email'){if(/^(no|nada|-|prefiero no)$/.test(t)){draft.email='';}else{const m=raw.match(/[^@\s]+@[^@\s]+\.[^@\s]+/);if(!m){bubble('bot','Ese correo no parece correcto. Escríbelo completo (por ejemplo nombre@gmail.com) o responde «no».');return;}draft.email=m[0].slice(0,120);}flow='uds';bubble('bot',PROMPT.uds);chips(['1','2','3','Cancelar']);return;}
+  if(flow==='perro'){draft.perro=/^(no|nada|-|prefiero no)$/.test(t)?'':raw.trim().replace(/^(se llama|es)\s+/i,'').slice(0,40);flow='canal';bubble('bot',PROMPT.canal);chips(['WhatsApp','Correo','Cancelar']);return;}
+  if(flow==='canal'){if(has(t,'whats','wasa','guasa','wa')){draft.canal='whatsapp';draft.email='';flow='uds';bubble('bot','Hecho: te avisaremos por WhatsApp. '+PROMPT.uds);chips(['1','2','3','Cancelar']);return;} if(has(t,'correo','mail','gmail','email')){draft.canal='email';const m=raw.match(/[^@\s]+@[^@\s]+\.[^@\s]+/);if(m){draft.email=m[0].slice(0,120);flow='uds';bubble('bot',PROMPT.uds);chips(['1','2','3','Cancelar']);}else{flow='email';bubble('bot',PROMPT.email);chips(['Cancelar']);}return;} bubble('bot','Elige WhatsApp o correo.');chips(['WhatsApp','Correo','Cancelar']);return;}
+  if(flow==='email'){const m=raw.match(/[^@\s]+@[^@\s]+\.[^@\s]+/);if(!m){bubble('bot','Ese correo no parece correcto. Escríbelo completo, por ejemplo nombre@gmail.com.');return;}draft.email=m[0].slice(0,120);flow='uds';bubble('bot',PROMPT.uds);chips(['1','2','3','Cancelar']);return;}
   if(flow==='uds'){const w={una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5};const n=parseInt(t)||w[t.split(' ')[0]]||0;if(n<1||n>50){bubble('bot','Dime un número de chapas entre 1 y 50.');return;}draft.unidades=n;flow='confirm';bubble('bot',summary());chips(['Sí, confirmar','Cambiar colores','Cancelar']);return;}
   if(flow==='confirm'){
     const col=applyColors(t);
@@ -817,13 +833,14 @@ async function stepReserve(raw){
     flow=null;chips([]);const wait=bubble('bot','Guardando tu reserva…');
     const o={code:newCode(),nombre:draft.nombre,telefono:draft.telefono,perro:draft.perro,unidades:draft.unidades,a:state.a,b:state.b,notas:'Reservado desde el chat'};
     try{
-      const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:draft.email||'',perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+      const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:draft.email||'',canal:draft.canal||'whatsapp',perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
       const j=await r.json().catch(()=>({}));
       if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
+      if(j.canal==='email'){wait.textContent=`¡Reserva ${j.ref} guardada! 🎉 Te hemos enviado un correo a ${draft.email} con el resumen. Para completarla, haz un Bizum de ${eur(o.unidades*PRICE)} al ${WA_SHOW} con el concepto ${j.ref}. Te avisaremos por correo cuando lo recibamos.`;chips(MAIN_CHIPS);return;}
       wait.textContent=`¡Reserva ${j.ref} guardada! 🎉 Último paso: pulsa el botón para enviarnos el pedido por WhatsApp. Después haz un Bizum de ${eur(o.unidades*PRICE)} al ${WA_SHOW} con el concepto ${j.ref}. En cuanto lo recibamos te lo confirmamos.`;
       linkBtn(`Enviar pedido ${j.ref} por WhatsApp`,j.whatsapp_url);
     }catch(err){
-      if(err instanceof TypeError){wait.textContent=`Tu pedido ${o.code} está listo. Pulsa el botón para enviárnoslo por WhatsApp. Después haz un Bizum de ${eur(o.unidades*PRICE)} al ${WA_SHOW} con el concepto ${o.code}.`;linkBtn(`Enviar pedido ${o.code} por WhatsApp`,waLink(o));}
+      if(err instanceof TypeError&&draft.canal!=='email'){wait.textContent=`Tu pedido ${o.code} está listo. Pulsa el botón para enviárnoslo por WhatsApp. Después haz un Bizum de ${eur(o.unidades*PRICE)} al ${WA_SHOW} con el concepto ${o.code}.`;linkBtn(`Enviar pedido ${o.code} por WhatsApp`,waLink(o));}
       else{wait.textContent='No he podido guardar la reserva: '+err.message+'. Puedes intentarlo otra vez o escribirnos por WhatsApp.';chips(['Quiero reservar','Hablar por WhatsApp']);}
     }
   }
@@ -1072,7 +1089,7 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
 <script>
 // ---------- Visor 3D interactivo: desmontaje y montaje de las chapas (Three.js) ----------
 (function(){
-  const box=document.getElementById('cut'), stage=document.getElementById('cutStage'), cv=document.getElementById('cut3d');
+  const box=document.querySelector('.cut'), stage=document.getElementById('cutStage'), cv=document.getElementById('cut3d');
   const G=window.chapaGeo, fail=()=>{box.classList.add('no3d');stage.style.display='none';document.querySelector('.p-grid').style.gridTemplateColumns='1fr';};
   if(typeof THREE==='undefined'||!THREE.OrbitControls||!G){fail();return;}
   let renderer; try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){fail();return;}

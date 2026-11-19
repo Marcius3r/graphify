@@ -383,6 +383,7 @@ async function openOrder(id) {
       <dt>Cliente</dt><dd>${esc(o.cliente_nombre)}</dd>
       <dt>Teléfono</dt><dd><a href="tel:+${esc(o.cliente_telefono)}">${esc(tel)}</a></dd>
       ${o.cliente_email ? `<dt>Correo</dt><dd><a href="mailto:${esc(o.cliente_email)}?subject=${encodeURIComponent("Chapita · pedido " + o.ref)}">${esc(o.cliente_email)}</a></dd>` : ""}
+      <dt>Avisos por</dt><dd><span class="badge">${o.canal_preferido === "email" ? "Correo" : "WhatsApp"}</span></dd>
       <dt>Producto</dt><dd>${o.unidades} × ${esc(o.producto)}</dd>
       <dt>Color</dt><dd>${esc(cName(o.color_principal))}</dd>
       <dt>Fondo</dt><dd>${esc(cName(o.color_fondo))}</dd>
