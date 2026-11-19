@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chapita Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#234536">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chapita Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/admin/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/admin/apple-touch-icon.png">
+<link rel="icon" href="/admin/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#eceeea; --panel:#e2e5df; --paper:#f8f9f6; --ink:#23272b; --slate:#5d6267; --line:#d5d8d2;
+  --green:#234536; --green-ink:#fff; --warn:#9a5b12; --warn-bg:#f6ead6; --bad:#a3392f; --bad-bg:#f6dedb; --ok:#2f6b47; --ok-bg:#dcefe2;
+  --display:'Italiana','Didot',Georgia,serif; --text:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){:root{
+  --ground:#14171a; --panel:#1c2024; --paper:#191d20; --ink:#e8eae6; --slate:#a2a8ab; --line:#2c3135;
+  --green:#7fae94; --green-ink:#10241a; --warn:#e3a85c; --warn-bg:#3a2c18; --bad:#e58a80; --bad-bg:#3b1f1c; --ok:#8fd0a5; --ok-bg:#1c3326; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.5 var(--text);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.05}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:14px;border:0;background:var(--green);color:var(--green-ink);font-weight:600;cursor:pointer}
+.btn.big{min-height:58px;font-size:17px;width:100%}
+.btn.ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--bad-bg);color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+.field{display:grid;gap:6px}
+.field label{font-size:14px;font-weight:600}
+.field input,.field textarea,.field select,.inp{width:100%;min-width:0;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--paper)}
+.muted{color:var(--slate)}
+.small{font-size:13px}
+.err{color:var(--bad);font-size:14px;min-height:1.3em}
+
+/* login */
+.login{min-height:100%;display:grid;place-items:center;padding:24px}
+.login-card{width:min(420px,100%);display:grid;gap:16px;background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:28px}
+.login-card h1{font-size:42px}
+.brandmark{width:56px;height:56px;border-radius:16px}
+
+/* layout */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100%}
+.side{position:sticky;top:0;height:100vh;padding:28px 18px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;background:var(--paper)}
+.side h1{font-size:30px;margin:0 8px 18px}
+.nav-b{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:0;background:transparent;cursor:pointer;text-align:left;font-weight:500;color:var(--slate);position:relative}
+.nav-b svg{width:22px;height:22px;flex:none}
+.nav-b[aria-current="page"]{background:var(--ground);color:var(--ink)}
+.dot{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--bad);color:#fff;font-size:12px;font-weight:600;display:inline-grid;place-items:center;margin-left:auto}
+.main{min-width:0;padding:28px 32px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}
+.top h2{font-size:38px}
+.bottom{display:none}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .main{padding:calc(16px + var(--safe-t)) 16px calc(96px + var(--safe-b))}
+  .top h2{font-size:32px}
+  .bottom{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--paper);border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--safe-b))}
+  .bottom .nav-b{flex-direction:column;gap:3px;padding:8px 2px;font-size:11px;justify-content:center}
+  .bottom .dot{position:absolute;top:2px;right:calc(50% - 22px);margin:0;min-width:18px;height:18px;font-size:11px}
+}
+
+/* tarjetas resumen */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:26px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;cursor:pointer;text-align:left}
+.stat b{display:block;font:600 34px/1 var(--text);font-variant-numeric:tabular-nums}
+.stat span{font-size:14px;color:var(--slate)}
+.stat.alert{border-color:var(--bad)}
+.sec-t{font-size:15px;font-weight:600;margin:24px 0 10px;display:flex;justify-content:space-between;align-items:center}
+.notif{display:grid;gap:8px}
+.notif div{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px}
+.notif div.new{border-left:4px solid var(--green)}
+.notif time{display:block;font-size:12px;color:var(--slate)}
+
+/* pedidos */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar .inp{flex:1;min-width:200px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;scrollbar-width:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;white-space:nowrap}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.oc{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:64px 1fr;gap:14px;cursor:pointer;text-align:left;width:100%;min-width:0}
+.oc canvas{width:64px;height:64px}
+.oc h3{font-family:var(--text);font-weight:600;font-size:16px}
+.oc p{margin:2px 0 0;font-size:14px;color:var(--slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--panel);color:var(--ink);margin-top:6px}
+.badge.pago{background:var(--warn-bg);color:var(--warn)}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.empty{padding:40px 16px;text-align:center;color:var(--slate);background:var(--paper);border:1px dashed var(--line);border-radius:18px}
+
+/* ficha */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(10,14,12,.45);display:flex;justify-content:flex-end}
+.sheet-in{width:min(560px,100%);height:100%;overflow-y:auto;background:var(--ground);padding:calc(18px + var(--safe-t)) 20px calc(28px + var(--safe-b));display:grid;gap:16px;align-content:start}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-h h2{font-size:34px}
+.x{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--paper);font-size:22px;cursor:pointer}
+.design{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--panel);border-radius:18px;padding:14px}
+.design figure{margin:0;text-align:center;font-size:12px;color:var(--slate)}
+.design canvas{width:100%;height:auto}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;font-size:15px}
+.kv dt{color:var(--slate)}
+.kv dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.paybox{background:var(--paper);border:2px solid var(--green);border-radius:18px;padding:16px;display:grid;gap:12px}
+.paybox .concept{font:600 24px/1.25 var(--text);font-variant-numeric:tabular-nums}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hist{display:grid;gap:6px;font-size:13px}
+.hist div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:6px 0}
+
+/* whatsapp */
+.inbox{display:grid;grid-template-columns:320px 1fr;gap:14px;min-height:60vh}
+.convs{display:grid;gap:8px;align-content:start}
+.cv{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;text-align:left;cursor:pointer;width:100%;min-width:0}
+.cv[aria-current="true"]{border-color:var(--ink)}
+.cv b{display:flex;justify-content:space-between;gap:8px}
+.cv p{margin:2px 0 0;font-size:14px;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat{background:var(--paper);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;min-height:60vh;min-width:0}
+.chat-h{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:82%;padding:10px 13px;border-radius:16px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.in{background:var(--panel);align-self:flex-start;border-bottom-left-radius:5px}
+.bub.out{background:var(--green);color:var(--green-ink);align-self:flex-end;border-bottom-right-radius:5px}
+.bub time{display:block;font-size:11px;opacity:.7;margin-top:3px}
+.compose{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.compose textarea{flex:1;min-width:0;resize:none;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--ground);min-height:48px;max-height:140px}
+@media (max-width:820px){.inbox{grid-template-columns:1fr}.inbox.open .convs{display:none}.inbox:not(.open) .chat{display:none}}
+
+/* chat IA */
+.ia{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:18px;min-height:65vh}
+.sug{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px}
+.sug button{border:1px solid var(--line);background:var(--ground);border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer}
+.prop{align-self:flex-start;display:grid;gap:8px;background:var(--warn-bg);border-radius:14px;padding:12px;max-width:90%}
+.prop b{color:var(--warn)}
+
+/* ajustes */
+.setgrid{display:grid;gap:12px;max-width:760px}
+.setrow{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.setrow code{font-size:13px;background:var(--ground);padding:4px 8px;border-radius:6px;overflow-wrap:anywhere}
+.toast{position:fixed;left:50%;bottom:calc(90px + var(--safe-b));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--ground);padding:12px 18px;border-radius:12px;font-size:15px;max-width:calc(100% - 32px)}
+dialog{border:0;border-radius:20px;padding:0;width:min(440px,calc(100% - 32px));background:var(--paper);color:var(--ink)}
+dialog::backdrop{background:rgba(10,14,12,.5)}
+.dlg{padding:22px;display:grid;gap:14px}
+.dlg h3{font-size:30px}
+</style>
+</head>
+<body>
+
+<!-- Acceso -->
+<section class="login" id="vLogin" hidden>
+  <form class="login-card" id="fLogin">
+    <img class="brandmark" src="/admin/icon-192.png" alt="">
+    <h1>Chapita Admin</h1>
+    <p class="muted">Acceso privado del administrador.</p>
+    <div class="field"><label for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="username" required></div>
+    <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" minlength="10" required></div>
+    <p class="err" id="lErr" aria-live="polite"></p>
+    <button class="btn big" type="submit" id="lBtn">Entrar</button>
+    <button class="btn ghost" type="button" id="lSignup">Crear mi cuenta de administrador</button>
+    <p class="muted small">La primera vez, crea tu cuenta con tu correo de administrador y una contraseña de al menos 10 caracteres. Te llegará un correo para confirmarla.</p>
+  </form>
+</section>
+
+<!-- Aplicación -->
+<div class="app" id="vApp" hidden>
+  <aside class="side" aria-label="Secciones">
+    <h1>Chapita</h1>
+    <nav id="navSide"></nav>
+    <div style="margin-top:auto" class="muted small" id="whoSide"></div>
+  </aside>
+  <main class="main">
+    <div class="top"><h2 id="title">Inicio</h2><button class="btn ghost" id="btnRefresh" type="button" aria-label="Actualizar">Actualizar</button></div>
+
+    <section id="tInicio">
+      <div class="stats" id="stats"></div>
+      <div class="sec-t"><span>Avisos</span><button class="btn ghost" type="button" id="btnReadNotif" style="min-height:38px">Marcar como leídos</button></div>
+      <div class="notif" id="notifs"></div>
+    </section>
+
+    <section id="tPedidos" hidden>
+      <div class="toolbar"><input class="inp" id="q" type="search" placeholder="Buscar por pedido, cliente, mascota o teléfono" aria-label="Buscar pedidos"></div>
+      <div class="chips" id="chips"></div>
+      <div class="orders" id="orders"></div>
+    </section>
+
+    <section id="tWhatsApp" hidden>
+      <div class="inbox" id="inbox">
+        <div class="convs" id="convs"></div>
+        <div class="chat">
+          <div class="chat-h"><div><b id="chName"></b><div class="muted small" id="chSub"></div></div><button class="btn ghost" type="button" id="chBack" style="min-height:40px">Volver</button></div>
+          <div class="log" id="chLog"></div>
+          <div class="sug" id="chAi"><button type="button" id="chSuggest">Que la IA me proponga una respuesta</button></div>
+          <form class="compose" id="chForm"><textarea id="chText" rows="1" placeholder="Escribe tu respuesta" aria-label="Respuesta"></textarea><button class="btn" type="submit">Enviar</button></form>
+        </div>
+      </div>
+    </section>
+
+    <section id="tIA" hidden>
+      <div class="ia">
+        <div class="log" id="iaLog"></div>
+        <div class="sug" id="iaSug">
+          <button type="button">Enséñame los pedidos pendientes de pago</button>
+          <button type="button">¿Cuántas reservas hemos recibido esta semana?</button>
+          <button type="button">Busca el pedido de Toby</button>
+        </div>
+        <form class="compose" id="iaForm"><textarea id="iaText" rows="1" placeholder="Escribe a la IA de Chapita" aria-label="Mensaje para la IA"></textarea><button class="btn" type="submit" id="iaBtn">Enviar</button></form>
+      </div>
+    </section>
+
+    <section id="tAjustes" hidden>
+      <div class="setgrid" id="settings"></div>
+    </section>
+  </main>
+  <nav class="bottom" id="navBottom" aria-label="Secciones"></nav>
+</div>
+
+<!-- Ficha de pedido -->
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="sheet-h"><h2 id="shTitle"></h2><button class="x" type="button" id="shClose" aria-label="Cerrar">×</button></div>
+    <div id="shBody"></div>
+  </div>
+</div>
+
+<dialog id="dlg"><form class="dlg" method="dialog" id="dlgForm"><h3 id="dlgT"></h3><div id="dlgB"></div><div class="acts"><button class="btn ghost" value="no" type="submit">Cancelar</button><button class="btn" value="si" type="submit" id="dlgOk">Confirmar</button></div></form></dialog>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
+<script>
+const SUPA_URL = "https://zmosqfoiddndrlieuleb.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inptb3NxZm9pZGRuZHJsaWV1bGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwNTY0MjAsImV4cCI6MjExMDYzMjQyMH0.T1b2b4iTGdyH4bK8I9MOIIJ1kyk1ApwQ4Q1FxVlZ_9I"; // clave pública: no da acceso a nada sin sesión de administrador
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const eur = (c) => (c / 100).toLocaleString("es-ES", { minimumFractionDigits: 2 }) + " €";
+const fecha = (d) => d ? new Date(d).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+const COLORS = { onix:["negro ónix","#161616"], marfil:["blanco marfil","#efebe2"], chocolate:["chocolate","#4b2a20"], rosa:["rosa empolvado","#e9b9b4"], salvia:["verde salvia","#8fa58c"], ingles:["verde inglés","#2f4f3a"], arena:["arena","#d8c3a0"], piedra:["gris piedra","#8e8b86"], marino:["azul marino","#1f2f4f"], burdeos:["burdeos","#6b1f2a"], lavanda:["lavanda","#b8a9cf"], terracota:["terracota","#b5603f"] };
+const cName = (k) => COLORS[k]?.[0] ?? k;
+const EST = { nueva_reserva:"Nueva reserva", pendiente_revision:"Pendiente de revisión", aceptado:"Aceptado", rechazado:"Rechazado", pendiente_pago:"Pendiente de pago", pago_confirmado:"Pago confirmado", en_preparacion:"En preparación", enviado:"Enviado", completado:"Completado", cancelado:"Cancelado", incidencia:"Incidencia" };
+const badgeCls = (o) => ["rechazado","cancelado","incidencia"].includes(o.estado) ? "bad" : ["pago_confirmado","completado","enviado"].includes(o.estado) ? "ok" : "";
+
+let ORDERS = [], MSGS = [], NOTIFS = [], ADMIN = "", filtro = "todos", convSel = null, iaHist = [];
+
+// ---------- toast / diálogo ----------
+let toastT; function toast(t) { $("toast").textContent = t; $("toast").hidden = false; clearTimeout(toastT); toastT = setTimeout(() => $("toast").hidden = true, 3200); }
+function confirmar(titulo, html, ok = "Confirmar") {
+  return new Promise((res) => { $("dlgT").textContent = titulo; $("dlgB").innerHTML = html; $("dlgOk").textContent = ok;
+    const d = $("dlg"); d.returnValue = ""; d.showModal(); d.addEventListener("close", () => res(d.returnValue === "si"), { once: true }); });
+}
+
+// ---------- API privada ----------
+async function api(accion, datos = {}) {
+  const { data, error } = await sb.functions.invoke("admin-api", { body: { accion, ...datos } });
+  if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch {} throw new Error(m); }
+  return data;
+}
+
+// ---------- recoloreado de la chapa real (mismo motor que la web) ----------
+const toLin = new Float32Array(256); for (let i = 0; i < 256; i++) { const c = i / 255; toLin[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+const LUTN = 4096, fromLin = new Uint8ClampedArray(LUTN + 1); for (let i = 0; i <= LUTN; i++) { const c = i / LUTN; fromLin[i] = Math.round(255 * (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055)); }
+const shPow = new Float32Array(256); for (let i = 0; i < 256; i++) shPow[i] = Math.pow(i / 127.5, 1.6);
+const hexLin = (h) => [1, 3, 5].map((i) => toLin[parseInt(h.slice(i, i + 2), 16)]);
+const SRC = {};
+const loadZ = (n) => new Promise((r) => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"); c.width = im.naturalWidth; c.height = im.naturalHeight; const g = c.getContext("2d"); g.drawImage(im, 0, 0); SRC[n] = g.getImageData(0, 0, c.width, c.height); r(); }; im.onerror = r; im.src = `/img/zonas-${n}.webp`; });
+const zonesReady = Promise.all([loadZ("huella"), loadZ("nfc")]);
+function paint(cv, model, a, b, size) {
+  const z = SRC[model]; if (!z || !COLORS[a] || !COLORS[b]) return;
+  const tmp = document.createElement("canvas"); tmp.width = z.width; tmp.height = z.height;
+  const g = tmp.getContext("2d"), out = g.createImageData(z.width, z.height), d = z.data, o = out.data;
+  const A = hexLin(COLORS[a][1]), B = hexLin(COLORS[b][1]);
+  const [Bo, Fo, Di] = model === "huella" ? [A, B, A] : [A, A, B];
+  for (let i = 0; i < d.length; i += 4) { const al = d[i + 3]; if (!al) { o[i + 3] = 0; continue; }
+    const wb = d[i] / 255, wd = d[i + 1] / 255, wf = Math.max(0, 1 - wb - wd), sh = shPow[d[i + 2]];
+    for (let k = 0; k < 3; k++) o[i + k] = fromLin[Math.min(LUTN, ((wb * Bo[k] + wd * Di[k] + wf * Fo[k]) * sh * LUTN) | 0)];
+    o[i + 3] = al; }
+  g.putImageData(out, 0, 0);
+  cv.width = size; cv.height = size; cv.getContext("2d").drawImage(tmp, 0, 0, size, size);
+}
+
+// ---------- navegación ----------
+const TABS = [
+  ["Inicio", '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
+  ["Pedidos", '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'],
+  ["WhatsApp", '<path d="M4 20l1.4-4A8 8 0 1 1 8 18.6z"/>'],
+  ["IA", '<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/>'],
+  ["Ajustes", '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'],
+];
+const TITLES = { Inicio: "Inicio", Pedidos: "Pedidos", WhatsApp: "WhatsApp", IA: "Chat IA", Ajustes: "Ajustes" };
+let tab = "Inicio";
+function buildNav() {
+  const html = TABS.map(([t, svg]) => `<button class="nav-b" type="button" data-t="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${svg}</svg><span>${TITLES[t]}</span><span class="dot" data-dot="${t}" hidden></span></button>`).join("");
+  $("navSide").innerHTML = html; $("navBottom").innerHTML = html;
+  document.querySelectorAll(".nav-b").forEach((b) => b.onclick = () => go(b.dataset.t));
+}
+function go(t) {
+  tab = t; $("title").textContent = TITLES[t];
+  for (const [x] of TABS) $("t" + x).hidden = x !== t;
+  document.querySelectorAll(".nav-b").forEach((b) => b.setAttribute("aria-current", b.dataset.t === t ? "page" : "false"));
+  if (t === "Ajustes") renderSettings();
+  if (t === "IA" && !iaHist.length) iaWelcome();
+  try { localStorage.setItem("chapita-tab", t); } catch {}
+}
+
+// ---------- carga de datos (protegida por RLS: solo el administrador puede leer) ----------
+async function loadAll() {
+  const [o, m, n] = await Promise.all([
+    sb.from("orders").select("*").order("created_at", { ascending: false }).limit(500),
+    sb.from("messages").select("*").order("created_at", { ascending: false }).limit(1000),
+    sb.from("notificaciones").select("*").order("created_at", { ascending: false }).limit(60),
+  ]);
+  if (o.error) throw o.error;
+  ORDERS = o.data || []; MSGS = m.data || []; NOTIFS = n.data || [];
+  renderAll();
+}
+function renderAll() { renderStats(); renderNotifs(); renderOrders(); renderConvs(); if (convSel) renderChat(); updateDots(); }
+
+const cuenta = (f) => ORDERS.filter(f).length;
+function renderStats() {
+  const unread = MSGS.filter((m) => m.direccion === "entrante" && !m.leido).length;
+  const cards = [
+    ["Reservas nuevas", cuenta((o) => o.estado === "nueva_reserva"), "nueva_reserva"],
+    ["Pendientes de revisar", cuenta((o) => o.estado === "pendiente_revision"), "pendiente_revision"],
+    ["Pagos por confirmar", cuenta((o) => o.pago === "pendiente" && !["cancelado", "rechazado"].includes(o.estado)), "pago_pendiente", true],
+    ["Aceptados", cuenta((o) => o.estado === "aceptado"), "aceptado"],
+    ["Rechazados", cuenta((o) => o.estado === "rechazado"), "rechazado"],
+    ["En preparación", cuenta((o) => o.estado === "en_preparacion"), "en_preparacion"],
+    ["Enviados", cuenta((o) => o.estado === "enviado"), "enviado"],
+    ["Completados", cuenta((o) => o.estado === "completado"), "completado"],
+    ["Mensajes sin leer", unread, "_wa", true],
+    ["Incidencias", cuenta((o) => o.estado === "incidencia"), "incidencia", true],
+  ];
+  $("stats").innerHTML = cards.map(([t, n, f, al]) => `<button class="stat ${al && n ? "alert" : ""}" type="button" data-f="${f}"><b>${n}</b><span>${t}</span></button>`).join("");
+  $("stats").querySelectorAll(".stat").forEach((b) => b.onclick = () => { if (b.dataset.f === "_wa") return go("WhatsApp"); filtro = b.dataset.f; go("Pedidos"); renderOrders(); });
+}
+function renderNotifs() {
+  $("notifs").innerHTML = NOTIFS.length ? NOTIFS.slice(0, 30).map((n) => `<div class="${n.leida ? "" : "new"}">${esc(n.texto)}<time>${fecha(n.created_at)}</time></div>`).join("") : `<div class="muted">Sin avisos todavía. Aquí aparecerán las reservas nuevas, los mensajes y cualquier fallo de envío.</div>`;
+}
+function updateDots() {
+  const set = (t, n) => document.querySelectorAll(`[data-dot="${t}"]`).forEach((d) => { d.hidden = !n; d.textContent = n > 99 ? "99+" : n; });
+  set("Inicio", NOTIFS.filter((n) => !n.leida).length);
+  set("Pedidos", cuenta((o) => o.estado === "nueva_reserva"));
+  set("WhatsApp", MSGS.filter((m) => m.direccion === "entrante" && !m.leido).length);
+}
+
+// ---------- pedidos ----------
+const FILTROS = [["todos", "Todos"], ["nueva_reserva", "Nuevas"], ["pago_pendiente", "Pago pendiente"], ["pendiente_revision", "Por revisar"], ["aceptado", "Aceptados"], ["pago_confirmado", "Pagados"], ["en_preparacion", "En preparación"], ["enviado", "Enviados"], ["completado", "Completados"], ["rechazado", "Rechazados"], ["cancelado", "Cancelados"], ["incidencia", "Incidencias"]];
+function renderOrders() {
+  $("chips").innerHTML = FILTROS.map(([k, t]) => `<button type="button" data-k="${k}" aria-pressed="${filtro === k}">${t}</button>`).join("");
+  $("chips").querySelectorAll("button").forEach((b) => b.onclick = () => { filtro = b.dataset.k; renderOrders(); });
+  const q = $("q").value.trim().toLowerCase(), qd = q.replace(/\D/g, "");
+  const list = ORDERS.filter((o) => (filtro === "todos" || (filtro === "pago_pendiente" ? o.pago === "pendiente" && !["cancelado", "rechazado"].includes(o.estado) : o.estado === filtro))
+    && (!q || [o.ref, o.cliente_nombre, o.perro].some((v) => String(v || "").toLowerCase().includes(q)) || (qd.length >= 3 && o.cliente_telefono.includes(qd))));
+  $("orders").innerHTML = list.length ? list.map((o) => `<button class="oc" type="button" data-id="${o.id}"><canvas data-a="${o.color_principal}" data-b="${o.color_fondo}" width="64" height="64" aria-hidden="true"></canvas><div style="min-width:0"><h3>${esc(o.ref)} · ${esc(o.cliente_nombre)}</h3><p>${o.unidades} × ${esc(o.producto)} · ${eur(o.importe_cents)}${o.perro ? " · " + esc(o.perro) : ""}</p><span class="badge ${badgeCls(o)}">${EST[o.estado] || o.estado}</span> <span class="badge ${o.pago === "pagado" ? "ok" : "pago"}">${o.pago === "pagado" ? "Pagado" : "Pago pendiente"}</span></div></button>`).join("") : `<div class="empty">No hay pedidos con este filtro.</div>`;
+  $("orders").querySelectorAll(".oc").forEach((b) => b.onclick = () => openOrder(b.dataset.id));
+  zonesReady.then(() => $("orders").querySelectorAll("canvas").forEach((c) => paint(c, "huella", c.dataset.a, c.dataset.b, 128)));
+}
+$("q").addEventListener("input", renderOrders);
+
+async function openOrder(id) {
+  const o = ORDERS.find((x) => x.id === id); if (!o) return;
+  $("shTitle").textContent = o.ref;
+  const tel = o.cliente_telefono.replace(/^34/, "");
+  $("shBody").innerHTML = `
+    <div class="design"><figure><canvas id="shF"></canvas>Delante</figure><figure><canvas id="shB"></canvas>Detrás</figure></div>
+    ${o.pago !== "pagado" && !["cancelado", "rechazado"].includes(o.estado) ? `
+    <div class="paybox"><div class="muted small">Comprueba en tu banco un Bizum de</div><div class="concept">${eur(o.importe_cents)} · concepto ${esc(o.ref)}</div>
+      <button class="btn big" type="button" id="aPago">Confirmar pago</button></div>` : o.pago === "pagado" ? `<div class="paybox"><b>Pago confirmado</b><div class="muted small">${fecha(o.confirmado_at || o.pagado_at)}</div></div>` : ""}
+    <dl class="kv">
+      <dt>Cliente</dt><dd>${esc(o.cliente_nombre)}</dd>
+      <dt>Teléfono</dt><dd><a href="tel:+${esc(o.cliente_telefono)}">${esc(tel)}</a></dd>
+      ${o.cliente_email ? `<dt>Correo</dt><dd>${esc(o.cliente_email)}</dd>` : ""}
+      <dt>Producto</dt><dd>${o.unidades} × ${esc(o.producto)}</dd>
+      <dt>Color</dt><dd>${esc(cName(o.color_principal))}</dd>
+      <dt>Fondo</dt><dd>${esc(cName(o.color_fondo))}</dd>
+      ${o.perro ? `<dt>Mascota</dt><dd>${esc(o.perro)}</dd>` : ""}
+      ${o.personalizacion ? `<dt>Personalización</dt><dd>${esc(o.personalizacion)}</dd>` : ""}
+      ${o.notas ? `<dt>Notas</dt><dd>${esc(o.notas)}</dd>` : ""}
+      <dt>Total</dt><dd>${eur(o.importe_cents)}</dd>
+      <dt>Estado</dt><dd><span class="badge ${badgeCls(o)}">${EST[o.estado]}</span></dd>
+      <dt>Pago</dt><dd><span class="badge ${o.pago === "pagado" ? "ok" : "pago"}">${o.pago === "pagado" ? "Pagado" : "Pendiente"}</span></dd>
+      <dt>Reserva</dt><dd>${fecha(o.created_at)}</dd>
+      ${o.motivo ? `<dt>Motivo</dt><dd>${esc(o.motivo)}</dd>` : ""}
+    </dl>
+    <div class="acts">
+      <button class="btn ghost" type="button" id="aAceptar">Aceptar pedido</button>
+      <button class="btn danger" type="button" id="aRechazar">Rechazar pedido</button>
+      <button class="btn ghost" type="button" id="aPrep">En preparación</button>
+      <button class="btn ghost" type="button" id="aEnv">Marcar enviado</button>
+      <button class="btn ghost" type="button" id="aComp">Completado</button>
+      <button class="btn danger" type="button" id="aCanc">Cancelar</button>
+    </div>
+    <div class="field"><label for="aEstado">Otro estado</label><select id="aEstado">${Object.entries(EST).filter(([k]) => k !== "pago_confirmado").map(([k, v]) => `<option value="${k}" ${k === o.estado ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+    <button class="btn ghost" type="button" id="aEstadoGo">Cambiar estado</button>
+    <button class="btn ghost" type="button" id="aChat">Abrir conversación de WhatsApp</button>
+    <div class="sec-t">Historial</div><div class="hist" id="shHist"><div class="muted">Cargando…</div></div>`;
+  $("sheet").hidden = false;
+  zonesReady.then(() => { paint($("shF"), "huella", o.color_principal, o.color_fondo, 360); paint($("shB"), "nfc", o.color_principal, o.color_fondo, 360); });
+  const run = async (fn, ok) => { try { await fn(); toast(ok); await loadAll(); openOrder(id); } catch (e) { toast("No se pudo: " + e.message); } };
+  const btn = (bid, f) => { const b = $(bid); if (b) b.onclick = f; };
+  btn("aPago", async () => { if (await confirmar("Confirmar pago", `<p>¿Has comprobado en tu banco un Bizum de <b>${eur(o.importe_cents)}</b> con el concepto <b>${esc(o.ref)}</b>?</p><p class="muted small">Se marcará como pagado y el cliente recibirá la confirmación por WhatsApp.</p>`, "Sí, confirmar pago")) run(() => api("confirmar_pago", { order_id: id }), "Pago confirmado. Avisando al cliente…"); });
+  btn("aAceptar", async () => { if (await confirmar("Aceptar pedido", `<p>Se avisará a ${esc(o.cliente_nombre)} por WhatsApp. Aceptar no confirma el pago.</p>`, "Aceptar")) run(() => api("aceptar", { order_id: id }), "Pedido aceptado"); });
+  btn("aRechazar", async () => {
+    const ok = await confirmar("Rechazar pedido", `<div class="field"><label for="rMot">Motivo</label><input id="rMot" class="inp" required></div><div class="field"><label for="rIns">Instrucciones para el cliente (opcional)</label><textarea id="rIns" class="inp" rows="2"></textarea></div>`, "Rechazar");
+    if (ok) { const motivo = $("rMot").value.trim(), instrucciones = $("rIns").value.trim(); if (!motivo) return toast("Escribe el motivo"); run(() => api("rechazar", { order_id: id, motivo, instrucciones }), "Pedido rechazado"); } });
+  const est = (e, t) => async () => { if (await confirmar(t, `<p>El pedido ${esc(o.ref)} pasará a «${EST[e]}» y se avisará al cliente.</p>`)) run(() => api("cambiar_estado", { order_id: id, estado: e }), "Estado actualizado"); };
+  btn("aPrep", est("en_preparacion", "En preparación")); btn("aEnv", est("enviado", "Marcar enviado")); btn("aComp", est("completado", "Completado"));
+  btn("aCanc", async () => { const ok = await confirmar("Cancelar pedido", `<div class="field"><label for="cMot">Motivo</label><input id="cMot" class="inp"></div>`, "Cancelar pedido"); if (ok) run(() => api("cambiar_estado", { order_id: id, estado: "cancelado", motivo: $("cMot").value.trim() }), "Pedido cancelado"); });
+  btn("aEstadoGo", () => { const e = $("aEstado").value; if (e !== o.estado) est(e, "Cambiar estado")(); });
+  btn("aChat", () => { $("sheet").hidden = true; openConv(o.cliente_telefono); go("WhatsApp"); });
+  const { data: ev } = await sb.from("order_events").select("tipo,detalle,at").eq("order_id", id).order("at", { ascending: false }).limit(40);
+  $("shHist").innerHTML = (ev || []).map((e) => `<div><span>${esc(e.tipo.replace(/_/g, " "))}${e.detalle?.a ? " → " + esc(EST[e.detalle.a] || e.detalle.a) : ""}</span><span class="muted">${fecha(e.at)}</span></div>`).join("") || `<div class="muted">Sin movimientos.</div>`;
+}
+$("shClose").onclick = () => $("sheet").hidden = true;
+$("sheet").addEventListener("click", (e) => { if (e.target === $("sheet")) $("sheet").hidden = true; });
+
+// ---------- WhatsApp ----------
+function convList() {
+  const by = {};
+  for (const m of MSGS) { (by[m.telefono] ||= []).push(m); }
+  return Object.entries(by).map(([tel, ms]) => {
+    const last = ms[0], o = ORDERS.find((x) => x.cliente_telefono === tel);
+    return { tel, last, unread: ms.filter((m) => m.direccion === "entrante" && !m.leido).length, nombre: ms.find((m) => m.nombre)?.nombre || o?.cliente_nombre || "+" + tel, order: o };
+  }).sort((a, b) => new Date(b.last.created_at) - new Date(a.last.created_at));
+}
+function renderConvs() {
+  const cs = convList();
+  $("convs").innerHTML = cs.length ? cs.map((c) => `<button class="cv" type="button" data-tel="${c.tel}" aria-current="${convSel === c.tel}"><b><span>${esc(c.nombre)}</span>${c.unread ? `<span class="dot">${c.unread}</span>` : `<span class="muted small">${fecha(c.last.created_at)}</span>`}</b><p>${c.order ? esc(c.order.ref) + " · " : ""}${esc(c.last.texto)}</p></button>`).join("") : `<div class="empty">Aún no hay conversaciones. Cuando un cliente escriba al WhatsApp de Chapita aparecerá aquí.</div>`;
+  $("convs").querySelectorAll(".cv").forEach((b) => b.onclick = () => openConv(b.dataset.tel));
+}
+async function openConv(tel) {
+  convSel = tel; $("inbox").classList.add("open"); renderConvs(); renderChat();
+  if (MSGS.some((m) => m.telefono === tel && m.direccion === "entrante" && !m.leido)) { try { await api("marcar_leidos", { telefono: tel }); MSGS.forEach((m) => { if (m.telefono === tel) m.leido = true; }); renderConvs(); updateDots(); renderStats(); } catch {} }
+}
+function renderChat() {
+  const c = convList().find((x) => x.tel === convSel);
+  $("chName").textContent = c?.nombre || "+" + convSel; $("chSub").textContent = (c?.order ? c.order.ref + " · " + (EST[c.order.estado] || "") + " · " : "") + "+" + convSel;
+  const ms = MSGS.filter((m) => m.telefono === convSel).slice().reverse();
+  $("chLog").innerHTML = ms.map((m) => `<div class="bub ${m.direccion === "entrante" ? "in" : "out"}">${esc(m.texto)}<time>${fecha(m.created_at)}${m.direccion === "saliente" ? " · " + esc(m.estado) : ""}</time></div>`).join("") || `<div class="muted">Sin mensajes todavía. Puedes escribir el primero.</div>`;
+  $("chLog").scrollTop = $("chLog").scrollHeight;
+}
+$("chBack").onclick = () => { $("inbox").classList.remove("open"); convSel = null; renderConvs(); };
+$("chForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); const texto = $("chText").value.trim(); if (!texto || !convSel) return;
+  const o = ORDERS.find((x) => x.cliente_telefono === convSel);
+  try { await api("enviar_mensaje", o ? { order_id: o.id, texto } : { telefono: convSel, texto }); $("chText").value = ""; toast("Mensaje en cola de envío"); setTimeout(loadAll, 1500); } catch (er) { toast("No se pudo enviar: " + er.message); }
+});
+$("chSuggest").onclick = async () => {
+  const c = convList().find((x) => x.tel === convSel); if (!c) return;
+  $("chSuggest").disabled = true; $("chSuggest").textContent = "Pensando…";
+  try {
+    const r = await iaCall([{ role: "user", content: `Redacta (sin enviarla) una respuesta breve y cercana para el cliente con teléfono ${convSel}${c.order ? ", pedido " + c.order.ref : ""}. Consulta su conversación y su pedido antes. Devuelve solo el texto del mensaje.` }]);
+    $("chText").value = r.respuesta || ""; $("chText").focus();
+  } catch (e) { toast(e.message); }
+  $("chSuggest").disabled = false; $("chSuggest").textContent = "Que la IA me proponga una respuesta";
+};
+
+// ---------- Chat IA ----------
+async function iaCall(mensajes) {
+  const { data, error } = await sb.functions.invoke("admin-ia", { body: { mensajes } });
+  if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch {} throw new Error(m); }
+  return data;
+}
+function iaBubble(cls, html) { const d = document.createElement("div"); d.className = "bub " + cls; d.innerHTML = html; $("iaLog").appendChild(d); $("iaLog").scrollTop = $("iaLog").scrollHeight; return d; }
+function iaWelcome() { iaBubble("in", "Hola. Soy la IA de Chapita. Puedo buscar pedidos, contarte cómo va el negocio y enviar mensajes a tus clientes cuando me lo pidas. Para confirmar pagos, cancelar o rechazar te pediré que lo confirmes tú."); }
+async function iaSend(texto) {
+  if (!texto.trim()) return; iaBubble("out", esc(texto)); iaHist.push({ role: "user", content: texto });
+  $("iaText").value = ""; $("iaBtn").disabled = true; const wait = iaBubble("in", "Pensando…");
+  try {
+    const r = await iaCall(iaHist);
+    wait.innerHTML = esc(r.respuesta); iaHist.push({ role: "assistant", content: r.respuesta });
+    for (const a of r.acciones || []) iaBubble("in", "✓ " + esc(a));
+    for (const p of r.pendientes || []) {
+      const box = document.createElement("div"); box.className = "prop";
+      box.innerHTML = `<b>Necesita tu confirmación</b><span>${esc(p.etiqueta)}${p.motivo ? " · " + esc(p.motivo) : ""}</span><div class="acts"><button class="btn ghost" type="button">Descartar</button><button class="btn" type="button">Confirmar</button></div>`;
+      const [no, si] = box.querySelectorAll("button");
+      no.onclick = () => { box.remove(); };
+      si.onclick = async () => { si.disabled = true; try {
+        if (p.accion === "confirmar_pago") await api("confirmar_pago", { order_id: p.order_id });
+        else if (p.accion === "aceptar") await api("aceptar", { order_id: p.order_id });
+        else if (p.accion === "rechazar") await api("rechazar", { order_id: p.order_id, motivo: p.motivo || "" });
+        else await api("cambiar_estado", { order_id: p.order_id, estado: p.estado, motivo: p.motivo || undefined });
+        box.innerHTML = `<b>Hecho</b><span>${esc(p.etiqueta)}</span>`; loadAll();
+      } catch (e) { toast("No se pudo: " + e.message); si.disabled = false; } };
+      $("iaLog").appendChild(box);
+    }
+    if (r.acciones?.length) setTimeout(loadAll, 1500);
+  } catch (e) { wait.innerHTML = esc(e.message); }
+  $("iaBtn").disabled = false; $("iaLog").scrollTop = $("iaLog").scrollHeight;
+}
+$("iaForm").addEventListener("submit", (e) => { e.preventDefault(); iaSend($("iaText").value); });
+$("iaSug").querySelectorAll("button").forEach((b) => b.onclick = () => iaSend(b.textContent));
+for (const id of ["iaText", "chText"]) $(id).addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && window.matchMedia("(pointer:fine)").matches) { e.preventDefault(); $(id).form.requestSubmit(); } });
+
+// ---------- Ajustes ----------
+async function renderSettings() {
+  $("settings").innerHTML = `<div class="setrow"><div><b>Cuenta</b><div class="muted small">${esc(ADMIN)}</div></div><button class="btn ghost" type="button" id="sOut">Cerrar sesión</button></div><div class="setrow muted">Comprobando conexiones…</div>`;
+  $("sOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  let c = null; try { c = await api("config"); } catch (e) { $("settings").lastElementChild.textContent = "No se pudo leer la configuración: " + e.message; return; }
+  const st = (ok) => `<span class="badge ${ok ? "ok" : "pago"}">${ok ? "Conectado" : "Falta configurar"}</span>`;
+  const notifOk = "Notification" in window && Notification.permission === "granted";
+  $("settings").innerHTML = `
+    <div class="setrow"><div><b>Cuenta</b><div class="muted small">${esc(ADMIN)}</div></div><button class="btn ghost" type="button" id="sOut">Cerrar sesión</button></div>
+    <div class="setrow"><div><b>WhatsApp Business</b><div class="muted small">Envío y recepción de mensajes</div></div>${st(c.whatsapp && c.firma_whatsapp)}</div>
+    <div class="setrow"><div style="min-width:0"><b>Webhook para Meta</b><div class="muted small">URL de devolución de llamada</div><code>${esc(c.webhook_url)}</code><div class="muted small" style="margin-top:6px">Identificador de verificación</div><code>${esc(c.verify_token)}</code></div></div>
+    <div class="setrow"><div><b>Chat IA</b><div class="muted small">API de Claude</div></div>${st(c.ia)}</div>
+    <div class="setrow"><div><b>Correo alternativo</b><div class="muted small">Si WhatsApp falla y el cliente dejó su correo</div></div>${st(c.email)}</div>
+    <div class="setrow"><div><b>Avisos en este dispositivo</b><div class="muted small">Con la app abierta o en segundo plano</div></div>${notifOk ? st(true) : `<button class="btn ghost" type="button" id="sNotif">Activar avisos</button>`}</div>
+    <div class="setrow"><div><b>Bizum</b><div class="muted small">Número que ve el cliente</div></div><code>${esc(c.bizum)}</code></div>`;
+  $("sOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  if ($("sNotif")) $("sNotif").onclick = async () => { const p = await Notification.requestPermission(); toast(p === "granted" ? "Avisos activados" : "No se activaron los avisos"); renderSettings(); };
+}
+
+// ---------- tiempo real + avisos ----------
+function realtime() {
+  sb.channel("chapita-admin")
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => loadAll())
+    .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => loadAll())
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "notificaciones" }, (p) => {
+      loadAll();
+      const t = p.new?.texto || "Nuevo aviso";
+      if ("Notification" in window && Notification.permission === "granted") navigator.serviceWorker?.ready.then((r) => r.showNotification("Chapita", { body: t, icon: "/admin/icon-192.png", tag: "chapita-" + p.new?.id })).catch(() => {});
+      toast(t);
+    }).subscribe();
+}
+$("btnRefresh").onclick = () => loadAll().then(() => toast("Actualizado")).catch((e) => toast(e.message));
+$("btnReadNotif").onclick = async () => { try { await api("marcar_notificaciones"); await loadAll(); } catch (e) { toast(e.message); } };
+
+// ---------- acceso ----------
+async function entrar(session) {
+  if (!session) { $("vApp").hidden = true; $("vLogin").hidden = false; return; }
+  const { data: isAdmin, error } = await sb.rpc("is_admin");
+  if (error || !isAdmin) { await sb.auth.signOut(); $("lErr").textContent = "Esta cuenta no tiene acceso a Chapita Admin."; $("vApp").hidden = true; $("vLogin").hidden = false; return; }
+  ADMIN = session.user.email; $("whoSide").textContent = ADMIN;
+  $("vLogin").hidden = true; $("vApp").hidden = false; buildNav();
+  let t = "Inicio"; try { t = localStorage.getItem("chapita-tab") || "Inicio"; } catch {}
+  go(TITLES[t] ? t : "Inicio");
+  try { await loadAll(); } catch (e) { toast("No se pudieron cargar los datos: " + e.message); }
+  realtime();
+}
+$("fLogin").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("lErr").textContent = ""; $("lBtn").disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email: $("lEmail").value.trim(), password: $("lPass").value });
+  $("lBtn").disabled = false;
+  if (error) { $("lErr").textContent = /confirm/i.test(error.message) ? "Confirma primero tu correo con el enlace que te enviamos." : "Correo o contraseña incorrectos."; return; }
+  entrar(data.session);
+});
+$("lSignup").onclick = async () => {
+  const email = $("lEmail").value.trim(), password = $("lPass").value;
+  if (!email || password.length < 10) { $("lErr").textContent = "Escribe tu correo y una contraseña de al menos 10 caracteres."; return; }
+  const { error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + "/admin/" } });
+  $("lErr").textContent = error ? "No se pudo crear la cuenta: " + error.message : "Cuenta creada. Abre el correo que te hemos enviado para confirmarla y después entra aquí.";
+};
+sb.auth.getSession().then(({ data }) => entrar(data.session));
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/admin/sw.js").catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Chapas NFC para perros impresas en 3D en dos colores. Diseña la tuya y resérvala por WhatsApp.">
+<meta name="theme-color" content="#234536">
+<link rel="icon" href="/admin/icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Chapita NFC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: the tag is the hero. Left: headline, price, order. Right: one real tag, flippable front/back, colours chosen in place.
+   Below: how it's made (3-step film), collection, finish, steps, questions. Cool porcelain ground so the tag is the only colour. */
+:root{
+  --ground:#eceeea; --panel:#e2e5df; --paper:#f6f7f4; --ink:#23272b; --slate:#5d6267; --line:#d5d8d2;
+  --green:#234536; --green-ink:#ffffff; --film:#1d2326; --film-ink:#e8ebe6; --film-dim:#9aa3a2; --film-line:#323a3d;
+  --display:'Italiana','Didot','Bodoni 72',Georgia,serif;
+  --text:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#16191b; --panel:#1d2124; --paper:#1a1e20; --ink:#e8eae6; --slate:#a2a8ab; --line:#2c3134;
+  --green:#7fae94; --green-ink:#10241a; --film:#0f1213; --film-line:#2a3134; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#16191b; --panel:#1d2124; --paper:#1a1e20; --ink:#e8eae6; --slate:#a2a8ab; --line:#2c3134;
+  --green:#7fae94; --green-ink:#10241a; --film:#0f1213; --film-line:#2a3134; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{background:var(--ground);color:var(--ink);font-family:var(--text);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.02;margin:0;text-wrap:balance;letter-spacing:.005em}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:4px}
+.muted{color:var(--slate)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:600 15px/1 var(--text);padding:17px 28px;border-radius:999px;border:0;background:var(--green);color:var(--green-ink);text-decoration:none;cursor:pointer}
+.btn:hover{filter:brightness(1.12)}
+.link{font-weight:500;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:22px}
+.brand{font-family:var(--display);font-size:32px;text-decoration:none;line-height:1}
+.top nav{display:flex;gap:26px;font-size:15px}
+.top nav a{text-decoration:none;color:var(--slate)}
+.top nav a:hover{color:var(--ink)}
+@media (max-width:640px){.top nav a:not(:last-child){display:none}}
+
+/* hero = atelier */
+.hero{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);grid-template-areas:"title atelier" "body atelier";column-gap:56px;align-items:center;padding-block:24px 96px}
+.intro{grid-area:title;align-self:end}
+.intro-b{grid-area:body;align-self:start}
+.atelier{grid-area:atelier}
+.intro h1{font-size:clamp(52px,7.2vw,104px)}
+.intro-b .lead{margin-top:28px;font-size:19px;color:var(--slate);max-width:34ch}
+.buy{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:36px}
+.buy .price{font-family:var(--display);font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.choice{margin-top:14px;font-size:15px;color:var(--slate);min-height:1.5em}
+.note{margin-top:6px;font-size:15px;color:var(--green);min-height:1.5em}
+.facts{display:flex;gap:28px;flex-wrap:wrap;margin-top:40px;font-size:15px;color:var(--slate)}
+.facts span{display:flex;align-items:center;gap:8px}
+.facts svg{width:18px;height:18px;flex:none}
+
+.atelier{background:var(--panel);border-radius:28px;padding:28px;display:grid;gap:24px}
+.stage{position:relative;display:grid;place-items:center;aspect-ratio:1/0.86;border-radius:20px;background:radial-gradient(60% 55% at 50% 45%,var(--paper),var(--panel) 100%);overflow:hidden}
+.flip{width:min(78%,440px);aspect-ratio:1/1;perspective:1600px;position:relative}
+.flip .card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.7,.1,1)}
+.flip.back .card{transform:rotateY(180deg)}
+.flip canvas{position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip canvas.b{transform:rotateY(180deg)}
+.shadow{position:absolute;left:18%;right:18%;bottom:4%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(20,25,22,.28),rgba(20,25,22,0));filter:blur(4px)}
+@media (prefers-reduced-motion: reduce){.flip .card{transition:none}}
+
+.pick{display:grid;gap:18px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center}
+.row-l{font-size:15px;font-weight:600}
+.row-l small{display:block;font-weight:400;color:var(--slate);font-size:13px;line-height:1.35;margin-top:2px}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(0,0,0,.15);padding:0;cursor:pointer}
+.sw button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--panel),0 0 0 4.5px var(--ink)}
+.combos{display:flex;flex-wrap:wrap;gap:8px}
+.combos button{display:flex;align-items:center;gap:8px;font:500 14px/1 var(--text);padding:8px 14px 8px 8px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.combos button[aria-pressed="true"]{border-color:var(--ink)}
+.combos i{display:flex}
+.combos i span{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}
+.combos i span+span{margin-left:-6px}
+.cur{font-family:var(--display);font-size:20px;margin-left:6px}
+@media (max-width:960px){.hero{grid-template-columns:1fr;grid-template-areas:"title" "atelier" "body";row-gap:24px;padding-bottom:72px}.intro-b .lead{max-width:none}}
+@media (max-width:560px){.atelier{padding:16px;border-radius:22px}.row{grid-template-columns:1fr;gap:10px}.stage{aspect-ratio:1/1}}
+
+/* film */
+.film{background:var(--film);color:var(--film-ink)}
+.film .wrap{padding-block:104px}
+.film h2{font-size:clamp(40px,5vw,66px);max-width:16ch}
+.film .sub{color:var(--film-dim);max-width:46ch;margin-top:18px}
+.reels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:56px}
+@media (max-width:900px){.reels{grid-template-columns:1fr}}
+.reel{min-width:0}
+.frame{position:relative;aspect-ratio:4/5;border-radius:18px;border:1px solid var(--film-line);background:radial-gradient(80% 60% at 50% 40%,#283034,#151a1c);overflow:hidden;max-width:100%}
+.frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.frame .wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--film-dim);font-size:14px}
+.frame .wait svg{width:46px;height:46px}
+.reel h3{font-size:30px;margin-top:20px;display:flex;gap:12px;align-items:baseline}
+.reel h3 span{font-family:var(--text);font-size:14px;color:var(--film-dim)}
+.reel p{color:var(--film-dim);font-size:16px;margin-top:6px;max-width:36ch}
+
+/* sections */
+.sec{padding-block:104px}
+.sec h2{font-size:clamp(40px,5vw,66px);max-width:18ch}
+.sec .sub{color:var(--slate);max-width:48ch;margin-top:16px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:52px}
+@media (max-width:900px){.tiles{grid-template-columns:1fr}}
+.tile{min-width:0;display:flex;flex-direction:column}
+.tile .img{position:relative;aspect-ratio:1/1;border-radius:22px;background:var(--panel);display:grid;place-items:center;overflow:hidden;max-width:100%}
+.tile .img canvas,.tile .img img{width:64%;height:auto;filter:drop-shadow(0 18px 18px rgba(20,25,22,.18))}
+.tile .img svg{width:52%;height:auto}
+.state{position:absolute;top:16px;left:16px;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--paper);color:var(--ink)}
+.state.soon{color:var(--slate)}
+.tile .meta{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:22px}
+.tile h3{font-size:32px}
+.tile .p{font-family:var(--display);font-size:28px;white-space:nowrap}
+.tile .p.soon{font-family:var(--text);font-size:14px;font-weight:600;color:var(--slate)}
+.tile .for{font-size:15px;font-weight:600;color:var(--green);margin-top:4px}
+.tile .desc{color:var(--slate);font-size:16px;margin-top:8px;max-width:38ch}
+
+.finish{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;align-items:start}
+.specs{list-style:none;margin:0;padding:0}
+.specs li{display:flex;justify-content:space-between;gap:24px;padding-block:18px;border-bottom:1px solid var(--line)}
+.specs li:first-child{border-top:1px solid var(--line)}
+.specs b{font-weight:600}
+.specs span{color:var(--slate);text-align:right}
+@media (max-width:860px){.finish{grid-template-columns:1fr;gap:32px}}
+
+.steps{list-style:none;padding:0;margin:52px 0 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;counter-reset:s}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+.steps li{min-width:0;padding-top:20px;border-top:1px solid var(--ink)}
+.steps li::before{counter-increment:s;content:counter(s);font-family:var(--display);font-size:40px;line-height:1;color:var(--green)}
+.steps h3{font-size:28px;margin-top:12px}
+.steps p{color:var(--slate);margin-top:8px}
+
+.faq{max-width:820px;margin-top:40px}
+.faq details{border-bottom:1px solid var(--line);padding-block:22px}
+.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:20px;font-size:19px;font-weight:500}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--green);font-size:22px;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq p{color:var(--slate);margin-top:10px;max-width:62ch}
+
+footer{padding-block:40px;border-top:1px solid var(--line);color:var(--slate);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* reserva + asistente */
+[hidden]{display:none!important}
+dialog{border:0;border-radius:24px;padding:0;max-width:min(520px,calc(100vw - 32px));width:100%;background:var(--paper);color:var(--ink);box-shadow:0 30px 80px rgba(10,15,12,.35)}
+dialog::backdrop{background:rgba(15,20,18,.45)}
+.dlg{padding:28px;display:grid;gap:16px}
+.dlg h2{font-size:38px}
+.dlg .mini{display:flex;align-items:center;gap:14px;padding:12px;border-radius:16px;background:var(--panel)}
+.dlg .mini canvas{width:64px;height:64px}
+.field{display:grid;gap:6px;min-width:0}
+.field input,.field textarea{width:100%;min-width:0}
+.field label{font-size:14px;font-weight:600}
+.field input,.field textarea{font:400 16px/1.4 var(--text);padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.field input:focus,.field textarea:focus{outline:2px solid var(--green);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--ground);color:var(--ink);font-size:20px;cursor:pointer}
+.qty output{min-width:2ch;text-align:center;font-family:var(--display);font-size:28px}
+.total-line{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:14px}
+.total-line b{font-family:var(--display);font-weight:400;font-size:32px}
+.dlg-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.msg{font-size:15px;min-height:1.4em}
+.msg.ok{color:var(--green)} .msg.err{color:#a3392f}
+
+.chat-fab{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:10px;padding:14px 20px 14px 16px;border-radius:999px;border:0;background:var(--ink);color:var(--ground);font:600 15px/1 var(--text);cursor:pointer;box-shadow:0 14px 34px rgba(10,15,12,.28)}
+.chat-fab svg{width:22px;height:22px}
+.chat{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:41;width:min(400px,calc(100vw - 32px));height:min(600px,calc(100dvh - 40px));display:flex;flex-direction:column;border-radius:24px;background:var(--paper);border:1px solid var(--line);box-shadow:0 30px 80px rgba(10,15,12,.35);overflow:hidden}
+.chat header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
+.chat header b{font-family:var(--display);font-weight:400;font-size:26px}
+.chat header small{display:block;color:var(--slate);font-size:13px}
+.chat header button{border:0;background:transparent;color:var(--slate);font-size:26px;cursor:pointer;line-height:1}
+.log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.bub{max-width:85%;padding:11px 14px;border-radius:18px;font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.bot{background:var(--panel);border-bottom-left-radius:6px;align-self:flex-start}
+.bub.me{background:var(--green);color:var(--green-ink);border-bottom-right-radius:6px;align-self:flex-end}
+.bub.sys{align-self:center;background:transparent;color:var(--slate);font-size:13px;text-align:center}
+.quick{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 10px}
+.quick button{font:500 13px/1 var(--text);padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:var(--ground);color:var(--ink);cursor:pointer}
+.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.chat form input{flex:1;min-width:0;font:400 16px/1.3 var(--text);padding:12px 14px;border-radius:999px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.chat form button{border:0;border-radius:999px;background:var(--green);color:var(--green-ink);font:600 14px/1 var(--text);padding:0 18px;cursor:pointer}
+
+.owner-fab{position:fixed;left:calc(20px + env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:40;padding:12px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:600 14px/1 var(--text);cursor:pointer}
+.orders{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:60vh;overflow-y:auto}
+.orders li{padding:14px;border-radius:14px;background:var(--panel);display:grid;gap:4px;font-size:15px}
+.orders li b{font-weight:600}
+.orders .when{color:var(--slate);font-size:13px}
+
+#tag3d{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none;opacity:0;transition:opacity .6s}
+#tag3d.on{opacity:1}
+#tag3d:active{cursor:grabbing}
+.stage.is3d .flip,.stage.is3d .shadow{display:none}
+.hint{position:absolute;top:16px;left:18px;margin:0;font-size:13px;color:var(--slate);white-space:nowrap;pointer-events:none;transition:opacity .4s}
+.dl8k{position:absolute;right:16px;bottom:16px;font:500 13px/1 var(--text);padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.dl8k:disabled{opacity:.6;cursor:progress}
+@media (max-width:560px){.dl8k{bottom:auto;top:12px;right:12px}.hint{top:14px;left:14px}}
+
+.ov-sides{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--panel);border-radius:18px;padding:16px}
+.ov-sides canvas{width:100%;height:auto}
+.ov-list{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;margin:0;font-size:15px}
+.ov-list dt{color:var(--slate)}
+.ov-list dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.ov-actions{display:grid;gap:10px}
+
+.hd-act{display:flex;align-items:center;gap:6px}
+.chat header .spk{font:500 13px/1 var(--text);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.chat header .spk[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+.chat form .mic{flex:none;width:46px;padding:0;border-radius:50%;background:var(--ground);color:var(--ink);border:1px solid var(--line);display:grid;place-items:center}
+.chat form .mic svg{width:20px;height:20px}
+.chat form .mic[aria-pressed="true"]{background:#a3392f;color:#fff;border-color:#a3392f}
+</style>
+
+<header class="wrap top">
+  <a class="brand" href="#">Chapita</a>
+  <nav aria-label="Secciones"><a href="#coleccion">Colección</a><a href="#por-dentro">Por dentro</a><a href="#dudas">Preguntas</a></nav>
+</header>
+
+<main>
+<section class="wrap hero" aria-label="Diseña tu chapa">
+  <div class="intro">
+    <h1>Una chapa con su ficha dentro</h1>
+  </div>
+  <div class="intro-b">
+    <p class="lead">Impresa en 3D en dos colores, sellada con resina transparente y con un chip NFC. Quien encuentre a tu perro acerca el móvil y ve cómo avisarte.</p>
+    <div class="buy"><span class="price">6,90 €</span><button class="btn" type="button" id="buy">Reservar pedido</button></div>
+    <p class="choice" id="summary"></p>
+    <p class="note" id="note" aria-live="polite"></p>
+    <div class="facts">
+      <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 6.5a4 4 0 0 1 0 5M9 4.5a7 7 0 0 1 0 9M12 2.5a10 10 0 0 1 0 13"/></svg>Sin batería</span>
+      <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="1.5" width="8" height="15" rx="2"/><path d="M8 13.5h2"/></svg>Sin app</span>
+      <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="10" r="6"/><circle cx="9" cy="3" r="1.5"/></svg>Para perros grandes</span>
+    </div>
+  </div>
+
+  <div class="atelier">
+    <div class="stage" id="stage">
+      <canvas id="tag3d" aria-label="Chapa en 3D: arrastra para girarla y pellizca o usa la rueda para acercarla" role="img"></canvas>
+      <div class="shadow" aria-hidden="true"></div>
+      <div class="flip" id="flip">
+        <div class="card">
+          <canvas class="f" id="front" width="720" height="720" role="img" aria-label="Parte delantera de tu chapa, con la huella"></canvas>
+          <canvas class="b" id="back" width="720" height="720" role="img" aria-label="Parte trasera de tu chapa, con el símbolo NFC"></canvas>
+        </div>
+      </div>
+      <p class="hint" id="hint3d" hidden>Tócala y gírala</p>
+      <button type="button" class="dl8k" id="dl8k" hidden>Imagen 8K</button>
+    </div>
+    <div class="pick">
+      <div class="row"><span class="row-l">Color principal<small>Huella, contorno y la parte de atrás</small></span><div class="sw" data-zone="a"></div></div>
+      <div class="row"><span class="row-l">Color de fondo<small>Alrededor de la huella y el símbolo NFC</small></span><div class="sw" data-zone="b"></div></div>
+      <div class="row"><span class="row-l">Combinaciones</span><div class="combos" id="combos"></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="film" id="por-dentro">
+  <div class="wrap">
+    <h2>Así se hace por dentro</h2>
+    <p class="sub">Plástico de color sólido impreso en 3D, el chip NFC dentro y una capa de resina transparente que lo sella todo.</p>
+    <div class="reels">
+      <article class="reel"><div class="frame" data-video="abrir"><div class="wait"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1"><circle cx="23" cy="23" r="22"/><path d="M19 15l12 8-12 8z"/></svg>Vídeo en preparación</div></div><h3><span>1</span>Se abre</h3><p>La chapa se separa en capas y aparece el chip en el centro.</p></article>
+      <article class="reel"><div class="frame" data-video="montar"><div class="wait"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1"><circle cx="23" cy="23" r="22"/><path d="M19 15l12 8-12 8z"/></svg>Vídeo en preparación</div></div><h3><span>2</span>Se monta</h3><p>La capa superior cubre el chip y la resina transparente lo sella.</p></article>
+      <article class="reel"><div class="frame" data-video="escanear"><div class="wait"><svg viewBox="0 0 46 46" fill="none" stroke="currentColor" stroke-width="1"><circle cx="23" cy="23" r="22"/><path d="M19 15l12 8-12 8z"/></svg>Vídeo en preparación</div></div><h3><span>3</span>Se escanea</h3><p>Un móvil se acerca y aparecen los datos del perro y el teléfono de su familia.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="wrap sec" id="coleccion">
+  <h2>La colección</h2>
+  <p class="sub">Cada chapa lleva chip NFC, resina transparente y una anilla metálica, que es la única pieza de metal.</p>
+  <div class="tiles">
+    <article class="tile">
+      <div class="img"><span class="state">Disponible</span><canvas id="tile" width="720" height="720" role="img" aria-label="Chapa Huella"></canvas></div>
+      <div class="meta"><h3>Huella</h3><span class="p">6,90 €</span></div>
+      <span class="for">Para perros grandes</span>
+      <p class="desc">Huella delante y símbolo NFC detrás, en los dos colores que elijas. <a class="link" href="#">Diseñar la mía</a></p>
+    </article>
+    <article class="tile">
+      <div class="img"><span class="state soon">Próximamente</span><img src="/img/hueso.webp" alt="Chapa verde con forma de hueso"></div>
+      <div class="meta"><h3>Hueso</h3><span class="p soon">Próximamente</span></div>
+      <span class="for">Para perros pequeños</span>
+      <p class="desc">Forma de hueso con el nombre de tu perro, chip NFC dentro y resina transparente.</p>
+    </article>
+    <article class="tile">
+      <div class="img"><span class="state soon">Próximamente</span>
+        <svg viewBox="0 0 200 200" role="img" aria-label="Nuevos modelos"><g fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55"><circle cx="100" cy="112" r="62"/><circle cx="100" cy="40" r="14"/><circle cx="100" cy="40" r="5"/><path d="M100 92v40M80 112h40"/></g></svg></div>
+      <div class="meta"><h3>Nuevos modelos</h3><span class="p soon">Próximamente</span></div>
+      <span class="for">Más formas y colores</span>
+      <p class="desc">Estamos preparando nuevas chapas con el mismo chip y el mismo acabado.</p>
+    </article>
+  </div>
+</section>
+
+<section class="wrap sec" style="padding-top:0">
+  <div class="finish">
+    <div>
+      <h2>Color sólido y resina transparente</h2>
+      <p class="sub">Sin purpurina, sin efectos metálicos y sin adornos. El plástico conserva su color y la resina le da el brillo.</p>
+    </div>
+    <ul class="specs">
+      <li><b>Cuerpo</b><span>Plástico impreso en 3D, color sólido</span></li>
+      <li><b>Colores</b><span>Dos, a tu elección</span></li>
+      <li><b>Interior</b><span>Chip NFC, sin batería</span></li>
+      <li><b>Acabado</b><span>Capa de resina transparente</span></li>
+      <li><b>Anilla</b><span>Metálica</span></li>
+      <li><b>Lectura</b><span>Android con NFC e iPhone XS o posterior</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="wrap sec" style="padding-top:0">
+  <h2>Del pedido al collar</h2>
+  <ol class="steps">
+    <li><h3>Eliges sus colores</h3><p>Prueba combinaciones arriba y pide la que más te guste.</p></li>
+    <li><h3>Rellenas su ficha</h3><p>Tu teléfono, un mensaje y lo que deba saber quien lo encuentre. La chapa guarda el enlace a esa ficha.</p></li>
+    <li><h3>Alguien acerca el móvil</h3><p>Si tu perro se pierde, quien lo encuentre ve su ficha y te llama al momento.</p></li>
+  </ol>
+</section>
+
+<section class="wrap sec" id="dudas" style="padding-top:0">
+  <h2>Preguntas</h2>
+  <div class="faq">
+    <details><summary>¿Necesita batería?</summary><p>No. El chip NFC toma la energía del propio móvil cuando se acerca, así que no hay nada que cargar ni cambiar.</p></details>
+    <details><summary>¿Qué móviles pueden leerla?</summary><p>La mayoría de móviles Android con NFC y los iPhone XS o posteriores, sin instalar ninguna app.</p></details>
+    <details><summary>¿Puedo cambiar los datos?</summary><p>Sí. La chapa guarda el enlace a la ficha de tu perro, así que puedes actualizar los datos sin cambiar de chapa.</p></details>
+    <details><summary>¿Cuándo llega la chapa Hueso?</summary><p>Muy pronto. Será la versión para perros pequeños.</p></details>
+    <details><summary>¿Cómo se paga?</summary><p>Cuando confirmamos tu pedido por WhatsApp te enviamos la fecha estimada de entrega y los datos de pago: un Bizum con el código de tu pedido como concepto. Pronto también con tarjeta, Apple Pay y Google Pay.</p></details>
+    <details><summary>¿Cuánto cuesta el envío?</summary><p>Lo publicaremos cuando abra la tienda online.</p></details>
+  </div>
+</section>
+</main>
+
+
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <form class="dlg" id="resForm" method="dialog">
+    <h2 id="dlg-t">Reservar pedido</h2>
+    <div class="mini"><canvas id="miniF" width="720" height="720" aria-hidden="true"></canvas><div><b id="miniName"></b><div class="muted" style="font-size:14px">Chapa Huella · chip NFC · resina</div></div></div>
+    <div class="field"><label for="r-name">Nombre</label><input id="r-name" name="nombre" autocomplete="name" required maxlength="80"></div>
+    <div class="two">
+      <div class="field"><label for="r-tel">Teléfono</label><input id="r-tel" name="telefono" type="tel" autocomplete="tel" required maxlength="30"></div>
+      <div class="field"><label for="r-dog">Nombre del perro</label><input id="r-dog" name="perro" maxlength="40"></div>
+    </div>
+    <div class="field"><label>Unidades</label><div class="qty"><button type="button" id="q-minus" aria-label="Quitar una">−</button><output id="q-val">1</output><button type="button" id="q-plus" aria-label="Añadir una">+</button></div></div>
+    <div class="field"><label for="r-notes">Notas</label><textarea id="r-notes" rows="2" maxlength="400" placeholder="Opcional"></textarea></div>
+    <div class="total-line"><span>Total sin envío</span><b id="r-total">6,90 €</b></div>
+    <p class="msg" id="r-msg" aria-live="polite"></p>
+    <p class="muted" style="font-size:14px">Se abrirá WhatsApp con tu pedido escrito. Solo tienes que pulsar enviar. Te contestamos con la fecha de entrega y cómo pagar.</p>
+    <div class="dlg-actions"><button class="btn ghost" type="button" id="r-cancel">Cerrar</button><a class="btn" id="r-wa" href="#" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a></div>
+  </form>
+</dialog>
+
+
+<dialog id="orderView" aria-labelledby="ov-t">
+  <div class="dlg">
+    <h2 id="ov-t">Pedido <span id="ovCode"></span></h2>
+    <div class="ov-sides"><canvas id="ovF" width="720" height="720" role="img" aria-label="Diseño, parte delantera"></canvas><canvas id="ovB" width="720" height="720" role="img" aria-label="Diseño, parte trasera"></canvas></div>
+    <dl class="ov-list" id="ovList"></dl>
+    <div id="ovOwner" hidden>
+      <p class="muted" id="ovDate" style="font-size:14px;margin-bottom:12px"></p>
+      <div class="ov-actions">
+        <a class="btn ghost" id="ovPay" target="_blank" rel="noopener">Pedir el pago</a>
+        <a class="btn" id="ovPaid" target="_blank" rel="noopener">Pago recibido: confirmar al cliente</a>
+      </div>
+    </div>
+    <p id="ovClient" class="muted" hidden><span id="ovClientTxt"></span></p>
+    <div class="dlg-actions"><button class="btn ghost" type="button" id="ovImg" hidden>Guardar imagen</button><button class="btn ghost" type="button" id="ovClose">Cerrar</button></div>
+  </div>
+</dialog>
+
+<dialog id="ordersDlg" aria-labelledby="ord-t">
+  <div class="dlg"><h2 id="ord-t">Reservas recibidas</h2><ul class="orders" id="orders"></ul><div class="dlg-actions"><button class="btn ghost" type="button" id="ord-close">Cerrar</button></div></div>
+</dialog>
+
+<button class="chat-fab" type="button" id="chatOpen"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 16.5V5.5A2.5 2.5 0 0 1 6.5 3h9A2.5 2.5 0 0 1 18 5.5v6a2.5 2.5 0 0 1-2.5 2.5H8l-4 2.5z"/></svg>¿Dudas? Pregúntanos</button>
+<section class="chat" id="chat" hidden aria-label="Asistente de Chapita">
+  <header><div><b>Recepcionista</b><small>Escribe o pulsa el micrófono y habla</small></div><div class="hd-act"><button type="button" class="spk" id="spk" hidden aria-pressed="false">Voz: no</button><button type="button" id="chatClose" aria-label="Cerrar">×</button></div></header>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="quick" id="quick"><button type="button">¿Cuánto cuesta?</button><button type="button">¿Qué colores hay?</button><button type="button">Quiero reservar</button></div>
+  <form id="chatForm"><button type="button" class="mic" id="micBtn" hidden aria-label="Hablar con la recepcionista" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5"/></svg></button><input id="chatIn" autocomplete="off" placeholder="Escribe tu pregunta" maxlength="500" aria-label="Tu mensaje"><button type="submit">Enviar</button></form>
+</section>
+<button class="owner-fab" type="button" id="ownerBtn" hidden>Reservas</button>
+
+<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><span>Envíos: próximamente</span></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" integrity="sha384-wagZhIFgY4hD+7awjQjR4e2E294y6J2HSnd8eTNc15ZubTeQeVRZwhQJ+W6hnBsf" crossorigin="anonymous"></script>
+<script>
+// Vídeos de "Así se hace por dentro": se rellenan cuando estén listos.
+const VIDEOS={abrir:'',montar:'',escanear:''};
+document.querySelectorAll('.frame[data-video]').forEach(f=>{
+  const src=VIDEOS[f.dataset.video]; if(!src) return;
+  const v=document.createElement('video');v.src=src;v.muted=true;v.loop=true;v.playsInline=true;v.setAttribute('muted','');v.setAttribute('playsinline','');
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches) v.autoplay=true; else v.controls=true;
+  f.innerHTML='';f.appendChild(v);
+});
+
+// Colores. a = huella + contorno + parte de atrás. b = alrededor de la huella + símbolo NFC.
+const COLORS=[
+  ['onix','negro ónix','#161616'],['marfil','blanco marfil','#efebe2'],['chocolate','chocolate','#4b2a20'],
+  ['rosa','rosa empolvado','#e9b9b4'],['salvia','verde salvia','#8fa58c'],['ingles','verde inglés','#2f4f3a'],
+  ['arena','arena','#d8c3a0'],['piedra','gris piedra','#8e8b86'],['marino','azul marino','#1f2f4f'],
+  ['burdeos','burdeos','#6b1f2a'],['lavanda','lavanda','#b8a9cf'],['terracota','terracota','#b5603f']
+];
+const CMAP=Object.fromEntries(COLORS.map(c=>[c[0],c]));
+const COMBOS=[
+  ['Chocolate y marfil',{a:'chocolate',b:'marfil'}],['Ónix y marfil',{a:'onix',b:'marfil'}],
+  ['Verde inglés y arena',{a:'ingles',b:'arena'}],['Marino y arena',{a:'marino',b:'arena'}],
+  ['Burdeos y rosa',{a:'burdeos',b:'rosa'}],['Salvia y marfil',{a:'salvia',b:'marfil'}],
+  ['Rosa y marfil',{a:'rosa',b:'marfil'}]
+];
+let state={...COMBOS[0][1]};
+const side=(s,face)=>face==='f'?{model:'huella',borde:s.a,dibujo:s.a,fondo:s.b}:{model:'nfc',borde:s.a,fondo:s.a,dibujo:s.b};
+
+const toLin=new Float32Array(256);for(let i=0;i<256;i++){const c=i/255;toLin[i]=c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+const LUTN=4096,fromLin=new Uint8ClampedArray(LUTN+1);for(let i=0;i<=LUTN;i++){const c=i/LUTN;fromLin[i]=Math.round(255*(c<=0.0031308?c*12.92:1.055*Math.pow(c,1/2.4)-0.055));}
+const hexLin=h=>[1,3,5].map(i=>toLin[parseInt(h.slice(i,i+2),16)]);
+const shPow=new Float32Array(256);for(let i=0;i<256;i++){shPow[i]=Math.pow(i/127.5,1.6);}
+const SRC={};
+function loadZones(name){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');g.drawImage(im,0,0);SRC[name]=g.getImageData(0,0,c.width,c.height);res();};im.onerror=rej;im.src=(location.protocol.startsWith('http')&&!location.hostname.endsWith('claude.ai')&&!location.hostname.includes('claudeusercontent')?'/img/':'')+`zonas-${name}.webp`;});}
+function paint(canvas,s){
+  const z=SRC[s.model]; if(!z) return;
+  if(canvas.width!==z.width){canvas.width=z.width;canvas.height=z.height;}
+  const g=canvas.getContext('2d'), out=g.createImageData(z.width,z.height), d=z.data, o=out.data;
+  const B=hexLin(CMAP[s.borde][2]),F=hexLin(CMAP[s.fondo][2]),D=hexLin(CMAP[s.dibujo][2]);
+  for(let i=0;i<d.length;i+=4){
+    const a=d[i+3]; if(!a){o[i+3]=0;continue;}
+    const wb=d[i]/255, wd=d[i+1]/255, wf=Math.max(0,1-wb-wd), sh=shPow[d[i+2]];
+    o[i]  =fromLin[Math.min(LUTN,((wb*B[0]+wd*D[0]+wf*F[0])*sh*LUTN)|0)];
+    o[i+1]=fromLin[Math.min(LUTN,((wb*B[1]+wd*D[1]+wf*F[1])*sh*LUTN)|0)];
+    o[i+2]=fromLin[Math.min(LUTN,((wb*B[2]+wd*D[2]+wf*F[2])*sh*LUTN)|0)];
+    o[i+3]=a;
+  }
+  g.putImageData(out,0,0);
+  g.save();g.globalCompositeOperation='source-atop';
+  const gr=g.createRadialGradient(z.width*.34,z.height*.3,0,z.width*.34,z.height*.3,z.width*.62);
+  gr.addColorStop(0,'rgba(255,255,255,.22)');gr.addColorStop(.45,'rgba(255,255,255,.05)');gr.addColorStop(1,'rgba(0,0,0,.06)');
+  g.fillStyle=gr;g.fillRect(0,0,z.width,z.height);g.restore();
+}
+
+const $=id=>document.getElementById(id);
+function render(){
+  paint($('front'),side(state,'f'));paint($('back'),side(state,'b'));
+  if(window.tag3d) window.tag3d.colors(CMAP[state.a][2],CMAP[state.b][2]);
+  ['a','b'].forEach(z=>document.querySelectorAll(`.sw[data-zone="${z}"] button`).forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===state[z])));
+  document.querySelectorAll('#combos button').forEach(b=>{const p=COMBOS[+b.dataset.i][1];b.setAttribute('aria-pressed',p.a===state.a&&p.b===state.b);});
+  const n=k=>CMAP[k][1];
+  $('summary').textContent=`Tu chapa: ${n(state.a)} con fondo ${n(state.b)}.`;
+  $('note').textContent='';
+}
+document.querySelectorAll('.sw').forEach(sw=>{
+  const z=sw.dataset.zone;
+  COLORS.forEach(([k,n,hex])=>{const b=document.createElement('button');b.type='button';b.dataset.c=k;b.style.background=hex;b.title=n;b.setAttribute('aria-label',(z==='a'?'Color principal: ':'Color de fondo: ')+n);b.addEventListener('click',()=>{state[z]=k;render();});sw.appendChild(b);});
+});
+COMBOS.forEach(([n,p],i)=>{const b=document.createElement('button');b.type='button';b.dataset.i=i;b.innerHTML=`<i><span style="background:${CMAP[p.a][2]}"></span><span style="background:${CMAP[p.b][2]}"></span></i>${n}`;b.addEventListener('click',()=>{state={...p};render();});$('combos').appendChild(b);});
+function face(f){$('flip').classList.toggle('back',f==='b');}
+$('flip').addEventListener('click',()=>face($('flip').classList.contains('back')?'f':'b'));
+document.querySelector('.tile .link').addEventListener('click',e=>{e.preventDefault();window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});
+
+
+// ---------- Reservas (db) y asistente (sample) ----------
+const PRICE=6.90, eur=n=>n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+let qty=1, dbP=null, userP=null;
+const cap=n=>(window.claude&&window.claude.use)?window.claude.use(n).catch(()=>null):Promise.resolve(null);
+dbP=cap('db'); userP=cap('user');
+const colorName=k=>CMAP[k][1];
+function setQty(n){qty=Math.max(1,Math.min(50,n));$('q-val').textContent=qty;$('r-total').textContent=eur(qty*PRICE);}
+$('q-minus').onclick=()=>setQty(qty-1);$('q-plus').onclick=()=>setQty(qty+1);
+function openRes(){paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';$('dlg').showModal();}
+$('buy').addEventListener('click',openRes);
+$('r-cancel').onclick=()=>$('dlg').close();
+
+async function saveReservation(r){
+  const db=await dbP, user=await userP;
+  if(!db||!user) throw new Error('Las reservas no están disponibles en esta vista. Escríbenos para reservar.');
+  const uid=await user.id(); if(!uid) throw new Error('Inicia sesión para reservar.');
+  const ref=db.doc('reservas/'+uid); const snap=await ref.get();
+  const prev=snap.exists?(snap.data().pedidos||[]):[];
+  const item={...r,precio_unidad:PRICE,total:Math.round(r.unidades*PRICE*100)/100,fecha:new Date().toISOString(),estado:'pendiente'};
+  await ref.set({pedidos:[...prev,item].slice(-20),actualizado:item.fecha});
+  return item;
+}
+const WA='34627157395', WA_SHOW='627 157 395', SITE='https://claude.ai/artifact/Cohfz5w69Loedqt27xTig9';
+let orderCode='';
+const newCode=()=>'CH-'+String(Math.floor(1000+Math.random()*9000));
+const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function keyFromName(n,fallback){const t=norm(n);const hit=COLORS.find(c=>t&&(norm(c[1])===t||norm(c[1]).includes(t)||t.includes(norm(c[1]))||t.includes(c[0])));return hit?hit[0]:fallback;}
+// El pedido viaja dentro del enlace (#p-…, en hexadecimal), así no hace falta servidor.
+const toHex=str=>Array.from(new TextEncoder().encode(str),b=>b.toString(16).padStart(2,'0')).join('');
+const fromHex=h=>new TextDecoder().decode(new Uint8Array((h.match(/../g)||[]).map(x=>parseInt(x,16))));
+const encodeOrder=o=>'p-'+toHex([o.code,o.unidades,o.a,o.b,o.nombre,o.perro||'',o.telefono||'',o.notas||''].join('|'));
+function decodeOrder(hash){try{const [code,u,a,b,nombre,perro,telefono,notas]=fromHex(hash.replace(/^#?p-/,'')).split('|');if(!/^CH-\d{4}$/.test(code)||!CMAP[a]||!CMAP[b])return null;return {code,unidades:Math.max(1,Math.min(50,parseInt(u)||1)),a,b,nombre,perro,telefono,notas};}catch(e){return null;}}
+const total=o=>eur(o.unidades*PRICE);
+function orderText(o){
+  return ['Hola Chapita 👋 Quiero reservar:',
+    `• Pedido: ${o.code}`,
+    `• ${o.unidades} × Chapa Huella`,
+    `• Color principal: ${colorName(o.a)}`,
+    `• Color de fondo: ${colorName(o.b)}`,
+    o.perro?`• Perro: ${o.perro}`:null,
+    `• Nombre: ${o.nombre||'—'}`,
+    o.telefono?`• Teléfono: ${o.telefono}`:null,
+    `• Total: ${total(o)} (sin envío)`,
+    o.notas?`Notas: ${o.notas}`:null,
+    `💳 Pago por Bizum con el concepto ${o.code}`,
+    `🖼 Ver diseño: ${SITE}#${encodeOrder(o)}`].filter(Boolean).join('\n');
+}
+const waLink=o=>`https://wa.me/${WA}?text=${encodeURIComponent(orderText(o))}`;
+const payInfo=o=>`Haz un Bizum de ${total(o)} al ${WA_SHOW} con el concepto ${o.code}. En cuanto lo recibamos te confirmamos el pedido y la fecha de entrega (como mucho en 2 días).`;
+function currentOrder(){return {code:orderCode,nombre:$('r-name').value.trim(),telefono:$('r-tel').value.trim(),perro:$('r-dog').value.trim(),unidades:qty,a:state.a,b:state.b,color_principal:colorName(state.a),color_fondo:colorName(state.b),notas:$('r-notes').value.trim()};}
+function updateWa(){$('r-wa').href=waLink(currentOrder());}
+['r-name','r-tel','r-dog','r-notes'].forEach(id=>$(id).addEventListener('input',updateWa));
+$('q-minus').addEventListener('click',updateWa);$('q-plus').addEventListener('click',updateWa);
+$('buy').addEventListener('click',()=>{orderCode=newCode();updateWa();});
+$('resForm').addEventListener('submit',e=>e.preventDefault());
+// Reserva real: se guarda en el servidor de Chapita y se abre WhatsApp con el mensaje preparado.
+const API_PEDIDOS='https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/crear-pedido';
+let enviando=false;
+$('r-wa').addEventListener('click',async e=>{
+  e.preventDefault();
+  if(enviando) return;
+  const o=currentOrder();
+  if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono para que podamos confirmarte el pedido.';(o.nombre?$('r-tel'):$('r-name')).focus();return;}
+  enviando=true;$('r-wa').setAttribute('aria-busy','true');$('r-msg').className='msg';$('r-msg').textContent='Guardando tu reserva…';
+  try{
+    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
+    $('r-msg').className='msg ok';$('r-msg').textContent=`Reserva ${j.ref} guardada. Abriendo WhatsApp: solo tienes que pulsar enviar.`;
+    setTimeout(()=>{location.href=j.whatsapp_url;},700);
+  }catch(err){
+    if(err instanceof TypeError){ // sin conexión con el servidor (p. ej. vista previa): enlace directo de respaldo
+      updateWa();$('r-msg').className='msg ok';$('r-msg').textContent=`Pedido ${o.code} listo. Abriendo WhatsApp…`;
+      setTimeout(()=>{location.href=$('r-wa').href;},500);
+    }else{$('r-msg').className='msg err';$('r-msg').textContent=err.message;}
+  }finally{enviando=false;$('r-wa').removeAttribute('aria-busy');}
+});
+
+// ---------- Vista de un pedido (se abre desde el enlace "Ver diseño" del WhatsApp) ----------
+const fechaEntrega=()=>new Date(Date.now()+2*864e5).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+function custWa(o,text){let n=String(o.telefono||'').replace(/\D/g,'');if(n.length===9)n='34'+n;return n?`https://wa.me/${n}?text=${encodeURIComponent(text)}`:`https://wa.me/?text=${encodeURIComponent(text)}`;}
+const msgPago=o=>`¡Hola${o.nombre?' '+o.nombre.split(' ')[0]:''}! 🐾 Tu pedido ${o.code} está reservado:\n• ${o.unidades} × Chapa Huella, ${colorName(o.a)} con fondo ${colorName(o.b)}${o.perro?'\n• Para '+o.perro:''}\n\n💳 Para empezar a fabricarla, haz un Bizum de ${total(o)} al ${WA_SHOW} con el concepto ${o.code}.\nEn cuanto lo recibamos te confirmamos la fecha de entrega.`;
+const msgPagado=o=>`¡Pago recibido! ✅ Gracias${o.nombre?', '+o.nombre.split(' ')[0]:''}.\nTu pedido ${o.code} ya está en producción.\n📦 Entrega estimada: como muy tarde el ${fechaEntrega()}.\n\n¡Gracias por confiar en Chapita! 🐾`;
+let viewOrder=null;
+async function openOrderView(){
+  const o=decodeOrder(location.hash); if(!o) return;
+  viewOrder=o;
+  paint($('ovF'),side(o,'f'));paint($('ovB'),side(o,'b'));
+  $('ovCode').textContent=o.code;
+  const rows=[['Cliente',o.nombre],['Teléfono',o.telefono],['Perro',o.perro],['Chapas',`${o.unidades} × Chapa Huella`],['Colores',`${colorName(o.a)} con fondo ${colorName(o.b)}`],['Total',`${total(o)} (sin envío)`],['Concepto del Bizum',o.code],['Notas',o.notas]].filter(r=>r[1]);
+  const dl=$('ovList');dl.innerHTML='';rows.forEach(([k,v])=>{const dt=document.createElement('dt');dt.textContent=k;const dd=document.createElement('dd');dd.textContent=v;dl.append(dt,dd);});
+  $('ovPay').href=custWa(o,msgPago(o)); $('ovPaid').href=custWa(o,msgPagado(o));
+  $('ovDate').textContent=`Entrega estimada si confirmas hoy: ${fechaEntrega()}`;
+  const user=await userP; const owner=user?await user.isOwner():false;
+  $('ovOwner').hidden=!owner; $('ovClient').hidden=owner; $('ovClientTxt').textContent=payInfo(o);
+  if(!$('orderView').open) $('orderView').showModal();
+}
+$('ovClose').onclick=()=>{$('orderView').close();history.replaceState(null,'',location.pathname+location.search);};
+addEventListener('hashchange',openOrderView);
+// Imagen del diseño (las dos caras) para guardarla
+async function designPng(o){
+  const W=1600,H=1000,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.fillStyle='#eceeea';g.fillRect(0,0,W,H);
+  const f=document.createElement('canvas'),b=document.createElement('canvas');paint(f,side(o,'f'));paint(b,side(o,'b'));
+  g.drawImage(f,80,90,680,680);g.drawImage(b,840,90,680,680);
+  g.fillStyle='#23272b';g.font='600 40px "Instrument Sans", sans-serif';g.fillText(`${o.code} · ${o.unidades} × Chapa Huella`,80,860);
+  g.font='400 32px "Instrument Sans", sans-serif';g.fillStyle='#5d6267';g.fillText(`${colorName(o.a)} con fondo ${colorName(o.b)}${o.perro?' · '+o.perro:''}${o.nombre?' · '+o.nombre:''}`,80,915);
+  return await new Promise((res,rej)=>c.toBlob(x=>x?res(x):rej(new Error('blob')),'image/png'));
+}
+const dlNs=cap('downloads');
+dlNs.then(d=>{ if(!d) return; $('ovImg').hidden=false; $('ovImg').onclick=async()=>{try{await d.save({filename:`chapita-${viewOrder.code}.png`,data:await designPng(viewOrder)});}catch(e){}}; });
+
+// Panel del dueño: ve todas las reservas
+userP.then(async user=>{
+  if(!user||!(await user.isOwner())) return;
+  $('ownerBtn').hidden=false;
+  const db=await dbP; if(!db) return;
+  db.collection('reservas').onSnapshot(snap=>{
+    const all=[];snap.docs.forEach(d=>((d.data()||{}).pedidos||[]).forEach(p=>all.push(p)));
+    all.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+    $('ownerBtn').textContent=`Reservas (${all.length})`;
+    const ul=$('orders');ul.innerHTML='';
+    if(!all.length){const li=document.createElement('li');li.textContent='Todavía no hay reservas. Aparecerán aquí en cuanto alguien reserve.';ul.appendChild(li);return;}
+    all.forEach(p=>{const li=document.createElement('li');
+      const b=document.createElement('b');b.textContent=`${p.nombre} · ${p.telefono}`;
+      const d=document.createElement('span');d.textContent=`${p.unidades} × ${p.color_principal} con fondo ${p.color_fondo} · ${eur(Number(p.total)||0)}${p.perro?' · perro: '+p.perro:''}`;
+      const n=document.createElement('span');n.className='when';n.textContent=`${new Date(p.fecha).toLocaleString('es-ES')} · ${p.origen==='asistente'?'por el asistente':'por formulario'}${p.notas?' · '+p.notas:''}`;
+      li.append(b,d,n);ul.appendChild(li);});
+  },()=>{});
+});
+$('ownerBtn').onclick=()=>$('ordersDlg').showModal();$('ord-close').onclick=()=>$('ordersDlg').close();
+
+// Asistente
+const log=$('log'); const chatHist=[]; let busy=false, ctrl=null;
+const FACTS=()=>`Eres el asistente de la tienda online "Chapita". Respondes en español, con frases cortas, cálidas y claras. Solo hablas de la tienda.
+DATOS DE LA TIENDA (no inventes nada fuera de esto):
+- Producto disponible: Chapa Huella, para perros grandes. Precio: 6,90 € por unidad (IVA incluido). No hay descuentos por cantidad.
+- Delante lleva una huella; detrás, el símbolo NFC (rayas y la palabra NFC).
+- Se hace en DOS colores: color principal (huella, contorno y toda la parte de atrás) y color de fondo (alrededor de la huella y el símbolo NFC de atrás).
+- Colores: ${COLORS.map(c=>c[1]).join(', ')}.
+- Combinaciones recomendadas: ${COMBOS.map(c=>c[0]).join(', ')}.
+- Impresa en 3D en plástico de color sólido, con chip NFC dentro y una capa de resina transparente que da brillo. Sin purpurina ni adornos. La anilla es metálica.
+- El chip no necesita batería ni app. Funciona con la mayoría de Android con NFC y con iPhone XS o posteriores. Al acercar el móvil se abre la ficha del perro (teléfono de la familia, mensaje, avisos). Los datos de la ficha se pueden cambiar sin cambiar la chapa.
+- Chapa Hueso (para perros pequeños): próximamente. Nuevos modelos: próximamente.
+- Envíos y plazos: todavía no están definidos; di que se confirman al llamar al cliente.
+- Ahora mismo el cliente tiene elegido en la web: color principal ${colorName(state.a)}, color de fondo ${colorName(state.b)}.
+RESERVAS: si el cliente quiere comprar o reservar, pide su nombre, su teléfono, el nombre del perro, las unidades y los colores (propón los que tiene elegidos). Cuando tengas todo, resume el pedido con el total (unidades × 6,90 €, sin envío) y pide que confirme. Solo tras su "sí", usa la herramienta reservar_pedido y explícale el siguiente paso que te devuelva.
+PAGO Y ENTREGA: se paga por Bizum al 627 157 395 poniendo como concepto el código del pedido (CH-…), que te da la herramienta. Cuando la tienda recibe el pago, se lo confirma por WhatsApp y la entrega es como mucho en 2 días. Necesitas también el teléfono del cliente.
+Si pregunta algo que no sabes, dilo y ofrece que el equipo le llame.`;
+function bubble(cls,text){const d=document.createElement('div');d.className='bub '+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+const reservarTool={name:'reservar_pedido',description:'Prepara el pedido del cliente y le muestra un botón para enviarlo por WhatsApp a la tienda. Úsala solo cuando el cliente haya confirmado nombre, unidades y colores. Devuelve {ok, codigo, total, siguiente_paso}.',
+  inputSchema:{type:'object',properties:{nombre:{type:'string'},telefono:{type:'string'},unidades:{type:'integer',minimum:1,maximum:50},color_principal:{type:'string'},color_fondo:{type:'string'},nombre_perro:{type:'string'},notas:{type:'string'}},required:['nombre','telefono','unidades','color_principal','color_fondo']},
+  async execute(i){const u=Math.max(1,Math.min(50,parseInt(i.unidades)||1));
+    if(!String(i.nombre||'').trim()) throw new Error('Falta el nombre del cliente.');
+    const a=keyFromName(i.color_principal,state.a), b=keyFromName(i.color_fondo,state.b);
+    const o={code:newCode(),nombre:String(i.nombre).slice(0,80),telefono:String(i.telefono||'').slice(0,30),perro:String(i.nombre_perro||'').slice(0,40),unidades:u,a,b,color_principal:colorName(a),color_fondo:colorName(b),notas:String(i.notas||'').slice(0,400)};
+    saveReservation({...o,origen:'asistente'}).catch(()=>{});
+    const link=document.createElement('a');link.className='btn';link.href=waLink(o);link.target='_blank';link.rel='noopener';link.textContent=`Enviar pedido ${o.code} por WhatsApp`;link.style.alignSelf='flex-start';log.appendChild(link);log.scrollTop=log.scrollHeight;
+    return {ok:true,codigo:o.code,total:eur(u*PRICE),pago:payInfo(o),siguiente_paso:'Debajo del chat ha aparecido un botón verde. Pide al cliente que lo pulse para enviar el pedido por WhatsApp y explícale el pago (campo pago).'};}};
+async function ask(text){
+  if(busy||!text.trim()) return; busy=true; $('quick').hidden=true;
+  bubble('me',text); chatHist.push({role:'user',content:text});
+  const out=bubble('bot','…');
+  const sample=await cap('sample');
+  if(!sample){out.textContent='El asistente no está disponible en esta vista. Puedes reservar con el botón "Reservar pedido".';busy=false;return;}
+  const msgs=[{role:'user',content:FACTS()},{role:'assistant',content:'Entendido. Atenderé al cliente con esos datos.'},...chatHist];
+  ctrl=new AbortController();
+  try{
+    const r=await sample(msgs,{cache:false,signal:ctrl.signal,modelTier:'quick',tools:[reservarTool],onText:({text})=>{out.textContent=text;log.scrollTop=log.scrollHeight;}});
+    out.textContent=(r.text||'').trim()||'¿Puedes repetirlo?'; chatHist.push({role:'assistant',content:out.textContent}); say(out.textContent);
+  }catch(e){
+    if(e&&e.code==='tools_unavailable'){try{const r=await sample(msgs,{cache:false,modelTier:'quick',onText:({text})=>{out.textContent=text;}});out.textContent=r.text.trim();chatHist.push({role:'assistant',content:out.textContent});}catch(e2){out.textContent='Ahora no puedo responder. Prueba en un momento o usa "Reservar pedido".';}}
+    else if(e&&e.code==='rate_limited') out.textContent='Hay muchas consultas ahora mismo. Prueba en un minuto.';
+    else if(e&&e.code==='not_granted') out.textContent='El asistente está desactivado en esta vista. Puedes reservar con el botón "Reservar pedido".';
+    else out.textContent='Ahora no puedo responder. Prueba en un momento o usa "Reservar pedido".';
+  }
+  busy=false;
+}
+cap('sample').then(s=>{if(!s)$('chatOpen').hidden=true;});
+$('chatOpen').onclick=()=>{$('chat').hidden=false;$('chatOpen').hidden=true;if(!log.children.length)bubble('bot','Hola. Te ayudo con precios, colores y reservas de la Chapa Huella. ¿Qué necesitas?');$('chatIn').focus();};
+
+// Modo voz: dictado (habla el cliente) y voz (contesta la recepcionista)
+let dict=null, tts=null, speakOn=false, listening=false, baseTxt='', autoSend=false;
+function setSpk(on){speakOn=on;$('spk').setAttribute('aria-pressed',on);$('spk').textContent=on?'Voz: sí':'Voz: no';if(!on&&tts)tts.stop();}
+function say(text){if(speakOn&&tts&&text) tts.speak(text.slice(0,2000),{language:'es'}).catch(()=>{});}
+cap('tts').then(t=>{if(!t)return;tts=t;$('spk').hidden=false;$('spk').onclick=()=>setSpk(!speakOn);});
+cap('dictation').then(d=>{
+  if(!d) return; dict=d; $('micBtn').hidden=false;
+  d.onPartial(({text})=>{$('chatIn').value=baseTxt+text;});
+  d.onFinal(({text})=>{baseTxt+=text+' ';$('chatIn').value=baseTxt;});
+  d.onState(({state:st})=>{listening=st==='listening';$('micBtn').setAttribute('aria-pressed',listening);
+    if(st==='idle'&&autoSend){autoSend=false;const t=$('chatIn').value.trim();$('chatIn').value='';baseTxt='';if(t)ask(t);}});
+  $('micBtn').onclick=()=>{
+    if(listening){d.stop().catch(()=>{});return;}
+    if(tts){tts.stop();if(!speakOn)setSpk(true);}
+    baseTxt='';autoSend=true;$('chatIn').value='';
+    d.start().catch(()=>{autoSend=false;$('micBtn').hidden=true;});
+  };
+});
+
+$('chatClose').onclick=()=>{$('chat').hidden=true;$('chatOpen').hidden=false;if(ctrl)ctrl.abort();};
+$('chatForm').addEventListener('submit',e=>{e.preventDefault();const t=$('chatIn').value;$('chatIn').value='';ask(t);});
+$('quick').querySelectorAll('button').forEach(b=>b.onclick=()=>ask(b.textContent));
+
+Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrderView();paint($('tile'),side({a:'onix',b:'marfil'},'f'));})
+  .catch(()=>{$('note').textContent='No se pudo cargar la vista previa. Recarga la página.';});
+</script>
+<script>
+// ---------- Chapa en 3D (Three.js) ----------
+(function(){
+  if(typeof THREE==='undefined'||!THREE.OrbitControls) return;
+  const stage=document.getElementById('stage'), cv=document.getElementById('tag3d');
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,powerPreference:'high-performance'});}catch(e){return;}
+  if(!renderer.getContext()) return;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.LinearToneMapping;
+  renderer.toneMappingExposure=0.95;
+  renderer.setClearColor(0x000000,0);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(28,1,0.1,100);
+  const TARGET=new THREE.Vector3(0,0.42,0);
+
+  // Estudio de fotografía como entorno (reflejos de la resina y la anilla)
+  (function(){
+    const pm=new THREE.PMREMGenerator(renderer), s=new THREE.Scene();
+    const g=new THREE.SphereGeometry(20,48,24), pos=g.attributes.position, col=[];
+    for(let i=0;i<pos.count;i++){const y=pos.getY(i)/20, v=0.22+0.5*(y*0.5+0.5);col.push(v,v,v*1.02);}
+    g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+    s.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide})));
+    const box=(w,h,x,y,z,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(i,i,i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);s.add(m);};
+    box(14,4,0,10,8,6); box(4,12,-12,2,6,3.2); box(4,12,12,1,-4,2.4); box(10,3,0,-6,10,1.2);
+    scene.environment=pm.fromScene(s,0.03).texture; pm.dispose();
+  })();
+  const key=new THREE.DirectionalLight(0xffffff,1.6); key.position.set(3,5,7); scene.add(key);
+  const rim=new THREE.DirectionalLight(0xffffff,0.9); rim.position.set(-5,2,-6); scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x88908a,0.35));
+
+  // ---- Forma de la chapa: círculo + anilla con su agujero ----
+  const R=1.5, C=1.56, RT=0.42, RF=0.26, HOLE_Y=1.62, RH=0.17, T=0.26;
+  const TAU=Math.PI*2, ang=(p,c)=>Math.atan2(p.y-c.y,p.x-c.x);
+  function arc(path,c,r,a0,a1,contain){
+    const sweep=((a1-a0)%TAU+TAU)%TAU;
+    let cw; if(contain===undefined) cw=sweep>Math.PI; else {const dm=((contain-a0)%TAU+TAU)%TAU; cw=!(dm<=sweep);}
+    path.absarc(c.x,c.y,r,a0,a1,cw);
+  }
+  function outline(withHole){
+    const py=((R+RF)**2-(RT+RF)**2+C*C)/(2*C), px=Math.sqrt((R+RF)**2-py*py);
+    const O=new THREE.Vector2(0,0), TC=new THREE.Vector2(0,C), PR=new THREE.Vector2(px,py), PL=new THREE.Vector2(-px,py);
+    const T1R=PR.clone().multiplyScalar(R/(R+RF)), T1L=new THREE.Vector2(-T1R.x,T1R.y);
+    const T2R=TC.clone().add(PR.clone().sub(TC).multiplyScalar(RT/(RT+RF))), T2L=new THREE.Vector2(-T2R.x,T2R.y);
+    const sh=new THREE.Shape(); sh.moveTo(T1R.x,T1R.y);
+    arc(sh,O,R,ang(T1R,O),ang(T1L,O),-Math.PI/2);
+    arc(sh,PL,RF,ang(T1L,PL),ang(T2L,PL));
+    arc(sh,TC,RT,ang(T2L,TC),ang(T2R,TC),Math.PI/2);
+    arc(sh,PR,RF,ang(T2R,PR),ang(T1R,PR));
+    if(withHole){const h=new THREE.Path();h.absarc(0,HOLE_Y,RH,0,TAU,true);sh.holes.push(h);}
+    return sh;
+  }
+  const disc=(r)=>{const s=new THREE.Shape();s.absarc(0,0,r,0,TAU,false);return s;};
+  const ring=(ro,ri)=>{const s=disc(ro);const h=new THREE.Path();h.absarc(0,0,ri,0,TAU,true);s.holes.push(h);return s;};
+  // Huella (coordenadas del diseño de la chapa)
+  function paw(){
+    const k=1.18/104, P=(x,y)=>[(x-150)*k,-(y-190)*k], out=[];
+    const s=new THREE.Shape(); s.moveTo(...P(150,186));
+    const c=(a,b,d,e,f,g)=>s.bezierCurveTo(...P(a,b),...P(d,e),...P(f,g));
+    c(172,186,188,206,198,222); c(208,239,203,256,186,258); c(172,260,163,251,150,251);
+    c(137,251,128,260,114,258); c(97,256,92,239,102,222); c(112,206,128,186,150,186);
+    out.push(s);
+    [[97,176,16,21,28],[126,138,16,22,8],[174,138,16,22,-8],[203,176,16,21,-28]].forEach(([x,y,rx,ry,r])=>{
+      const e=new THREE.Shape();const p=P(x,y);e.absellipse(p[0],p[1],rx*k,ry*k,0,TAU,false,r*Math.PI/180);out.push(e);});
+    return out;
+  }
+  // Trazo grueso a partir de una línea (para las rayas y las letras NFC)
+  function stroke(pts,w){
+    const out=[];
+    for(let i=0;i<pts.length-1;i++){
+      const [x0,y0]=pts[i],[x1,y1]=pts[i+1], dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1, nx=-dy/L*w/2, ny=dx/L*w/2;
+      const s=new THREE.Shape(); s.moveTo(x0+nx,y0+ny); s.lineTo(x1+nx,y1+ny); s.lineTo(x1-nx,y1-ny); s.lineTo(x0-nx,y0-ny); s.closePath(); out.push(s);
+    }
+    pts.forEach(([x,y])=>{const c=new THREE.Shape();c.absarc(x,y,w/2,0,TAU,false);out.push(c);});
+    return out;
+  }
+  const arcPts=(cx,cy,r,a0,a1,n=28)=>Array.from({length:n+1},(_,i)=>{const a=a0+(a1-a0)*i/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+  function nfc(){
+    // Diseñado tal como se ve desde atrás; luego se refleja en X.
+    const rot=(p,a,ox,oy)=>{const c=Math.cos(a),s=Math.sin(a);return [ox+p[0]*c-p[1]*s, oy+p[0]*s+p[1]*c];};
+    let lines=[];
+    [0.2,0.4,0.6,0.8].forEach(r=>lines.push(arcPts(-0.5,0.22,r,-0.68,0.68).map(p=>rot([p[0],p[1]],-0.2,0,0))));
+    const h=0.3,w=0.22,gap=0.33,A=-0.24,ox=-0.36,oy=-0.72;
+    const L=(pts,i)=>pts.map(([x,y])=>rot([x+i*gap,y],A,ox,oy));
+    lines.push(L([[0,0],[0,h],[w,0],[w,h]],0));
+    lines.push(L([[0,0],[0,h],[w,h]],1)); lines.push(L([[0,h*0.5],[w*0.8,h*0.5]],1));
+    lines.push(L(arcPts(w/2,h/2,h/2,0.85,TAU-0.85,24),2));
+    const shapes=[];
+    lines.forEach((pts,i)=>shapes.push(...stroke(pts.map(([x,y])=>[-x,y]), i<4?0.1:0.062)));
+    return shapes;
+  }
+
+  const matA=new THREE.MeshPhysicalMaterial({roughness:0.55,metalness:0,clearcoat:0.8,clearcoatRoughness:0.1,envMapIntensity:0.35});
+  const matB=matA.clone();
+  const metal=new THREE.MeshStandardMaterial({color:new THREE.Color(0xdadde0).convertSRGBToLinear(),metalness:1,roughness:0.16,envMapIntensity:1.4});
+  const ext=(shapes,depth,bev,curve=96)=>new THREE.ExtrudeGeometry(shapes,{depth,bevelEnabled:bev>0,bevelThickness:bev,bevelSize:bev,bevelSegments:bev>0?5:0,curveSegments:curve});
+  const tag=new THREE.Group();
+  const base=new THREE.Mesh(ext(outline(true),T,0.04,128),matA); base.position.z=-T/2; tag.add(base);
+  const zF=T/2+0.04, zB=-T/2-0.04;
+  const fondo=new THREE.Mesh(ext(disc(1.2),0.012,0,128),matB); fondo.position.z=zF-0.004; tag.add(fondo);
+  const rimM=new THREE.Mesh(ext(ring(1.47,1.22),0.045,0.012,128),matA); rimM.position.z=zF-0.004; tag.add(rimM);
+  const pawM=new THREE.Mesh(ext(paw(),0.04,0.012,48),matA); pawM.position.z=zF+0.004; tag.add(pawM);
+  const nfcM=new THREE.Mesh(ext(nfc(),0.032,0.008,24),matB); nfcM.position.z=zB-0.03; tag.add(nfcM);
+  // Anilla metálica (la única pieza de metal)
+  const ringG=new THREE.Group(), tor=new THREE.TorusGeometry(0.4,0.034,24,128);
+  [-0.036,0.036].forEach(x=>{const m=new THREE.Mesh(tor,metal);m.position.x=x;ringG.add(m);});
+  ringG.rotation.y=Math.PI/2-0.8; ringG.position.set(0,HOLE_Y+0.4-0.02,0); tag.add(ringG);
+  tag.rotation.set(-0.08,-0.42,0.03);
+  scene.add(tag);
+  // Sombra suave en el suelo
+  const sc=document.createElement('canvas');sc.width=sc.height=256;const sg=sc.getContext('2d');
+  const gr=sg.createRadialGradient(128,128,0,128,128,128);gr.addColorStop(0,'rgba(20,25,22,.38)');gr.addColorStop(1,'rgba(20,25,22,0)');sg.fillStyle=gr;sg.fillRect(0,0,256,256);
+  const shadow=new THREE.Mesh(new THREE.PlaneGeometry(4.2,1.3),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));
+  shadow.rotation.x=-Math.PI/2; shadow.position.set(0,-1.85,0); scene.add(shadow);
+
+  // ---- Cámara y controles ----
+  const controls=new THREE.OrbitControls(camera,cv);
+  controls.target.copy(TARGET); controls.enableDamping=true; controls.dampingFactor=0.08; controls.enablePan=false;
+  controls.rotateSpeed=0.8; controls.autoRotate=!reduce; controls.autoRotateSpeed=1.1;
+  let fitD=9;
+  function resize(){
+    const w=stage.clientWidth,h=stage.clientHeight; if(!w||!h) return;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,3)); renderer.setSize(w,h,false);
+    camera.aspect=w/h; camera.updateProjectionMatrix();
+    const t=Math.tan(camera.fov*Math.PI/360)*2;
+    const d=Math.max(4.9/t, 3.9/(t*camera.aspect));
+    const dir=camera.position.clone().sub(TARGET); const len=dir.length();
+    if(len<0.01) camera.position.set(0,0.3,d); else camera.position.copy(TARGET).add(dir.multiplyScalar(d/len*(len/fitD||1)));
+    fitD=d; controls.minDistance=d*0.42; controls.maxDistance=d*1.4; controls.update();
+  }
+  camera.position.set(0,0.3,9); resize(); new ResizeObserver(resize).observe(stage);
+  const hint=document.getElementById('hint3d');
+  controls.addEventListener('start',()=>{controls.autoRotate=false; anim=null; hint.style.opacity=0;});
+
+  let anim=null;
+  function face(f){
+    controls.autoRotate=false;
+    const off=camera.position.clone().sub(TARGET), sph=new THREE.Spherical().setFromVector3(off);
+    const from=sph.theta, base=f==='f'?0:Math.PI; let to=base+(-tag.rotation.y)*0; 
+    let d=((to-from+Math.PI)%TAU+TAU)%TAU-Math.PI;
+    anim={t0:performance.now(),from,d,phi0:sph.phi,radius:sph.radius,dur:reduce?1:900};
+  }
+  function step(now){
+    if(!anim) return;
+    const k=Math.min(1,(now-anim.t0)/anim.dur), e=1-Math.pow(1-k,3);
+    const s=new THREE.Spherical(anim.radius, anim.phi0+(Math.PI/2-0.03-anim.phi0)*e, anim.from+anim.d*e);
+    camera.position.copy(TARGET).add(new THREE.Vector3().setFromSpherical(s));
+    if(k>=1) anim=null;
+  }
+  // Delante/detrás miran la cara de la chapa, que está algo girada
+  const faceAngle=f=>(f==='f'?0:Math.PI)+tag.rotation.y;
+  const _face=face; face=function(f){_face(f); if(anim){const tgt=faceAngle(f); anim.d=((tgt-anim.from+Math.PI)%TAU+TAU)%TAU-Math.PI;}};
+
+  let visible=true;
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;}).observe(stage);
+  function loop(now){ requestAnimationFrame(loop); if(!visible) return; step(now); controls.update(); renderer.render(scene,camera); }
+  requestAnimationFrame(loop);
+  stage.classList.add('is3d'); cv.classList.add('on'); hint.hidden=false;
+
+  function colors(a,b){matA.color.set(a).convertSRGBToLinear(); matB.color.set(b).convertSRGBToLinear();}
+
+  // ---- Imagen 8K (7680 × 7680) por mosaico ----
+  async function export8k(){
+    const N=7680, TILE=2560, out=document.createElement('canvas'); out.width=out.height=N;
+    const ctx=out.getContext('2d'); if(!ctx) throw new Error('canvas');
+    const pr=renderer.getPixelRatio(), w=stage.clientWidth, h=stage.clientHeight, asp=camera.aspect;
+    renderer.setPixelRatio(1); renderer.setSize(TILE,TILE,false); camera.aspect=1;
+    shadow.visible=false;
+    try{
+      for(let y=0;y<N;y+=TILE) for(let x=0;x<N;x+=TILE){
+        camera.setViewOffset(N,N,x,y,TILE,TILE); camera.updateProjectionMatrix();
+        renderer.render(scene,camera); ctx.drawImage(cv,x,y);
+      }
+    } finally {
+      camera.clearViewOffset(); camera.aspect=asp; camera.updateProjectionMatrix();
+      renderer.setPixelRatio(pr); renderer.setSize(w,h,false); shadow.visible=true;
+    }
+    return await new Promise((res,rej)=>out.toBlob(b=>b?res(b):rej(new Error('blob')),'image/png'));
+  }
+  const btn=document.getElementById('dl8k');
+  const dlP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null);
+  dlP.then(dl=>{
+    if(!dl) return; btn.hidden=false;
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true; const label=btn.textContent; btn.textContent='Preparando 8K…';
+      try{ const blob=await export8k(); await dl.save({filename:'chapita-8k.png',data:blob}); btn.textContent=label; }
+      catch(e){ btn.textContent=(e&&e.code==='declined')?label:'No se pudo crear'; setTimeout(()=>btn.textContent=label,2500); }
+      btn.disabled=false;
+    });
+  });
+
+  window.tag3d={colors,face};
+  colors(CMAP[state.a][2],CMAP[state.b][2]);
+})();
+</script>
+
+
+</body>
+</html>
