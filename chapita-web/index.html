@@ -209,26 +209,10 @@ a{color:inherit}
   .sc-chap b{font-size:28px}
 }
 
-/* Animación: así se escanea la chapa */
-.scan{position:relative;margin-top:26px;aspect-ratio:16/11;border-radius:22px;background:radial-gradient(90% 80% at 35% 50%,#2b3236,#171c1e);overflow:hidden}
-.scan canvas{position:absolute;left:8%;top:50%;width:46%;height:auto;transform:translateY(-50%) rotate(-8deg);filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))}
-.scan-waves{position:absolute;left:52%;top:48%;width:0;height:0}
-.scan-waves i{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:2px solid rgba(255,190,110,.9);opacity:0;animation:scanw 6s infinite}
-.scan-waves i:nth-child(2){animation-delay:.25s}.scan-waves i:nth-child(3){animation-delay:.5s}
-.scan-phone{position:absolute;right:7%;top:9%;width:30%;aspect-ratio:9/18.5;border-radius:22px;background:#0b0d0e;border:3px solid #3a4246;box-shadow:0 20px 40px rgba(0,0,0,.5);padding:6px;animation:scanp 6s infinite cubic-bezier(.65,0,.35,1)}
-.scan-screen{position:relative;width:100%;height:100%;border-radius:16px;background:#f4f5f2;overflow:hidden;font:500 10px/1.35 var(--text);color:#23272b}
-.scan-wait{position:absolute;inset:0;display:grid;place-items:center;color:#6a7075;animation:scanwait 6s infinite}
-.scan-card{position:absolute;inset:0;padding:12px 10px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;opacity:0;transform:translateY(12px);animation:scanc 6s infinite}
-.pf-ph{width:46%;aspect-ratio:1;border-radius:50%;background:#e9d9b8;display:grid;place-items:center;font-size:28px;margin-bottom:4px}
-.scan-card b{font:400 18px/1 var(--display)}.scan-card span{color:#6a7075;font-size:9px}.scan-card p{margin:4px 0 2px;font-size:9.5px}
-.scan-card em{font-style:normal;display:block;width:100%;padding:6px 4px;border-radius:999px;background:#234536;color:#fff;font-size:9.5px;margin-top:3px}
-.scan-card em.alt{background:#e3e6e1;color:#23272b}
-@keyframes scanp{0%,8%{transform:translateX(70%) rotate(10deg);opacity:0}22%{opacity:1}38%,82%{transform:translateX(-22%) rotate(-4deg);opacity:1}96%,100%{transform:translateX(70%) rotate(10deg);opacity:0}}
-@keyframes scanw{0%,36%{opacity:0;transform:scale(.4)}44%{opacity:.95}62%{opacity:0;transform:scale(1.9)}100%{opacity:0}}
-@keyframes scanwait{0%,42%{opacity:1}48%,100%{opacity:0}}
-@keyframes scanc{0%,46%{opacity:0;transform:translateY(12px)}54%,84%{opacity:1;transform:none}92%,100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.scan-phone{animation:none;transform:translateX(-22%) rotate(-4deg)}.scan-waves i{animation:none}.scan-wait{display:none}.scan-card{animation:none;opacity:1;transform:none}}
-@media (max-width:560px){.scan-screen{font-size:8px}.scan-card b{font-size:14px}.pf-ph{font-size:20px}}
+/* Vídeo real: así se escanea la chapa */
+.scan{position:relative;margin:26px 0 0;border-radius:22px;overflow:hidden;background:#05070a;aspect-ratio:16/9}
+.scan video{display:block;width:100%;height:100%;object-fit:cover}
+.scan figcaption{position:absolute;left:14px;bottom:12px;padding:8px 12px;border-radius:999px;background:rgba(5,7,10,.6);color:#e8ebe6;font-size:13px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 /* Cabecera fija con accesos directos */
 .topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ground) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
 .topbar .top{padding-block:12px}
@@ -438,14 +422,10 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
             <li><b>El chip responde</b>La antena recibe la energía del móvil y el chip envía el enlace a la ficha. Por eso no necesita batería.</li>
             <li><b>Te llaman</b>En su móvil se abre la ficha de tu perro con tu teléfono y tu mensaje.</li>
           </ol>
-          <div class="scan" aria-label="Animación: un móvil se acerca a la cara NFC de la chapa y se abre la ficha del perro" role="img">
-            <canvas id="scanTag" width="420" height="420"></canvas>
-            <div class="scan-waves" aria-hidden="true"><i></i><i></i><i></i></div>
-            <div class="scan-phone" aria-hidden="true"><div class="scan-screen">
-              <div class="scan-wait">Acerca el móvil…</div>
-              <div class="scan-card"><div class="pf-ph">🐶</div><b>Toby</b><span>Golden retriever · Valencia</span><p>Si me encuentras, avisa a mi familia, por favor.</p><em>📞 Llamar a su familia</em><em class="alt">💬 Enviar ubicación</em></div>
-            </div></div>
-          </div>
+          <figure class="scan">
+            <video id="scanV" muted playsinline loop preload="none" poster="/video/escaneo-poster.jpg" aria-label="Vídeo: un móvil se acerca a la chapa y se abre la ficha del perro"><source src="/video/escaneo.mp4" type="video/mp4"></video>
+            <figcaption>Así se lee: un toque con el móvil y aparece la ficha.</figcaption>
+          </figure>
         </div>
       </div>
       <ol class="cut-list" id="cutList"></ol>
@@ -970,7 +950,8 @@ cap('dictation').then(d=>{
 $('chatClose').onclick=()=>{$('chat').hidden=true;$('chatOpen').hidden=false;if(ctrl)ctrl.abort();};
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();const t=$('chatIn').value;$('chatIn').value='';ask(t);});
 
-Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrderView();paint($('tile'),side({a:'marino',b:'marfil'},'f'));paint($('scanTag'),side(state,'b'));})
+(function(){const v=document.getElementById('scanV');if(!v)return;const red=matchMedia('(prefers-reduced-motion: reduce)').matches;new IntersectionObserver(es=>{if(es[0].isIntersecting){if(!red){v.preload='auto';v.play().catch(()=>{});}}else v.pause();},{threshold:.35}).observe(v);if(red)v.controls=true;})();
+Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrderView();paint($('tile'),side({a:'marino',b:'marfil'},'f'));})
   .catch(()=>{$('note').textContent='No se pudo cargar la vista previa. Recarga la página.';});
 </script>
 <script>
@@ -1199,15 +1180,16 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     b(14,4,0,10,8,6);b(4,12,-12,2,6,3);b(4,12,12,1,-4,2.4);
     scene.environment=pm.fromScene(sc,0.03).texture;pm.dispose();
   })();
-  const k1=new THREE.DirectionalLight(0xffffff,1.5);k1.position.set(4,5,6);scene.add(k1);
-  const k2=new THREE.DirectionalLight(0xffffff,0.8);k2.position.set(-5,2,-6);scene.add(k2);
-  scene.add(new THREE.HemisphereLight(0xffffff,0x707a76,0.4));
+  const k1=new THREE.DirectionalLight(0xfff4e8,1.35);k1.position.set(4,6,6);scene.add(k1);
+  const k2=new THREE.DirectionalLight(0xe8f0ff,0.9);k2.position.set(-6,2,-5);scene.add(k2);
+  const k3=new THREE.DirectionalLight(0xffffff,0.35);k3.position.set(-3,-2,7);scene.add(k3);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x6c736f,0.35));
 
   // ---- Materiales (con plano de corte opcional: quita un cuarto de la chapa) ----
   const clipA=new THREE.Plane(new THREE.Vector3(-1,0,0),0.02), clipB=new THREE.Plane(new THREE.Vector3(0,1,0),-0.05), clips=[];
   const phys=(o)=>new THREE.MeshPhysicalMaterial(Object.assign({side:THREE.DoubleSide,clippingPlanes:clips,clipIntersection:true},o));
   const std=(o)=>new THREE.MeshStandardMaterial(Object.assign({clippingPlanes:clips,clipIntersection:true},o));
-  const plast=(hex)=>phys({color:new THREE.Color(hex).convertSRGBToLinear(),roughness:0.5,clearcoat:0.7,clearcoatRoughness:0.12,envMapIntensity:0.45});
+  const plast=(hex)=>phys({color:new THREE.Color(hex).convertSRGBToLinear(),roughness:0.42,clearcoat:1,clearcoatRoughness:0.05,envMapIntensity:0.75,sheen:0});
   const resin=phys({color:0xffffff,roughness:0.03,transmission:0.92,thickness:0.08,transparent:true,opacity:0.3,clearcoat:1,envMapIntensity:1.2,depthWrite:false});
   const inlay=phys({color:0xe9ecef,roughness:0.4,transparent:true,opacity:0.88});
   const copper=std({color:new THREE.Color(0xc77a45).convertSRGBToLinear(),metalness:1,roughness:0.28,envMapIntensity:1.3});
@@ -1314,6 +1296,10 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
   const models={huella:huella(),hueso:hueso()};
   Object.values(models).forEach(m=>{m.L.forEach(l=>{l.g=new THREE.Group();l.objs.forEach(o=>l.g.add(o));if(l.resin){l.mat=resin.clone();l.objs.forEach(o=>o.material=l.mat);}m.grp.add(l.g);});m.grp.visible=false;scene.add(m.grp);});
   let M=models.huella; M.grp.visible=true;
+  // Sombra suave en el suelo, como en una foto de estudio
+  const shC=document.createElement('canvas');shC.width=shC.height=256;const shG=shC.getContext('2d');const shR=shG.createRadialGradient(128,128,0,128,128,128);shR.addColorStop(0,'rgba(15,20,18,.42)');shR.addColorStop(.55,'rgba(15,20,18,.16)');shR.addColorStop(1,'rgba(15,20,18,0)');shG.fillStyle=shR;shG.fillRect(0,0,256,256);
+  const floorSh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shC),transparent:true,depthWrite:false}));floorSh.rotation.x=-Math.PI/2;scene.add(floorSh);
+  const placeShadow=()=>{const big=M===models.hueso;floorSh.position.set(0,big?-1.25:-1.95,0);floorSh.scale.set(big?5.2:4.2,big?2.2:1.6,1);};placeShadow();
   const NP=180, pg=new THREE.BufferGeometry(), pp=new Float32Array(NP*3), seeds=[];
   for(let i=0;i<NP;i++){seeds.push([Math.random()*TAU,0.5+Math.random()*2.6,(Math.random()-0.5)*3.2,0.2+Math.random()*0.8,Math.random()]);}
   pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
@@ -1371,7 +1357,7 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
   document.querySelectorAll('.cut-tabs button').forEach(b=>b.onclick=()=>{
     const m=models[b.dataset.model]; if(m===M) return; M.grp.visible=false; M=m; M.grp.visible=true;
     document.querySelectorAll('.cut-tabs button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-    userCam=false; camera.position.copy(controls.target).add(FRONT.clone().multiplyScalar(fitD)); buildUI(); fit(); t=0; dir=1; loop=!reduce; playing=!reduce; ui();
+    placeShadow(); userCam=false; camera.position.copy(controls.target).add(FRONT.clone().multiplyScalar(fitD)); buildUI(); fit(); t=0; dir=1; loop=!reduce; playing=!reduce; ui();
   });
   let nameT; nameIn.addEventListener('input',()=>{clearTimeout(nameT);nameT=setTimeout(()=>models.hueso.setName(nameIn.value.trim()),180);});
   const hint=document.getElementById('cutHint');hint.hidden=mobile();
@@ -1392,6 +1378,7 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     if(mobile()){const want=2.35-1.75*Math.min(1,scrollP()*5); if(Math.abs(want-mobOff)>0.002){mobOff+=(want-mobOff)*0.15; controls.target.y=M.target[1]+mobOff;}}
     if(!userCam){const k=ease(Math.min(1,t*1.8)); const side=new THREE.Vector3(...M.cam).normalize(); tmpD.copy(FRONT).lerp(side,k).normalize(); camera.position.copy(controls.target).add(tmpD.multiplyScalar(fitD*(1+0.12*k)));}
     // Chispas y brillo del chip
+    floorSh.scale.x=(M===models.hueso?5.2:4.2)*(1+0.9*ease(t)); floorSh.material.opacity=1-0.35*ease(t);
     const glow=Math.min(1,t*1.6); pmat.opacity=glow*0.95; copper.emissiveIntensity=glow*0.55; chipM.emissiveIntensity=glow*0.35;
     const chipL=M.L.find(l=>l.n&&l.n.startsWith('Chip')); if(chipL){ const cz=chipL.g.position.z, tt=now/1000; for(let i=0;i<NP;i++){const [a,r,z,sp,ph]=seeds[i];const ang=a+tt*sp*0.35;const rr=r*(0.55+0.45*glow);pp[i*3]=Math.cos(ang)*rr;pp[i*3+1]=Math.sin(ang)*rr*0.85+0.1+Math.sin(tt*sp+ph*6)*0.08;pp[i*3+2]=cz+z*glow*0.9;} pg.attributes.position.needsUpdate=true; sparks.rotation.copy(M.grp.rotation); }
     // Textos: la portada se aparta al bajar; capítulos con la pieza que se está separando
