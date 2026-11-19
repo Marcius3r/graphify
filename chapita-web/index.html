@@ -671,6 +671,7 @@ footer a{color:inherit}
     <div class="field"><label>Unidades</label><div class="qty"><button type="button" id="q-minus" aria-label="Quitar una">−</button><output id="q-val">1</output><button type="button" id="q-plus" aria-label="Añadir una">+</button></div></div>
     <div class="field"><label for="r-notes">Notas</label><textarea id="r-notes" rows="2" maxlength="400" placeholder="Opcional"></textarea></div>
     <label class="legal-ok"><input type="checkbox" id="r-legal" required> He leído y acepto la <a href="/privacidad.html" target="_blank" rel="noopener">política de privacidad</a> y las <a href="/condiciones.html" target="_blank" rel="noopener">condiciones de compra</a>.</label>
+    <label class="legal-ok"><input type="checkbox" id="r-ofertas"> Opcional: si pago con tarjeta y no termino la compra, quiero recibir por correo un descuento para acabarla.</label>
     <div class="total-line"><span>Total sin envío</span><b id="r-total">6,90 €</b></div>
     <p class="msg" id="r-msg" aria-live="polite"></p>
     <p class="muted" style="font-size:14px">Se abrirá WhatsApp con tu pedido escrito. Solo tienes que pulsar enviar. Te contestamos con la fecha de entrega y cómo pagar.</p>
@@ -807,8 +808,9 @@ const colorName=k=>CMAP[k][1];
 function setQty(n){qty=Math.max(1,Math.min(50,n));$('q-val').textContent=qty;$('r-total').textContent=eur(qty*PRICE);}
 $('q-minus').onclick=()=>setQty(qty-1);$('q-plus').onclick=()=>setQty(qty+1);
 const canalSel=()=>(document.querySelector('input[name=canal]:checked')||{}).value||'whatsapp';
-function syncCanal(){const e=canalSel()==='email';$('r-email-f').hidden=!e;$('r-wa').textContent=e?'Reservar y pagar por Bizum (te llega por correo)':'Reservar y pagar por Bizum (por WhatsApp)';}
+function syncCanal(){const e=canalSel()==='email',of=$('r-ofertas').checked;$('r-email-f').hidden=!(e||of);$('r-email-f').querySelector('label').textContent=e?'Tu correo':'Tu correo (para enviarte el descuento)';$('r-wa').textContent=e?'Reservar y pagar por Bizum (te llega por correo)':'Reservar y pagar por Bizum (por WhatsApp)';}
 document.querySelectorAll('input[name=canal]').forEach(r=>r.addEventListener('change',syncCanal));
+$('r-ofertas').addEventListener('change',syncCanal);
 const modeloSel=()=>(document.querySelector('input[name=modelo]:checked')||{}).value||'huella';
 let boneImg=null;
 function syncModelo(){const h=modeloSel()==='hueso';$('r-grab-f').hidden=!h;$('miniSub').textContent=(h?'Chapa Hueso (imagen de ejemplo; se hace en tus colores)':'Chapa Huella')+' · chip NFC · resina';const c=$('miniF'),g=c.getContext('2d');if(h){const draw=()=>{g.clearRect(0,0,c.width,c.height);const w=c.width*.96,hh=w*boneImg.naturalHeight/boneImg.naturalWidth;g.drawImage(boneImg,(c.width-w)/2,(c.height-hh)/2,w,hh);};if(!boneImg){boneImg=new Image();boneImg.onload=draw;boneImg.src='/img/hueso.webp?v=2';}else if(boneImg.complete)draw();}else paint(c,side(state,'f'));}
@@ -869,15 +871,17 @@ $('r-pay').addEventListener('click',async()=>{
   const o=currentOrder(), canal=canalSel(), email=$('r-email').value.trim();
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono.';return;}
   if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para recibir la confirmación.';$('r-email').focus();return;}
+  const ofertas=$('r-ofertas').checked; if(ofertas&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para poder enviarte el descuento (o desmarca la casilla).';$('r-email').focus();return;}
   $('r-pay').disabled=true;$('r-msg').className='msg';$('r-msg').textContent='Abriendo el pago seguro…';
-  try{const r=await fetch(API_PAGAR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas,producto:o.producto||'huella',personalizacion:o.personalizacion||''})});
+  try{const r=await fetch(API_PAGAR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:(canal==='email'||ofertas)?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas,producto:o.producto||'huella',personalizacion:o.personalizacion||'',acepta_ofertas:ofertas})});
     const j=await r.json().catch(()=>({})); if(!r.ok||!j.url) throw new Error(j.error||'No se pudo abrir el pago');
     location.href=j.url;
   }catch(err){$('r-msg').className='msg err';$('r-msg').textContent=err.message;$('r-pay').disabled=false;}
 });
 (function(){const q=new URLSearchParams(location.search),st=q.get('pago'),ref=q.get('ref');if(!st)return;
   const d=document.createElement('div');d.className='pay-banner'+(st==='ok'?' ok':'');d.setAttribute('role','status');
-  d.textContent=st==='ok'?`¡Gracias! Hemos recibido tu pago del pedido ${ref||''}. En unos segundos te llegará la confirmación.`:`El pago del pedido ${ref||''} no se completó. Puedes intentarlo de nuevo o reservar con Bizum.`;
+  const TXT={ok:`¡Gracias! Hemos recibido tu pago del pedido ${ref||''}. En unos segundos te llegará la confirmación.`,enlace_caducado:'Este enlace de descuento ha caducado (valía 7 días). Puedes hacer tu pedido de nuevo aquí.',enlace_no_valido:'Este enlace de descuento no es válido. Puedes hacer tu pedido de nuevo aquí.',error:'No se pudo abrir el pago. Inténtalo de nuevo en un momento.'};
+  d.textContent=TXT[st]||`El pago del pedido ${ref||''} no se completó. Puedes intentarlo de nuevo o reservar con Bizum.`;
   const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label','Cerrar');x.onclick=()=>d.remove();d.appendChild(x);document.body.appendChild(d);
   history.replaceState(null,'',location.pathname+location.hash);})();
 // Reserva real: se guarda en el servidor de Chapita y se abre WhatsApp con el mensaje preparado.
