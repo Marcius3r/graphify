@@ -245,7 +245,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const eur = (c) => (c / 100).toLocaleString("es-ES", { minimumFractionDigits: 2 }) + " €";
 const fecha = (d) => d ? new Date(d).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
-const COLORS = { onix:["negro ónix","#161616"], marfil:["blanco marfil","#efebe2"], chocolate:["chocolate","#4b2a20"], rosa:["rosa empolvado","#e9b9b4"], salvia:["verde salvia","#8fa58c"], ingles:["verde inglés","#2f4f3a"], arena:["arena","#d8c3a0"], piedra:["gris piedra","#8e8b86"], marino:["azul marino","#1f2f4f"], burdeos:["burdeos","#6b1f2a"], lavanda:["lavanda","#b8a9cf"], terracota:["terracota","#b5603f"] };
+const COLORS = { onix:["negro","#141414"], marfil:["blanco","#f5f5f0"], burdeos:["rojo","#e3001b"], terracota:["naranja","#ff6b00"], arena:["amarillo","#ffcc00"], salvia:["verde lima","#8ac926"], ingles:["verde","#00a352"], piedra:["turquesa","#00b8b0"], chocolate:["azul cielo","#2ea8ff"], marino:["azul eléctrico","#1446ff"], lavanda:["morado","#8a2be2"], rosa:["rosa","#ff3d8b"] };
 const cName = (k) => COLORS[k]?.[0] ?? k;
 const EST = { nueva_reserva:"Nueva reserva", pendiente_revision:"Pendiente de revisión", aceptado:"Aceptado", rechazado:"Rechazado", pendiente_pago:"Pendiente de pago", pago_confirmado:"Pago confirmado", en_preparacion:"En preparación", enviado:"Enviado", completado:"Completado", cancelado:"Cancelado", incidencia:"Incidencia" };
 const badgeCls = (o) => ["rechazado","cancelado","incidencia"].includes(o.estado) ? "bad" : ["pago_confirmado","completado","enviado"].includes(o.estado) ? "ok" : "";
@@ -321,9 +321,12 @@ async function loadAll() {
   ]);
   if (o.error) throw o.error;
   ORDERS = o.data || []; MSGS = m.data || []; NOTIFS = n.data || [];
-  renderAll();
+  renderAll(); abrirDesdeEnlace();
 }
 function renderAll() { renderStats(); renderNotifs(); renderOrders(); renderConvs(); if (convSel) renderChat(); updateDots(); }
+let pedidoEnlace = (location.hash.match(/pedido=([0-9a-f-]{36})/) || [])[1] || null;
+function abrirDesdeEnlace() { if (!pedidoEnlace || !ORDERS.length) return; const id = pedidoEnlace; pedidoEnlace = null; history.replaceState(null, "", location.pathname); if (ORDERS.some((o) => o.id === id)) { go("Pedidos"); openOrder(id); } else toast("Ese pedido ya no existe"); }
+addEventListener("hashchange", () => { pedidoEnlace = (location.hash.match(/pedido=([0-9a-f-]{36})/) || [])[1] || null; abrirDesdeEnlace(); });
 
 const cuenta = (f) => ORDERS.filter(f).length;
 function renderStats() {
