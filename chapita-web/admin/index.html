@@ -379,7 +379,7 @@ async function openOrder(id) {
     <dl class="kv">
       <dt>Cliente</dt><dd>${esc(o.cliente_nombre)}</dd>
       <dt>Teléfono</dt><dd><a href="tel:+${esc(o.cliente_telefono)}">${esc(tel)}</a></dd>
-      ${o.cliente_email ? `<dt>Correo</dt><dd>${esc(o.cliente_email)}</dd>` : ""}
+      ${o.cliente_email ? `<dt>Correo</dt><dd><a href="mailto:${esc(o.cliente_email)}?subject=${encodeURIComponent("Chapita · pedido " + o.ref)}">${esc(o.cliente_email)}</a></dd>` : ""}
       <dt>Producto</dt><dd>${o.unidades} × ${esc(o.producto)}</dd>
       <dt>Color</dt><dd>${esc(cName(o.color_principal))}</dd>
       <dt>Fondo</dt><dd>${esc(cName(o.color_fondo))}</dd>
@@ -562,7 +562,7 @@ async function renderSettings() {
     <div class="setrow"><div><b>WhatsApp Business</b><div class="muted small">Envío y recepción de mensajes</div></div>${st(c.whatsapp && c.firma_whatsapp)}</div>
     <div class="setrow"><div style="min-width:0"><b>Webhook para Meta</b><div class="muted small">URL de devolución de llamada</div><code>${esc(c.webhook_url)}</code><div class="muted small" style="margin-top:6px">Identificador de verificación</div><code>${esc(c.verify_token)}</code></div></div>
     <div class="setrow"><div><b>Asistente</b><div class="muted small">Funciona solo, sin IA de pago ni créditos</div></div>${st(true)}</div>
-    <div class="setrow"><div><b>Correo alternativo</b><div class="muted small">Si WhatsApp falla y el cliente dejó su correo</div></div>${st(c.email)}</div>
+    <div class="setrow"><div><b>Gmail de la tienda</b><div class="muted small">${c.gmail ? esc(c.gmail) + " · avisos al cliente y copia de cada aviso para ti" : "Correos automáticos a clientes y avisos para ti"}</div></div>${st(c.email)}</div>
     <div class="setrow"><div><b>Avisos en este dispositivo</b><div class="muted small">Con la app abierta o en segundo plano</div></div>${notifOk ? st(true) : `<button class="btn ghost" type="button" id="sNotif">Activar avisos</button>`}</div>
     <div class="setrow"><div><b>Bizum</b><div class="muted small">Número que ve el cliente</div></div><code>${esc(c.bizum)}</code></div>`;
   $("sOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };

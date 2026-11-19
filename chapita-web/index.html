@@ -388,6 +388,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
     <div class="field"><label for="r-name">Nombre</label><input id="r-name" name="nombre" autocomplete="name" required maxlength="80"></div>
     <div class="two">
       <div class="field"><label for="r-tel">Teléfono</label><input id="r-tel" name="telefono" type="tel" autocomplete="tel" required maxlength="30"></div>
+      <div class="field"><label for="r-email">Correo (opcional, para recibir los avisos también por email)</label><input id="r-email" name="email" type="email" autocomplete="email" maxlength="120" inputmode="email"></div>
       <div class="field"><label for="r-dog">Nombre del perro</label><input id="r-dog" name="perro" maxlength="40"></div>
     </div>
     <div class="field"><label>Unidades</label><div class="qty"><button type="button" id="q-minus" aria-label="Quitar una">−</button><output id="q-val">1</output><button type="button" id="q-plus" aria-label="Añadir una">+</button></div></div>
@@ -572,7 +573,7 @@ $('r-wa').addEventListener('click',async e=>{
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono para que podamos confirmarte el pedido.';(o.nombre?$('r-tel'):$('r-name')).focus();return;}
   enviando=true;$('r-wa').setAttribute('aria-busy','true');$('r-msg').className='msg';$('r-msg').textContent='Guardando tu reserva…';
   try{
-    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:$('r-email').value.trim(),perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
     $('r-msg').className='msg ok';$('r-msg').textContent=`Reserva ${j.ref} guardada. Abriendo WhatsApp: solo tienes que pulsar enviar.`;
@@ -692,16 +693,17 @@ function answer(raw){
 }
 function human(){bubble('bot',`Claro. Pulsa el botón y escríbenos directamente al WhatsApp de Chapita (${WA_SHOW}).`);linkBtn('Abrir WhatsApp',`https://wa.me/${WA}?text=${encodeURIComponent('Hola Chapita, tengo una pregunta:')}`);chips(MAIN_CHIPS);}
 // Reserva guiada
-const PROMPT={nombre:'¡Genial! Vamos a reservar tu Chapa Huella. ¿Cómo te llamas?',tel:'¿Cuál es tu teléfono? Te confirmaremos el pedido por WhatsApp.',perro:'¿Cómo se llama tu perro? (si prefieres no decirlo, escribe «no»)',uds:'¿Cuántas chapas quieres?'};
+const PROMPT={nombre:'¡Genial! Vamos a reservar tu Chapa Huella. ¿Cómo te llamas?',tel:'¿Cuál es tu teléfono? Te confirmaremos el pedido por WhatsApp.',perro:'¿Cómo se llama tu perro? (si prefieres no decirlo, escribe «no»)',email:'¿Quieres recibir los avisos también por correo? Escríbeme tu email, o «no».',uds:'¿Cuántas chapas quieres?'};
 function startReserve(){flow='nombre';draft={};bubble('bot',PROMPT.nombre);chips(['Cancelar']);}
-function summary(){return `Este es tu pedido:\n• ${draft.unidades} × Chapa Huella\n• Color principal: ${colorName(state.a)}\n• Color de fondo: ${colorName(state.b)}${draft.perro?'\n• Para '+draft.perro:''}\n• Nombre: ${draft.nombre} · Tel: ${draft.telefono}\n• Total: ${eur(draft.unidades*PRICE)} (sin envío)\n\n¿Lo confirmo? Si quieres otros colores, dímelo (por ejemplo «marino con fondo arena»).`;}
+function summary(){return `Este es tu pedido:\n• ${draft.unidades} × Chapa Huella\n• Color principal: ${colorName(state.a)}\n• Color de fondo: ${colorName(state.b)}${draft.perro?'\n• Para '+draft.perro:''}\n• Nombre: ${draft.nombre} · Tel: ${draft.telefono}${draft.email?'\n• Correo: '+draft.email:''}\n• Total: ${eur(draft.unidades*PRICE)} (sin envío)\n\n¿Lo confirmo? Si quieres otros colores, dímelo (por ejemplo «marino con fondo arena»).`;}
 async function stepReserve(raw){
   const t=norm(raw).trim();
   if(has(t,'cancel','dejalo','no quiero','olvida')){flow=null;bubble('bot','Sin problema, he cancelado la reserva. ¿Te ayudo con algo más?');chips(MAIN_CHIPS);return;}
   if(raw.includes('?')){const a=answer(raw);if(a&&typeof a==='object'){bubble('bot',a.r);bubble('bot','Seguimos con tu reserva. '+(PROMPT[flow]||'¿Lo confirmo?'));return;}}
   if(flow==='nombre'){const n=raw.trim().replace(/^(me llamo|soy|mi nombre es)\s+/i,'').slice(0,80);if(n.length<2){bubble('bot','Escríbeme tu nombre, por favor.');return;}draft.nombre=n;flow='tel';bubble('bot',`Encantado, ${n.split(' ')[0]}. `+PROMPT.tel);return;}
   if(flow==='tel'){const d=raw.replace(/\D/g,'');if(d.length<9||d.length>15){bubble('bot','Ese teléfono no parece correcto. Escríbelo con sus 9 cifras, por ejemplo 612 345 678.');return;}draft.telefono=raw.trim().slice(0,30);flow='perro';bubble('bot',PROMPT.perro);chips(['No','Cancelar']);return;}
-  if(flow==='perro'){draft.perro=/^(no|nada|-|prefiero no)$/.test(t)?'':raw.trim().replace(/^(se llama|es)\s+/i,'').slice(0,40);flow='uds';bubble('bot',PROMPT.uds);chips(['1','2','3','Cancelar']);return;}
+  if(flow==='perro'){draft.perro=/^(no|nada|-|prefiero no)$/.test(t)?'':raw.trim().replace(/^(se llama|es)\s+/i,'').slice(0,40);flow='email';bubble('bot',PROMPT.email);chips(['No','Cancelar']);return;}
+  if(flow==='email'){if(/^(no|nada|-|prefiero no)$/.test(t)){draft.email='';}else{const m=raw.match(/[^@\s]+@[^@\s]+\.[^@\s]+/);if(!m){bubble('bot','Ese correo no parece correcto. Escríbelo completo (por ejemplo nombre@gmail.com) o responde «no».');return;}draft.email=m[0].slice(0,120);}flow='uds';bubble('bot',PROMPT.uds);chips(['1','2','3','Cancelar']);return;}
   if(flow==='uds'){const w={una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5};const n=parseInt(t)||w[t.split(' ')[0]]||0;if(n<1||n>50){bubble('bot','Dime un número de chapas entre 1 y 50.');return;}draft.unidades=n;flow='confirm';bubble('bot',summary());chips(['Sí, confirmar','Cambiar colores','Cancelar']);return;}
   if(flow==='confirm'){
     const col=applyColors(t);
@@ -711,7 +713,7 @@ async function stepReserve(raw){
     flow=null;chips([]);const wait=bubble('bot','Guardando tu reserva…');
     const o={code:newCode(),nombre:draft.nombre,telefono:draft.telefono,perro:draft.perro,unidades:draft.unidades,a:state.a,b:state.b,notas:'Reservado desde el chat'};
     try{
-      const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+      const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:draft.email||'',perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
       const j=await r.json().catch(()=>({}));
       if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
       wait.textContent=`¡Reserva ${j.ref} guardada! 🎉 Último paso: pulsa el botón para enviarnos el pedido por WhatsApp. Después haz un Bizum de ${eur(o.unidades*PRICE)} al ${WA_SHOW} con el concepto ${j.ref}. En cuanto lo recibamos te lo confirmamos.`;
