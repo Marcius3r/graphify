@@ -180,6 +180,34 @@ a{color:inherit}
 @media (max-width:480px){.cut-stage{aspect-ratio:3/4.3}}
 .chat-fab{transition:opacity .25s,transform .25s}
 .chat-fab.away{opacity:0;pointer-events:none;transform:translateY(12px)}
+
+/* Portada a pantalla completa: la chapa se desmonta al bajar (scroll) y en bucle */
+.scrolly{position:relative;height:300vh;margin-top:calc(-1 * var(--hdr,0px));background:radial-gradient(120% 80% at 62% 42%,#f7f8f6 0%,#e4e7e3 55%,#d3d7d2 100%)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .scrolly{background:radial-gradient(120% 80% at 62% 42%,#2b3134 0%,#1b2023 60%,#121518 100%)}}
+.sc-pin{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;outline:none;touch-action:pan-y}
+.sc-pin canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.sc-copy{position:absolute;left:max(24px,calc((100vw - 1240px)/2 + 16px));top:clamp(96px,16vh,170px);width:min(520px,42vw);transition:opacity .35s,transform .35s;z-index:2}
+.sc-copy h1{font-size:clamp(44px,5.4vw,84px);color:var(--ink)}
+.sc-lead{color:var(--slate);font-size:18px;line-height:1.55;margin-top:20px;max-width:40ch}
+.sc-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.sc-chap{position:absolute;left:max(24px,calc((100vw - 1240px)/2 + 16px));top:clamp(120px,24vh,240px);width:min(360px,34vw);opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s;pointer-events:none;z-index:2}
+.sc-chap.on{opacity:1;transform:none}
+.sc-n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--ground);font:600 14px/1 var(--text)}
+.sc-chap b{display:block;font:400 34px/1.05 var(--display);color:var(--ink);margin-top:12px}
+.sc-chap p{color:var(--slate);font-size:15px;line-height:1.5;margin-top:8px}
+.sc-bar{position:absolute;left:12px;right:12px;bottom:12px;max-width:760px;margin:0 auto;display:grid;gap:8px;z-index:3}
+.sc-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sc-bar .cut-tabs,.sc-bar .cut-name,.sc-bar .player{position:static}
+.scrolly .cut-dots span{background:var(--ink);color:var(--ground)}
+.scrolly .cut-hint{bottom:auto;top:calc(100% - 190px);color:var(--slate)}
+@media (max-width:860px){
+  .sc-copy{left:16px;right:16px;width:auto;top:118px}
+  .sc-copy h1{font-size:clamp(36px,10vw,52px)}
+  .sc-lead{font-size:16px;margin-top:12px}
+  .sc-ctas{margin-top:18px}.sc-ctas .btn{padding:14px 20px}
+  .sc-chap{left:16px;right:16px;width:auto;top:118px}
+  .sc-chap b{font-size:28px}
+}
 /* Cabecera fija con accesos directos */
 .topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ground) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
 .topbar .top{padding-block:12px}
@@ -221,6 +249,7 @@ html{scroll-behavior:smooth;scroll-padding-top:110px}
 @media (max-width:900px){.tiles{grid-template-columns:1fr}}
 .tile{min-width:0;display:flex;flex-direction:column}
 .tile .img{position:relative;aspect-ratio:1/1;border-radius:22px;background:var(--panel);display:grid;place-items:center;overflow:hidden;max-width:100%}
+.tile .img img{width:86%!important}
 .tile .img canvas,.tile .img img{width:64%;height:auto;filter:drop-shadow(0 18px 18px rgba(20,25,22,.18))}
 .tile .img svg{width:52%;height:auto}
 .state{position:absolute;top:16px;left:16px;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--paper);color:var(--ink)}
@@ -342,33 +371,38 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 </div></header>
 
 <main>
-<section class="film portada" id="inicio" aria-label="Chapita">
-  <div class="wrap">
-    <div class="p-grid">
-      <div class="p-copy">
-        <h1>Si se pierde, un toque en su chapa y vuelve a casa</h1>
-        <p class="p-lead">Chapa NFC para perros, impresa en 3D en dos colores y sellada con resina. Quien lo encuentre acerca el móvil y le aparece tu teléfono. Sin batería y sin app.</p>
-        <div class="p-ctas"><a class="btn light" href="#disena">Diseña la tuya · 6,90 €</a><a class="btn line" href="#por-dentro">Cómo funciona por dentro</a></div>
-        <ul class="p-facts"><li>Sin batería</li><li>Sin app</li><li>Android e iPhone</li><li>Entrega en 2 días tras el pago</li></ul>
-      </div>
-      <div class="cut-stage" id="cutStage" tabindex="0" aria-label="Visor 3D: arrastra para girar la chapa. Espacio para pausar, flechas para montar o desmontar.">
-        <canvas id="cut3d"></canvas><div class="cut-dots" id="cutDots" aria-hidden="true"></div>
+<section class="scrolly" id="inicio" aria-label="Chapita">
+  <div class="sc-pin" id="cutStage" tabindex="0" aria-label="Chapa en 3D: baja para desmontarla y sube para montarla. Arrastra para girarla.">
+    <canvas id="cut3d"></canvas><div class="cut-dots" id="cutDots" aria-hidden="true"></div>
+    <div class="sc-copy" id="scCopy">
+      <h1>Si se pierde, un toque en su chapa y vuelve a casa</h1>
+      <p class="sc-lead">Chapa NFC para perros, impresa en 3D en dos colores y sellada con resina. Quien lo encuentre acerca el móvil y le aparece tu teléfono.</p>
+      <div class="sc-ctas"><a class="btn" href="#disena">Diseña la tuya · 6,90 €</a><a class="btn ghost" href="#por-dentro">Cómo funciona</a></div>
+    </div>
+    <div class="sc-chap" id="scChap" aria-live="polite"><span class="sc-n" id="scN"></span><b id="scT"></b><p id="scD"></p></div>
+    <p class="cut-hint" id="cutHint" hidden>Baja para desmontarla · arrastra para girarla</p>
+    <div class="sc-bar">
+      <div class="sc-top">
         <div class="cut-tabs" role="group" aria-label="Modelo"><button type="button" data-model="huella" aria-pressed="true">Huella</button><button type="button" data-model="hueso" aria-pressed="false">Hueso <small>próximamente</small></button></div>
         <label class="cut-name" id="cutName" hidden>Nombre<input id="cutNameIn" maxlength="10" placeholder="TOBBY" autocomplete="off" spellcheck="false"></label>
-        <p class="cut-hint" id="cutHint" hidden>Arrastra para girarla 360°</p>
-        <div class="player">
-          <p class="p-cap" id="pCap" aria-live="polite">Montada</p>
-          <div class="p-row">
-            <button type="button" class="p-btn" id="pBack" aria-label="Rebobinar: montar la chapa" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M11.5 6.5v11L4 12zM20 6.5v11L12.5 12z" fill="currentColor"/></svg></button>
-            <button type="button" class="p-btn main" id="pPlay" aria-label="Reproducir"></button>
-            <button type="button" class="p-btn" id="pFwd" aria-label="Avanzar: desmontar la chapa" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12.5 6.5v11L20 12zM4 6.5v11L11.5 12z" fill="currentColor"/></svg></button>
-            <input type="range" id="pTime" min="0" max="1000" value="0" aria-label="Momento del desmontaje: de montada a desmontada">
-            <button type="button" class="p-cut" id="pCut" aria-pressed="false">Corte</button>
-          </div>
+      </div>
+      <div class="player">
+        <p class="p-cap" id="pCap" aria-live="polite">Montada</p>
+        <div class="p-row">
+          <button type="button" class="p-btn" id="pBack" aria-label="Atrás: montar la chapa" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M11.5 6.5v11L4 12zM20 6.5v11L12.5 12z" fill="currentColor"/></svg></button>
+          <button type="button" class="p-btn main" id="pPlay" aria-label="Pausa"></button>
+          <button type="button" class="p-btn" id="pFwd" aria-label="Adelante: desmontar la chapa" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12.5 6.5v11L20 12zM4 6.5v11L11.5 12z" fill="currentColor"/></svg></button>
+          <input type="range" id="pTime" min="0" max="1000" value="0" aria-label="Momento del desmontaje: de montada a desmontada">
+          <button type="button" class="p-cut" id="pCut" aria-pressed="false">Corte</button>
         </div>
       </div>
     </div>
-    <div class="cut" id="por-dentro">
+  </div>
+</section>
+
+<section class="film" id="por-dentro">
+  <div class="wrap">
+    <div class="cut">
       <div class="cut-head">
         <h2>Así es por dentro</h2>
         <p class="sub">Plástico de color sólido impreso en 3D, un chip NFC en el centro y resina transparente que lo sella todo.</p>
@@ -436,7 +470,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
       <p class="desc">Huella delante y símbolo NFC detrás, en los dos colores que elijas. <a class="link" href="#">Diseñar la mía</a></p>
     </article>
     <article class="tile">
-      <div class="img"><span class="state soon">Próximamente</span><img src="/img/hueso.webp" alt="Chapa verde con forma de hueso"></div>
+      <div class="img"><span class="state soon">Próximamente</span><img src="/img/hueso.webp?v=2" alt="Chapa Hueso verde con el nombre TOBBY y dos huellas" loading="lazy"></div>
       <div class="meta"><h3>Hueso</h3><span class="p soon">Próximamente</span></div>
       <span class="for">Para perros pequeños</span>
       <p class="desc">Forma de hueso con el nombre de tu perro, chip NFC dentro y resina transparente.</p>
@@ -545,7 +579,7 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 </section>
 <button class="owner-fab" type="button" id="ownerBtn" hidden>Reservas</button>
 
-<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><a href="mailto:voxelpego@gmail.com">voxelpego@gmail.com</a><span>Envíos: próximamente</span></div></footer>
+<footer><div class="wrap"><span>Chapita, chapas NFC impresas en 3D</span><a href="mailto:garciatellomarc@gmail.com">garciatellomarc@gmail.com</a><span>Envíos: próximamente</span></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" integrity="sha384-wagZhIFgY4hD+7awjQjR4e2E294y6J2HSnd8eTNc15ZubTeQeVRZwhQJ+W6hnBsf" crossorigin="anonymous"></script>
@@ -810,7 +844,7 @@ function answer(raw){
   if(has(t,'personaliz','nombre del perro','grabar','grabado','letras','dibujo')) return {r:'La chapa lleva la huella delante y el símbolo NFC detrás, en los dos colores que elijas. El nombre de tu perro y tus datos van en la ficha que se abre al acercar el móvil. Si quieres algo especial, coméntalo en las notas al reservar.',c:['Quiero reservar']};
   return null;
 }
-function human(){bubble('bot',`Claro. Escríbenos por WhatsApp (${WA_SHOW}) o por correo a voxelpego@gmail.com.`);linkBtn('Abrir WhatsApp',`https://wa.me/${WA}?text=${encodeURIComponent('Hola Chapita, tengo una pregunta:')}`);linkBtn('Escribir un correo','mailto:voxelpego@gmail.com?subject='+encodeURIComponent('Pregunta sobre Chapita'));chips(MAIN_CHIPS);}
+function human(){bubble('bot',`Claro. Escríbenos por WhatsApp (${WA_SHOW}) o por correo a garciatellomarc@gmail.com.`);linkBtn('Abrir WhatsApp',`https://wa.me/${WA}?text=${encodeURIComponent('Hola Chapita, tengo una pregunta:')}`);linkBtn('Escribir un correo','mailto:garciatellomarc@gmail.com?subject='+encodeURIComponent('Pregunta sobre Chapita'));chips(MAIN_CHIPS);}
 // Reserva guiada
 const PROMPT={nombre:'¡Genial! Vamos a reservar tu Chapa Huella. ¿Cómo te llamas?',tel:'¿Cuál es tu teléfono? Te confirmaremos el pedido por WhatsApp.',perro:'¿Cómo se llama tu perro? (si prefieres no decirlo, escribe «no»)',canal:'¿Cómo prefieres que te avisemos del pedido: por WhatsApp o por correo?',email:'Perfecto. Escríbeme tu correo.',uds:'¿Cuántas chapas quieres?'};
 function startReserve(){flow='nombre';draft={};bubble('bot',PROMPT.nombre);chips(['Cancelar']);}
@@ -884,7 +918,7 @@ cap('dictation').then(d=>{
 $('chatClose').onclick=()=>{$('chat').hidden=true;$('chatOpen').hidden=false;if(ctrl)ctrl.abort();};
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();const t=$('chatIn').value;$('chatIn').value='';ask(t);});
 
-Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrderView();paint($('tile'),side({a:'onix',b:'marfil'},'f'));})
+Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrderView();paint($('tile'),side({a:'marino',b:'marfil'},'f'));})
   .catch(()=>{$('note').textContent='No se pudo cargar la vista previa. Recarga la página.';});
 </script>
 <script>
@@ -1090,7 +1124,7 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
 // ---------- Visor 3D interactivo: desmontaje y montaje de las chapas (Three.js) ----------
 (function(){
   const box=document.querySelector('.cut'), stage=document.getElementById('cutStage'), cv=document.getElementById('cut3d');
-  const G=window.chapaGeo, fail=()=>{box.classList.add('no3d');stage.style.display='none';document.querySelector('.p-grid').style.gridTemplateColumns='1fr';};
+  const G=window.chapaGeo, fail=()=>{box.classList.add('no3d');cv.style.display='none';document.querySelector('.sc-bar').style.display='none';document.querySelector('.scrolly').style.height='100vh';};
   if(typeof THREE==='undefined'||!THREE.OrbitControls||!G){fail();return;}
   let renderer; try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){fail();return;}
   if(!renderer.getContext()){fail();return;}
@@ -1190,12 +1224,12 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     const A=plast('#1446ff'),B=plast('#f5f5f0'), grp=new THREE.Group();
     const body=outline(true); const pocket=new THREE.Path(); pocket.absarc(0,0,0.82,0,TAU,true); body.holes.push(pocket);
     const L=[
-      {n:'Resina transparente',d:'Una capa fina que sella la chapa, la protege del agua y le da brillo.',objs:[mesh(ext(disc(1.5),0.035,0.01,128),resin,0.2)],dz:1.9,anchor:[0,1.5,0.2],dot:1},
-      {n:'Cara delantera',d:'La huella y el borde en el color principal; el fondo, en el segundo color.',objs:[mesh(ext(disc(1.47),0.05,0,128),B,0.1),mesh(ext(ring(1.47,1.22),0.05,0.012,128),A,0.12),mesh(ext(paw(),0.04,0.01,48),A,0.15)],dz:1.15,anchor:[0,1.35,0.15],dot:2},
+      {n:'Resina transparente',d:'Una capa fina que sella la chapa, la protege del agua y le da brillo.',objs:[mesh(ext(disc(1.5),0.035,0.01,128),resin,0.25)],dz:1.9,anchor:[0,1.5,0.25],dot:1,resin:true},
+      {n:'Cara delantera',d:'La huella y el borde en el color principal; el fondo, en el segundo color.',objs:[mesh(ext(disc(1.44),0.05,0,128),B,0.135),mesh(ext(ring(1.47,1.22),0.06,0.012,128),A,0.14),mesh(ext(paw(),0.04,0.01,48),A,0.185)],dz:1.15,anchor:[0,1.35,0.18],dot:2},
       {n:'Cuerpo impreso en 3D',d:'Plástico de color sólido, con un hueco en el centro para el chip.',objs:[mesh(ext(body,0.2,0.03,128),A,-0.1),anilla(HOLE_Y+0.38)],dz:0,anchor:[1.0,-1.1,0.1],dot:3},
       {n:'Chip NFC con su antena',d:'Una pegatina NFC muy fina: un microchip y una antena de cobre en espiral. No lleva batería.',objs:[mesh(ext(disc(0.76),0.012,0,96),inlay,-0.006),mesh(new THREE.TubeGeometry(new Spiral(0.68,0.44,6),900,0.011,6,false),copper),mesh(new THREE.BoxGeometry(0.2,0.2,0.05),chipM,0.03)],dz:-1.15,anchor:[0,0.74,0.02],dot:4},
-      {n:'Cara trasera',d:'El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.',objs:[mesh(ext(disc(1.47),0.05,0.01,128),A,-0.15),mesh(ext(nfc(),0.03,0.006,24),B,-0.18)],dz:-2.2,anchor:[0,1.35,-0.1],dot:5},
-      {n:'',objs:[mesh(ext(disc(1.5),0.035,0.01,128),resin,-0.23)],dz:-2.85,anchor:null,dot:null},
+      {n:'Cara trasera',d:'El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.',objs:[mesh(ext(disc(1.44),0.05,0.01,128),A,-0.185),mesh(ext(nfc(),0.03,0.006,24),B,-0.222)],dz:-2.2,anchor:[0,1.35,-0.16],dot:5},
+      {n:'',objs:[mesh(ext(disc(1.5),0.035,0.01,128),resin,-0.29)],dz:-2.85,anchor:null,dot:null,resin:true},
     ];
     return {grp,L,A,B,order:[0,1,5,4,3],ringAnchor:[0,HOLE_Y+0.78,0],ringText:['Anilla','La única pieza de metal, para colgarla del collar.'],target:[0,-0.25,-0.45],dist:13,cam:[6.4,2.4,6.4]};
   }
@@ -1203,30 +1237,38 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     const A=plast('#11b84a'),B=plast('#f3e2b3'), grp=new THREE.Group();
     const body=boneShape(true); body.holes.push(rrectPath(1.5,0.66,0.12));
     const pawG=(x,y,r,s)=>{const g=ext(paw(),0.04,0.01,32);g.scale(s,s,1);g.rotateZ(r);g.translate(x,y,0);return g;};
-    const deco=new THREE.Group(); const nameM=mesh(new THREE.BufferGeometry(),B,0.15); deco.add(nameM);
-    [pawG(-1.3,0.33,-0.25,0.38),pawG(1.3,-0.38,0.25,0.38)].forEach(g=>deco.add(mesh(g,B,0.15)));
+    const deco=new THREE.Group(); const nameM=mesh(new THREE.BufferGeometry(),B,0.19); deco.add(nameM);
+    [pawG(-1.3,0.33,-0.25,0.38),pawG(1.3,-0.38,0.25,0.38)].forEach(g=>deco.add(mesh(g,B,0.19)));
     const nfcG=ext(nfc(),0.03,0.006,24); nfcG.scale(0.62,0.62,1); nfcG.translate(0,-0.04,0);
     const L=[
-      {n:'Resina transparente',d:'Sella el hueso por delante y por detrás, lo protege del agua y le da brillo.',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,0.21)],dz:2.1,anchor:[-1.3,0.9,0.28],dot:1},
+      {n:'Resina transparente',d:'Sella el hueso por delante y por detrás, lo protege del agua y le da brillo.',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,0.25)],dz:2.1,anchor:[-1.3,0.9,0.28],dot:1,resin:true},
       {n:'Nombre y huellas',d:'El nombre de tu perro y dos huellas en relieve, en el segundo color.',objs:[deco],dz:1.45,anchor:[0.9,0.25,0.25],dot:2},
-      {n:'Cara delantera',d:'El hueso con su marco para el nombre, en el color principal.',objs:[mesh(ext(boneShape(true),0.05,0.012,24),A,0.1),mesh(ext(octaRing(1.92,0.74,0.16,0.07),0.04,0.01,8),A,0.15)],dz:0.8,anchor:[1.3,-0.95,0.15],dot:3},
+      {n:'Cara delantera',d:'El hueso con su marco para el nombre, en el color principal.',objs:[mesh(ext(boneShape(true),0.05,0.012,24),A,0.135),mesh(ext(octaRing(1.92,0.74,0.16,0.07),0.04,0.01,8),A,0.185)],dz:0.8,anchor:[1.3,-0.95,0.15],dot:3},
       {n:'Cuerpo impreso en 3D',d:'Plástico de color sólido, con un hueco en el centro para el chip.',objs:[mesh(ext(body,0.2,0.03,24),A,-0.1),anilla(boneHoleY+0.36)],dz:0,anchor:[-1.75,-0.4,0],dot:4},
       {n:'Chip NFC con su antena',d:'Una pegatina NFC alargada: un microchip y una antena de cobre que da vueltas alrededor.',objs:[mesh(ext(rrect(1.4,0.58,0.1),0.012,0,12),inlay,-0.006),mesh(rectCoil(1.26,0.46,5,0.035),copper),mesh(new THREE.BoxGeometry(0.16,0.16,0.05),chipM,0.03)],dz:-1.05,anchor:[0,0.32,0.02],dot:5},
-      {n:'Cara trasera',d:'El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.',objs:[mesh(ext(boneShape(true),0.05,0.01,24),A,-0.15),mesh(nfcG,B,-0.18)],dz:-1.95,anchor:[1.3,0.9,-0.15],dot:6},
-      {n:'',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,-0.25)],dz:-2.6,anchor:null,dot:null},
+      {n:'Cara trasera',d:'El símbolo NFC en el segundo color, para saber por dónde acercar el móvil.',objs:[mesh(ext(boneShape(true),0.05,0.01,24),A,-0.185),mesh(nfcG,B,-0.222)],dz:-1.95,anchor:[1.3,0.9,-0.15],dot:6},
+      {n:'',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,-0.29)],dz:-2.6,anchor:null,dot:null,resin:true},
     ];
     const setName=(t)=>{const s=nameShapes((t||'TOBBY').toUpperCase().slice(0,10));nameM.geometry.dispose();nameM.geometry=s.length?ext(s,0.045,0.012,6):new THREE.BufferGeometry();};
     setName('TOBBY');
     return {grp,L,A,B,order:[0,1,2,6,5,4],ringAnchor:[0,boneHoleY+0.76,0],ringText:['Anilla','La única pieza de metal, para colgarla del collar.'],target:[0,-0.45,-0.25],dist:13,cam:[5.6,2.3,6.6],setName};
   }
   const models={huella:huella(),hueso:hueso()};
-  Object.values(models).forEach(m=>{m.L.forEach(l=>{l.g=new THREE.Group();l.objs.forEach(o=>l.g.add(o));m.grp.add(l.g);});m.grp.visible=false;scene.add(m.grp);});
+  Object.values(models).forEach(m=>{m.L.forEach(l=>{l.g=new THREE.Group();l.objs.forEach(o=>l.g.add(o));if(l.resin){l.mat=resin.clone();l.objs.forEach(o=>o.material=l.mat);}m.grp.add(l.g);});m.grp.visible=false;scene.add(m.grp);});
   let M=models.huella; M.grp.visible=true;
+  const NP=180, pg=new THREE.BufferGeometry(), pp=new Float32Array(NP*3), seeds=[];
+  for(let i=0;i<NP;i++){seeds.push([Math.random()*TAU,0.5+Math.random()*2.6,(Math.random()-0.5)*3.2,0.2+Math.random()*0.8,Math.random()]);}
+  pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+  const sprite=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,214,150,1)');r.addColorStop(0.25,'rgba(255,150,50,.85)');r.addColorStop(1,'rgba(255,120,20,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
+  const pmat=new THREE.PointsMaterial({map:sprite,size:0.11,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0});
+  const sparks=new THREE.Points(pg,pmat); scene.add(sparks);
+  copper.emissive=new THREE.Color(0xff7a1a); chipM.emissive=new THREE.Color(0xff8a2a);
 
   // ---- Interfaz ----
   const dotsBox=document.getElementById('cutDots'), list=document.getElementById('cutList'), cap=document.getElementById('pCap');
   const bPlay=document.getElementById('pPlay'), bBack=document.getElementById('pBack'), bFwd=document.getElementById('pFwd'), time=document.getElementById('pTime'), bCut=document.getElementById('pCut');
   const nameBox=document.getElementById('cutName'), nameIn=document.getElementById('cutNameIn');
+  const scCopy=document.getElementById('scCopy'), scChap=document.getElementById('scChap'), scN=document.getElementById('scN'), scT=document.getElementById('scT'), scD=document.getElementById('scD'), scrolly=document.querySelector('.scrolly');
   let dots=[];
   function buildUI(){
     const items=M.L.filter(l=>l.dot).map(l=>[l.dot,l.n,l.d]); items.push([items.length+1,...M.ringText]);
@@ -1237,18 +1279,21 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
   }
   const controls=new THREE.OrbitControls(camera,cv);
   controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;controls.enableZoom=false;controls.rotateSpeed=0.9;
-  camera.position.set(...models.huella.cam);
-  function fit(){controls.target.set(...M.target);const d=M.dist/Math.min(1,camera.aspect*1.05);const dir=camera.position.clone().sub(controls.target).normalize();camera.position.copy(controls.target).add(dir.multiplyScalar(d));controls.update();}
+  camera.position.set(0,0.12,1);
+  let fitD=13, userCam=false, mobOff=2.35; const mobile=()=>stage.clientWidth<860;
+  function fit(){const ty=mobile()?M.target[1]+mobOff:M.target[1], tx=mobile()?0:-0.9;controls.target.set(tx,ty,M.target[2]);fitD=mobile()?M.dist/Math.min(1,camera.aspect*1.42):M.dist/Math.min(1,camera.aspect*1.05);const dir=camera.position.clone().sub(controls.target).normalize();camera.position.copy(controls.target).add(dir.multiplyScalar(fitD));controls.update();}
+  const FRONT=new THREE.Vector3(0,0.12,1).normalize(), tmpD=new THREE.Vector3();
   function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2.5));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();fit();}
   new ResizeObserver(resize).observe(stage);
 
   // Línea de tiempo: 0 = montada, 1 = desmontada del todo
-  let t=0, dir=1, playing=false, cutOn=false, cutK=0, started=false, last=performance.now(), auto=!reduce;
-  const DUR=8; // segundos para desmontarla entera
+  let t=0, dir=1, playing=false, loop=!reduce, hold=0, cutOn=false, cutK=0, started=false, last=performance.now(), auto=!reduce, scrollT=null, lastP=-1;
+  const hdr=document.querySelector('.topbar'); const setHdr=()=>document.documentElement.style.setProperty('--hdr',(hdr?hdr.offsetHeight:0)+'px'); setHdr(); addEventListener('resize',setHdr);
+  const DUR=7; // segundos para desmontarla entera
   const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
   function progresses(){const n=M.order.length,W=0.34,step=n>1?(1-W)/(n-1):0;const p=new Array(M.L.length).fill(0);M.order.forEach((li,k)=>{p[li]=ease((t-k*step)/W);});return p;}
   const ICON={play:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>',pause:'<svg viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/><rect x="13.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/></svg>'};
-  function ui(){bPlay.innerHTML=playing?ICON.pause:ICON.play;bPlay.setAttribute('aria-label',playing?'Pausa':'Reproducir');
+  function ui(){const on=playing||scrollT!==null;bPlay.innerHTML=playing?ICON.pause:ICON.play;bPlay.setAttribute('aria-label',playing?'Pausa':'Reproducir');
     bBack.setAttribute('aria-pressed',String(playing&&dir<0));bFwd.setAttribute('aria-pressed',String(playing&&dir>0));}
   function caption(p){
     if(t<=0.001){cap.textContent='Montada';return;} if(t>=0.999){cap.textContent='Desmontada: todas sus piezas';return;}
@@ -1256,30 +1301,44 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     const l=M.L[cur]; const nm=l&&l.n?l.n:'Resina trasera';
     cap.textContent=(dir<0&&playing?'Montando · ':'Desmontando · ')+nm;
   }
-  const play=(d)=>{dir=d;if(d>0&&t>=1)t=0;if(d<0&&t<=0)t=1;playing=true;auto=false;ui();};
+  const play=(d)=>{dir=d;if(d>0&&t>=1)t=0;if(d<0&&t<=0)t=1;playing=true;loop=false;scrollT=null;ui();};
   bFwd.onclick=()=>play(1); bBack.onclick=()=>play(-1);
-  bPlay.onclick=()=>{auto=false;if(playing){playing=false;ui();return;} if(t>=1)dir=-1; else if(t<=0)dir=1; playing=true; ui();};
-  time.oninput=()=>{auto=false;playing=false;t=time.value/1000;ui();};
+  bPlay.onclick=()=>{scrollT=null;if(playing){playing=false;loop=false;ui();return;} if(t>=1)dir=-1; else if(t<=0)dir=1; playing=true; loop=true; ui();};
+  time.oninput=()=>{loop=false;playing=false;scrollT=null;t=time.value/1000;ui();};
+  // Al bajar se desmonta y al subir se monta (como las webs de producto con scroll)
+  function scrollP(){const r=scrolly.getBoundingClientRect(),h=r.height-innerHeight;return h>0?Math.min(1,Math.max(0,-r.top/h)):0;}
+  lastP=scrollP(); addEventListener('scroll',()=>{const p=scrollP(); if(Math.abs(p-lastP)>0.002){scrollT=p<0.015?null:p; if(scrollT!==null){playing=false;loop=false;hold=0;} else {loop=!reduce;playing=!reduce;dir=-1;hold=0;} ui();} lastP=p;},{passive:true});
   bCut.onclick=()=>{cutOn=!cutOn;bCut.setAttribute('aria-pressed',String(cutOn));};
   stage.addEventListener('keydown',e=>{if(e.target!==stage)return;if(e.key===' '){e.preventDefault();bPlay.click();}if(e.key==='ArrowRight'){e.preventDefault();play(1);}if(e.key==='ArrowLeft'){e.preventDefault();play(-1);}});
   document.querySelectorAll('.cut-tabs button').forEach(b=>b.onclick=()=>{
     const m=models[b.dataset.model]; if(m===M) return; M.grp.visible=false; M=m; M.grp.visible=true;
     document.querySelectorAll('.cut-tabs button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-    camera.position.set(...M.cam); buildUI(); fit(); t=0; dir=1; playing=!reduce; ui();
+    userCam=false; camera.position.copy(controls.target).add(FRONT.clone().multiplyScalar(fitD)); buildUI(); fit(); t=0; dir=1; loop=!reduce; playing=!reduce; ui();
   });
   let nameT; nameIn.addEventListener('input',()=>{clearTimeout(nameT);nameT=setTimeout(()=>models.hueso.setName(nameIn.value.trim()),180);});
-  const hint=document.getElementById('cutHint');hint.hidden=false;
-  controls.addEventListener('start',()=>{hint.style.opacity=0;sway=false;});
+  const hint=document.getElementById('cutHint');hint.hidden=mobile();
+  controls.addEventListener('start',()=>{hint.style.opacity=0;sway=false;userCam=true;});
   let sway=!reduce, visible=false, tmp=new THREE.Vector3();
-  new IntersectionObserver(es=>{visible=es[0].isIntersecting; if(visible&&!started){started=true; setTimeout(()=>{if(auto){playing=true;dir=1;ui();}},reduce?0:900);}},{rootMargin:'0px'}).observe(stage);
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting; if(visible&&!started){started=true; setTimeout(()=>{if(loop&&scrollT===null){playing=true;dir=1;ui();}},reduce?0:1200);}},{rootMargin:'0px'}).observe(stage);
 
   function frame(now){
     requestAnimationFrame(frame); const dt=Math.min(0.05,(now-last)/1000); last=now; if(!visible) return;
-    if(playing){ t+=dir*dt/DUR; if(t>=1){t=1;playing=false;ui();} if(t<=0){t=0;playing=false;ui();} }
+    if(scrollT!==null){ t+=(scrollT-t)*Math.min(1,dt*7); }
+    else if(hold>0){ hold-=dt; if(hold<=0){dir=-dir;playing=true;ui();} }
+    else if(playing){ t+=dir*dt/DUR; if(t>=1||t<=0){t=Math.min(1,Math.max(0,t)); playing=false; if(loop){hold=t>=1?1.6:1.1;} ui();} }
     time.value=Math.round(t*1000);
     cutK+=((cutOn?1:0)-cutK)*(reduce?1:0.15); clips.length=0; if(cutK>0.5) clips.push(clipA,clipB);
     const p=progresses();
-    M.L.forEach((l,i)=>{l.g.position.z=l.dz*p[i];});
+    M.L.forEach((l,i)=>{l.g.position.z=l.dz*p[i]; if(l.mat) l.mat.opacity=0.32*Math.min(1,p[i]*3);});
+    // Cámara: de frente cuando está montada (igual que en el editor) y de tres cuartos al abrirse
+    if(mobile()){const want=2.35-1.75*Math.min(1,scrollP()*5); if(Math.abs(want-mobOff)>0.002){mobOff+=(want-mobOff)*0.15; controls.target.y=M.target[1]+mobOff;}}
+    if(!userCam){const k=ease(Math.min(1,t*1.8)); const side=new THREE.Vector3(...M.cam).normalize(); tmpD.copy(FRONT).lerp(side,k).normalize(); camera.position.copy(controls.target).add(tmpD.multiplyScalar(fitD*(1+0.12*k)));}
+    // Chispas y brillo del chip
+    const glow=Math.min(1,t*1.6); pmat.opacity=glow*0.95; copper.emissiveIntensity=glow*0.55; chipM.emissiveIntensity=glow*0.35;
+    const chipL=M.L.find(l=>l.n&&l.n.startsWith('Chip')); if(chipL){ const cz=chipL.g.position.z, tt=now/1000; for(let i=0;i<NP;i++){const [a,r,z,sp,ph]=seeds[i];const ang=a+tt*sp*0.35;const rr=r*(0.55+0.45*glow);pp[i*3]=Math.cos(ang)*rr;pp[i*3+1]=Math.sin(ang)*rr*0.85+0.1+Math.sin(tt*sp+ph*6)*0.08;pp[i*3+2]=cz+z*glow*0.9;} pg.attributes.position.needsUpdate=true; sparks.rotation.copy(M.grp.rotation); }
+    // Textos: la portada se aparta al bajar; capítulos con la pieza que se está separando
+    const sp=scrollP(); scCopy.style.opacity=String(Math.max(0,1-sp*4)); scCopy.style.transform=`translateY(${-sp*60}px)`; scCopy.style.pointerEvents=sp>0.2?'none':'';
+    const showChap=t>0.08&&sp>0.12; scChap.classList.toggle('on',showChap); if(showChap){let cur=null;M.order.forEach(li=>{if(p[li]>0.05)cur=li;}); if(cur!==null){const l=M.L[cur], nm=l.n||'Resina trasera', ds=l.d||'La otra capa de resina, que sella la chapa por detrás.'; if(scT.textContent!==nm){scT.textContent=nm;scD.textContent=ds;scN.textContent=l.dot||'1';}}}
     if(sway) M.grp.rotation.y=Math.sin(now/2600)*0.3;
     controls.update(); renderer.render(scene,camera); caption(p);
     const w=stage.clientWidth,h=stage.clientHeight; let di=0;
