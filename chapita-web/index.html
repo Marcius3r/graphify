@@ -365,12 +365,16 @@ dialog::backdrop{background:rgba(15,20,18,.45)}
 .trk-steps li.ok::before{background:var(--green);border-color:var(--green)}
 .trk-steps li b{display:block;color:var(--ink);font-weight:600}
 footer a{color:inherit}
+.seg{display:flex;gap:8px}.seg label{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;cursor:pointer;font-weight:500}
+.seg label:has(input:checked){border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}.seg input{accent-color:var(--green);width:18px;height:18px;min-height:0;padding:0;margin:0;border:0;flex:none;appearance:auto;-webkit-appearance:radio;background:none;box-shadow:none}
+.lbl{font-size:14px;font-weight:600}
 .field{display:grid;gap:6px;min-width:0}
-.field input,.field textarea{width:100%;min-width:0}
+.field input:not([type=radio]):not([type=checkbox]),.field textarea{width:100%;min-width:0}
 .field label{font-size:14px;font-weight:600}
-.field input,.field textarea{font:400 16px/1.4 var(--text);padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
+.field input:not([type=radio]):not([type=checkbox]),.field textarea{font:400 16px/1.4 var(--text);padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--ground);color:var(--ink)}
 .field input:focus,.field textarea:focus{outline:2px solid var(--green);outline-offset:1px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two{align-items:start}
 .qty{display:flex;align-items:center;gap:10px}
 .qty button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--ground);color:var(--ink);font-size:20px;cursor:pointer}
 .qty output{min-width:2ch;text-align:center;font-family:var(--display);font-size:28px}
@@ -448,7 +452,7 @@ footer a{color:inherit}
     <p class="cut-hint" id="cutHint" hidden>Baja para desmontarla · arrastra para girarla</p>
     <div class="sc-bar">
       <div class="sc-top">
-        <div class="cut-tabs" role="group" aria-label="Modelo"><button type="button" data-model="huella" aria-pressed="true">Huella</button><button type="button" data-model="hueso" aria-pressed="false">Hueso <small>próximamente</small></button></div>
+        <div class="cut-tabs" role="group" aria-label="Modelo"><button type="button" data-model="huella" aria-pressed="true">Huella</button><button type="button" data-model="hueso" aria-pressed="false">Hueso</button></div>
         <label class="cut-name" id="cutName" hidden>Nombre<input id="cutNameIn" maxlength="10" placeholder="TOBBY" autocomplete="off" spellcheck="false"></label>
       </div>
       <div class="player">
@@ -553,10 +557,10 @@ footer a{color:inherit}
       <p class="desc">Huella delante y símbolo NFC detrás, en los dos colores que elijas. <a class="link" href="#">Diseñar la mía</a></p>
     </article>
     <article class="tile">
-      <div class="img"><span class="state soon">Próximamente</span><img src="/img/hueso.webp?v=2" alt="Chapa Hueso verde con el nombre TOBBY y dos huellas" loading="lazy"></div>
-      <div class="meta"><h3>Hueso</h3><span class="p soon">Próximamente</span></div>
-      <span class="for">Para perros pequeños</span>
-      <p class="desc">Forma de hueso con el nombre de tu perro, chip NFC dentro y resina transparente.</p>
+      <div class="img"><span class="state">Disponible</span><img src="/img/hueso.webp?v=2" alt="Chapa Hueso verde con el nombre TOBBY y dos huellas" loading="lazy"></div>
+      <div class="meta"><h3>Hueso</h3><span class="p">6,90 €</span></div>
+      <span class="for">Se recomienda el uso de esta chapa para perros grandes</span>
+      <p class="desc">Forma de hueso con el nombre de tu perro en relieve y dos huellas, chip NFC dentro y resina transparente. <a class="link" href="#" id="buyBone">Reservar la mía</a></p>
     </article>
     <article class="tile">
       <div class="img"><span class="state soon">Próximamente</span>
@@ -600,7 +604,7 @@ footer a{color:inherit}
     <details><summary>¿Necesita batería?</summary><p>No. El chip NFC toma la energía del propio móvil cuando se acerca, así que no hay nada que cargar ni cambiar.</p></details>
     <details><summary>¿Qué móviles pueden leerla?</summary><p>La mayoría de móviles Android con NFC y los iPhone XS o posteriores, sin instalar ninguna app.</p></details>
     <details><summary>¿Puedo cambiar los datos?</summary><p>Sí. La chapa guarda el enlace a la ficha de tu perro, así que puedes actualizar los datos sin cambiar de chapa.</p></details>
-    <details><summary>¿Cuándo llega la chapa Hueso?</summary><p>Muy pronto. Será la versión para perros pequeños.</p></details>
+    <details><summary>¿Qué diferencia hay entre la Huella y el Hueso?</summary><p>Las dos llevan el mismo chip NFC, resina transparente y anilla metálica, y cuestan 6,90 €. La Huella es redonda con una huella delante; el Hueso tiene forma de hueso con el nombre de tu perro en relieve y dos huellas. Se recomienda el uso de las dos para perros grandes.</p></details>
     <details><summary>¿Cómo se paga?</summary><p>Cuando confirmamos tu pedido por WhatsApp te enviamos la fecha estimada de entrega y los datos de pago: un Bizum con el código de tu pedido como concepto. Pronto también con tarjeta, Apple Pay y Google Pay.</p></details>
     <details><summary>¿Cuánto cuesta el envío?</summary><p>Lo publicaremos cuando abra la tienda online.</p></details>
   </div>
@@ -611,7 +615,9 @@ footer a{color:inherit}
 <dialog id="dlg" aria-labelledby="dlg-t">
   <form class="dlg" id="resForm" method="dialog">
     <h2 id="dlg-t">Reservar pedido</h2>
-    <div class="mini"><canvas id="miniF" width="720" height="720" aria-hidden="true"></canvas><div><b id="miniName"></b><div class="muted" style="font-size:14px">Chapa Huella · chip NFC · resina</div></div></div>
+    <div class="mini"><canvas id="miniF" width="720" height="720" aria-hidden="true"></canvas><div><b id="miniName"></b><div class="muted" style="font-size:14px" id="miniSub">Chapa Huella · chip NFC · resina</div></div></div>
+    <div class="field"><span class="lbl">Modelo</span><div class="seg" role="radiogroup" aria-label="Modelo"><label><input type="radio" name="modelo" value="huella" checked> Huella</label><label><input type="radio" name="modelo" value="hueso"> Hueso</label></div></div>
+    <div class="field" id="r-grab-f" hidden><label for="r-grab">Nombre que va en el hueso</label><input id="r-grab" maxlength="10" placeholder="Por ejemplo: TOBBY" autocomplete="off" style="text-transform:uppercase"></div>
     <div class="field"><label for="r-name">Nombre</label><input id="r-name" name="nombre" autocomplete="name" required maxlength="80"></div>
     <div class="two">
       <div class="field"><label for="r-tel">Teléfono</label><input id="r-tel" name="telefono" type="tel" autocomplete="tel" required maxlength="30"></div>
@@ -750,6 +756,7 @@ COMBOS.forEach(([n,p],i)=>{const b=document.createElement('button');b.type='butt
 function face(f){$('flip').classList.toggle('back',f==='b');}
 $('flip').addEventListener('click',()=>face($('flip').classList.contains('back')?'f':'b'));
 document.querySelector('.tile .link').setAttribute('href','#disena');
+document.getElementById('buyBone').addEventListener('click',e=>{e.preventDefault();window.__bone=true;document.getElementById('buy').click();});
 
 
 // ---------- Reservas (db) y asistente (sample) ----------
@@ -763,7 +770,11 @@ $('q-minus').onclick=()=>setQty(qty-1);$('q-plus').onclick=()=>setQty(qty+1);
 const canalSel=()=>(document.querySelector('input[name=canal]:checked')||{}).value||'whatsapp';
 function syncCanal(){const e=canalSel()==='email';$('r-email-f').hidden=!e;$('r-wa').textContent=e?'Reservar y pagar por Bizum (te llega por correo)':'Reservar y pagar por Bizum (por WhatsApp)';}
 document.querySelectorAll('input[name=canal]').forEach(r=>r.addEventListener('change',syncCanal));
-function openRes(){paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';syncCanal();$('dlg').showModal();}
+const modeloSel=()=>(document.querySelector('input[name=modelo]:checked')||{}).value||'huella';
+let boneImg=null;
+function syncModelo(){const h=modeloSel()==='hueso';$('r-grab-f').hidden=!h;$('miniSub').textContent=(h?'Chapa Hueso (imagen de ejemplo; se hace en tus colores)':'Chapa Huella')+' · chip NFC · resina';const c=$('miniF'),g=c.getContext('2d');if(h){const draw=()=>{g.clearRect(0,0,c.width,c.height);const w=c.width*.96,hh=w*boneImg.naturalHeight/boneImg.naturalWidth;g.drawImage(boneImg,(c.width-w)/2,(c.height-hh)/2,w,hh);};if(!boneImg){boneImg=new Image();boneImg.onload=draw;boneImg.src='/img/hueso.webp?v=2';}else if(boneImg.complete)draw();}else paint(c,side(state,'f'));}
+document.querySelectorAll('input[name=modelo]').forEach(r=>r.addEventListener('change',syncModelo));
+function openRes(){const wb=window.__bone;window.__bone=false;document.querySelector('input[name=modelo][value='+(wb?'hueso':'huella')+']').checked=true;paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';syncCanal();syncModelo();$('dlg').showModal();}
 $('buy').addEventListener('click',openRes);
 $('r-cancel').onclick=()=>$('dlg').close();
 
@@ -791,7 +802,7 @@ const total=o=>eur(o.unidades*PRICE);
 function orderText(o){
   return ['Hola Chapita 👋 Quiero reservar:',
     `• Pedido: ${o.code}`,
-    `• ${o.unidades} × Chapa Huella`,
+    `• ${o.unidades} × ${o.producto==='hueso'?'Chapa Hueso'+(o.personalizacion?' («'+o.personalizacion+'»)':''):'Chapa Huella'}`,
     `• Color principal: ${colorName(o.a)}`,
     `• Color de fondo: ${colorName(o.b)}`,
     o.perro?`• Perro: ${o.perro}`:null,
@@ -804,7 +815,7 @@ function orderText(o){
 }
 const waLink=o=>`https://wa.me/${WA}?text=${encodeURIComponent(orderText(o))}`;
 const payInfo=o=>`Haz un Bizum de ${total(o)} al ${WA_SHOW} con el concepto ${o.code}. En cuanto lo recibamos te confirmamos el pedido y la fecha de entrega (como mucho en 2 días).`;
-function currentOrder(){return {code:orderCode,nombre:$('r-name').value.trim(),telefono:$('r-tel').value.trim(),perro:$('r-dog').value.trim(),unidades:qty,a:state.a,b:state.b,color_principal:colorName(state.a),color_fondo:colorName(state.b),notas:$('r-notes').value.trim()};}
+function currentOrder(){return {code:orderCode,nombre:$('r-name').value.trim(),telefono:$('r-tel').value.trim(),perro:$('r-dog').value.trim(),unidades:qty,a:state.a,b:state.b,color_principal:colorName(state.a),color_fondo:colorName(state.b),notas:$('r-notes').value.trim(),producto:modeloSel(),personalizacion:modeloSel()==='hueso'?($('r-grab').value.trim()||$('r-dog').value.trim()).toUpperCase().slice(0,10):''};}
 function updateWa(){$('r-wa').href=waLink(currentOrder());}
 ['r-name','r-tel','r-dog','r-notes'].forEach(id=>$(id).addEventListener('input',updateWa));
 $('q-minus').addEventListener('click',updateWa);$('q-plus').addEventListener('click',updateWa);
@@ -815,11 +826,12 @@ const API_PAGAR='https://zmosqfoiddndrlieuleb.supabase.co/functions/v1/pagar';
 fetch(API_PAGAR).then(r=>r.json()).then(j=>{if(j&&j.activo){$('r-pay').hidden=false;$('r-pay-note').hidden=false;$('r-wa').classList.add('ghost');}}).catch(()=>{});
 $('r-pay').addEventListener('click',async()=>{
   if(!$('r-legal').checked){$('r-msg').className='msg err';$('r-msg').textContent='Acepta la política de privacidad y las condiciones para continuar.';$('r-legal').focus();return;}
+  if(modeloSel()==='hueso'&&!($('r-grab').value.trim()||$('r-dog').value.trim())){$('r-msg').className='msg err';$('r-msg').textContent='Escribe el nombre que va en el hueso.';$('r-grab').focus();return;}
   const o=currentOrder(), canal=canalSel(), email=$('r-email').value.trim();
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono.';return;}
   if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para recibir la confirmación.';$('r-email').focus();return;}
   $('r-pay').disabled=true;$('r-msg').className='msg';$('r-msg').textContent='Abriendo el pago seguro…';
-  try{const r=await fetch(API_PAGAR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+  try{const r=await fetch(API_PAGAR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas,producto:o.producto||'huella',personalizacion:o.personalizacion||''})});
     const j=await r.json().catch(()=>({})); if(!r.ok||!j.url) throw new Error(j.error||'No se pudo abrir el pago');
     location.href=j.url;
   }catch(err){$('r-msg').className='msg err';$('r-msg').textContent=err.message;$('r-pay').disabled=false;}
@@ -838,11 +850,12 @@ $('r-wa').addEventListener('click',async e=>{
   const o=currentOrder();
   if(!o.nombre||o.telefono.replace(/\D/g,'').length<9){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu nombre y tu teléfono para que podamos confirmarte el pedido.';(o.nombre?$('r-tel'):$('r-name')).focus();return;}
   if(!$('r-legal').checked){$('r-msg').className='msg err';$('r-msg').textContent='Acepta la política de privacidad y las condiciones para continuar.';$('r-legal').focus();return;}
+  if(modeloSel()==='hueso'&&!($('r-grab').value.trim()||$('r-dog').value.trim())){$('r-msg').className='msg err';$('r-msg').textContent='Escribe el nombre que va en el hueso.';$('r-grab').focus();return;}
   const canal=canalSel(), email=$('r-email').value.trim();
   if(canal==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('r-msg').className='msg err';$('r-msg').textContent='Escribe tu correo para que te enviemos el resumen y los avisos.';$('r-email').focus();return;}
   enviando=true;$('r-wa').setAttribute('aria-busy','true');$('r-msg').className='msg';$('r-msg').textContent='Guardando tu reserva…';
   try{
-    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+    const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:canal==='email'?email:'',canal,perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas,producto:o.producto||'huella',personalizacion:o.personalizacion||''})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
     if(j.canal==='email'){$('r-msg').className='msg ok';$('r-msg').textContent=`¡Reserva ${j.ref} guardada! Te hemos enviado un correo a ${email} con el resumen y cómo pagar por Bizum (concepto ${j.ref}). Los siguientes avisos te llegarán por correo.`;return;}
@@ -966,8 +979,8 @@ function answer(raw){
   if(has(t,'gracias','genial','perfecto','vale gracias')) return {r:'¡A ti! Si necesitas algo más, aquí estoy. 🐶',c:MAIN_CHIPS};
   if(has(t,'adios','hasta luego','chao')) return {r:'¡Hasta pronto! Un saludo a tu perro. 🐾',c:[]};
   if(has(t,'reserv','comprar','pedir','encargar','quiero una','quiero la','quiero dos','hacer un pedido')) return 'reserve';
-  if(has(t,'hueso','pequen','perro pequeno','raza pequena','chihuahua','yorkshire')) return {r:'La Chapa Hueso, pensada para perros pequeños, llegará próximamente. Ahora mismo está disponible la Chapa Huella, para perros grandes.',c:['¿Cuánto cuesta?','Quiero reservar']};
-  if(has(t,'nuevo','modelos','otros model','otra forma')) return {r:'Estamos preparando nuevos modelos que saldrán próximamente. Ahora mismo puedes reservar la Chapa Huella.',c:MAIN_CHIPS};
+  if(has(t,'hueso')) return {r:'¡La Chapa Hueso ya está disponible! Cuesta 6,90 €, lleva el nombre de tu perro en relieve y dos huellas, con chip NFC y resina. Se recomienda el uso de esta chapa para perros grandes. Para pedirla, dime «quiero reservar» y elige Hueso.',c:['Quiero reservar','¿Qué colores hay?']};
+  if(has(t,'nuevo','modelos','otros model','otra forma')) return {r:'Estamos preparando nuevos modelos. Ahora mismo puedes reservar la Chapa Huella y la Chapa Hueso.',c:MAIN_CHIPS};
   if(has(t,'cuanto','precio','cuesta','cuanto vale','coste','euros','€','barat','descuento','oferta')) return {r:`La Chapa Huella cuesta 6,90 € por unidad, IVA incluido. Si pides varias, es 6,90 € cada una (no hay descuento por cantidad). El envío se confirma por WhatsApp.`,c:['¿Qué colores hay?','Quiero reservar']};
   const col=applyColors(t); if(col) return {r:col,c:['Quiero reservar','¿Qué colores hay?']};
   if(has(t,'color','combina','tono','que hay')) return {r:`Se hace en dos colores: el principal (huella, borde y toda la parte de atrás) y el de fondo (alrededor de la huella y el símbolo NFC de atrás). Colores: ${colorList()}. Dime por ejemplo «rojo con fondo blanco» y te la enseño.`,c:['Azul con fondo blanco','Negro con fondo amarillo','Rosa con fondo negro']};
@@ -1007,7 +1020,7 @@ async function stepReserve(raw){
     flow=null;chips([]);const wait=bubble('bot','Guardando tu reserva…');
     const o={code:newCode(),nombre:draft.nombre,telefono:draft.telefono,perro:draft.perro,unidades:draft.unidades,a:state.a,b:state.b,notas:'Reservado desde el chat'};
     try{
-      const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:draft.email||'',canal:draft.canal||'whatsapp',perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas})});
+      const r=await fetch(API_PEDIDOS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:o.nombre,telefono:o.telefono,email:draft.email||'',canal:draft.canal||'whatsapp',perro:o.perro,unidades:o.unidades,color_principal:o.a,color_fondo:o.b,notas:o.notas,producto:o.producto||'huella',personalizacion:o.personalizacion||''})});
       const j=await r.json().catch(()=>({}));
       if(!r.ok) throw new Error(j.error||'No se pudo guardar la reserva');
       if(j.canal==='email'){wait.textContent=`¡Reserva ${j.ref} guardada! 🎉 Te hemos enviado un correo a ${draft.email} con el resumen. Para completarla, haz un Bizum de ${eur(o.unidades*PRICE)} al ${WA_SHOW} con el concepto ${j.ref}. Te avisaremos por correo cuando lo recibamos.`;chips(MAIN_CHIPS);return;}
