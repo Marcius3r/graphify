@@ -698,16 +698,15 @@ document.querySelectorAll('.frame[data-video]').forEach(f=>{
 // Colores. a = huella + contorno + parte de atrás. b = alrededor de la huella + símbolo NFC.
 const COLORS=[
   ['onix','negro','#141414'],['marfil','blanco','#f5f5f0'],['burdeos','rojo','#e3001b'],
-  ['terracota','naranja','#ff6b00'],['arena','amarillo','#ffcc00'],['salvia','verde lima','#8ac926'],
-  ['ingles','verde','#00a352'],['piedra','turquesa','#00b8b0'],['chocolate','azul cielo','#2ea8ff'],
+  ['terracota','naranja','#ff6b00'],['arena','amarillo','#ffcc00'],['ingles','verde','#3dbb5c'],
   ['marino','azul eléctrico','#1446ff'],['lavanda','morado','#8a2be2'],['rosa','rosa','#ff3d8b']
 ];
 const CMAP=Object.fromEntries(COLORS.map(c=>[c[0],c]));
 const COMBOS=[
   ['Azul y blanco',{a:'marino',b:'marfil'}],['Negro y amarillo',{a:'onix',b:'arena'}],
   ['Rojo y blanco',{a:'burdeos',b:'marfil'}],['Rosa y negro',{a:'rosa',b:'onix'}],
-  ['Verde y amarillo',{a:'ingles',b:'arena'}],['Naranja y azul',{a:'terracota',b:'marino'}],
-  ['Morado y lima',{a:'lavanda',b:'salvia'}],['Turquesa y blanco',{a:'piedra',b:'marfil'}]
+  ['Verde y blanco',{a:'ingles',b:'marfil'}],['Naranja y azul',{a:'terracota',b:'marino'}],
+  ['Morado y amarillo',{a:'lavanda',b:'arena'}]
 ];
 let state={...COMBOS[0][1]};
 const side=(s,face)=>face==='f'?{model:'huella',borde:s.a,dibujo:s.a,fondo:s.b}:{model:'nfc',borde:s.a,fondo:s.a,dibujo:s.b};
@@ -954,7 +953,7 @@ function chips(list){const q=$('quick');q.innerHTML='';list.forEach(t=>{const b=
 function linkBtn(text,href){const a=document.createElement('a');a.className='btn';a.href=href;a.target='_blank';a.rel='noopener';a.textContent=text;a.style.alignSelf='flex-start';log.appendChild(a);log.scrollTop=log.scrollHeight;return a;}
 const has=(t,...w)=>w.some(x=>t.includes(x));
 const MAIN_CHIPS=['¿Cuánto cuesta?','¿Qué colores hay?','¿Cómo funciona el NFC?','Quiero reservar'];
-const SYN=[['azul cielo','chocolate'],['azul claro','chocolate'],['celeste','chocolate'],['azul electrico','marino'],['azul oscuro','marino'],['azul','marino'],['verde lima','salvia'],['lima','salvia'],['verde','ingles'],['negro','onix'],['blanco','marfil'],['rojo','burdeos'],['naranja','terracota'],['amarillo','arena'],['turquesa','piedra'],['aguamarina','piedra'],['morado','lavanda'],['lila','lavanda'],['violeta','lavanda'],['purpura','lavanda'],['rosa','rosa'],['fucsia','rosa']];
+const SYN=[['azul electrico','marino'],['azul oscuro','marino'],['azul claro','marino'],['azul cielo','marino'],['celeste','marino'],['azul','marino'],['verde lima','ingles'],['verde claro','ingles'],['lima','ingles'],['verde','ingles'],['negro','onix'],['blanco','marfil'],['rojo','burdeos'],['naranja','terracota'],['amarillo','arena'],['morado','lavanda'],['lila','lavanda'],['violeta','lavanda'],['purpura','lavanda'],['rosa','rosa'],['fucsia','rosa']];
 function findColors(t){
   const hits=[];
   SYN.forEach(([w,k])=>{let i=t.indexOf(w);while(i>=0){if(!hits.some(h=>i>=h.i&&i<h.i+h.len))hits.push({i,len:w.length,k,fondo:/fondo\s*(de|en|color)?\s*$/.test(t.slice(Math.max(0,i-14),i))});i=t.indexOf(w,i+w.length);}});
