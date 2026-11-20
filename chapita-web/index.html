@@ -1358,16 +1358,21 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     return out;
   }
   const arcPts=(cx,cy,r,a0,a1,n=28)=>Array.from({length:n+1},(_,i)=>{const a=a0+(a1-a0)*i/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];});
-  function nfc(){
+  function nfc(recto){
     // Diseñado tal como se ve desde atrás; luego se refleja en X.
     const rot=(p,a,ox,oy)=>{const c=Math.cos(a),s=Math.sin(a);return [ox+p[0]*c-p[1]*s, oy+p[0]*s+p[1]*c];};
     let lines=[];
-    [0.2,0.4,0.6,0.8].forEach(r=>lines.push(arcPts(-0.5,0.22,r,-0.68,0.68).map(p=>rot([p[0],p[1]],-0.2,0,0))));
-    const h=0.3,w=0.22,gap=0.33,A=-0.24,ox=-0.36,oy=-0.72;
+    const tA=recto?0:-0.2;
+    [0.2,0.4,0.6,0.8].forEach(r=>lines.push(arcPts(-0.5,0.22,r,-0.68,0.68).map(p=>rot([p[0],p[1]],tA,0,0))));
+    const h=0.3,w=0.22,gap=0.33,A=recto?0:-0.24,ox=-0.36,oy=-0.72;
     const L=(pts,i)=>pts.map(([x,y])=>rot([x+i*gap,y],A,ox,oy));
     lines.push(L([[0,0],[0,h],[w,0],[w,h]],0));
     lines.push(L([[0,0],[0,h],[w,h]],1)); lines.push(L([[0,h*0.5],[w*0.8,h*0.5]],1));
     lines.push(L(arcPts(w/2,h/2,h/2,0.85,TAU-0.85,24),2));
+    if(recto){ // recto y centrado (para el hueso)
+      let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; lines.forEach(l=>l.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
+      const cx=(x0+x1)/2,cy=(y0+y1)/2; lines=lines.map(l=>l.map(([x,y])=>[x-cx,y-cy]));
+    }
     const shapes=[];
     lines.forEach((pts,i)=>shapes.push(...stroke(pts.map(([x,y])=>[-x,y]), i<4?0.1:0.062)));
     return shapes;
@@ -1612,7 +1617,7 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     const pawG=(x,y,r,s)=>{const g=ext(paw(),0.04,0.01,32);g.scale(s,s,1);g.rotateZ(r);g.translate(x,y,0);return g;};
     const deco=new THREE.Group(); const nameM=mesh(new THREE.BufferGeometry(),B,0.19); deco.add(nameM);
     [pawG(-1.3,0.33,-0.25,0.38),pawG(1.3,-0.38,0.25,0.38)].forEach(g=>deco.add(mesh(g,B,0.19)));
-    const nfcG=ext(nfc(),0.03,0.006,24); nfcG.scale(0.62,0.62,1); nfcG.translate(0,-0.04,0);
+    const nfcG=ext(nfc(true),0.03,0.006,24); nfcG.scale(0.5,0.5,1); nfcG.translate(0,-0.06,0);
     const L=[
       {n:'Resina transparente',d:'Sella el hueso por delante y por detrás, lo protege del agua y le da brillo.',objs:[mesh(ext(boneShape(true,1.012),0.035,0.01,24),resin,0.25)],dz:2.1,anchor:[-1.3,0.9,0.28],dot:1,resin:true},
       {n:'Nombre y huellas',d:'El nombre de tu perro y dos huellas en relieve, en el segundo color.',objs:[deco],dz:1.45,anchor:[0.9,0.25,0.25],dot:2},
@@ -1634,7 +1639,7 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     const pawG=(x,y,r,sc)=>{const g=ext(paw(),0.04,0.01,32);g.scale(sc,sc,1);g.rotateZ(r);g.translate(x,y,0);return g;};
     [pawG(-1.3,0.33,-0.25,0.38),pawG(1.3,-0.38,0.25,0.38)].forEach(g=>grp.add(M(g,mB,0.16)));
     const nameM=M(new THREE.BufferGeometry(),mB,0.16); grp.add(nameM);
-    const nfcG=ext(nfc(),0.03,0.006,24); nfcG.scale(0.62,0.62,1); nfcG.translate(0,-0.04,0); grp.add(M(nfcG,mB,-0.2));
+    const nfcG=ext(nfc(true),0.03,0.006,24); nfcG.scale(0.5,0.5,1); nfcG.translate(0,-0.06,0); grp.add(M(nfcG,mB,-0.2));
     const rg=new THREE.Group(),tor=new THREE.TorusGeometry(0.4,0.034,24,128);[-0.036,0.036].forEach(x=>{const m=new THREE.Mesh(tor,mMetal);m.position.x=x;rg.add(m);});
     rg.rotation.y=Math.PI/2-0.8; rg.position.set(0,boneHoleY+0.36,0); grp.add(rg);
     const setName=t=>{const sh=nameShapes((t||'TOBBY').toUpperCase().slice(0,10));nameM.geometry.dispose();nameM.geometry=sh.length?ext(sh,0.045,0.012,6):new THREE.BufferGeometry();};
