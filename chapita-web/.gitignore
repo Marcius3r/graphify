@@ -1,1 +1,5 @@
 .hallmark/shots/
+.hallmark/before/
+.hallmark/before.json
+.hallmark/compare.html
+.hallmark/salt
