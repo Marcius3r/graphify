@@ -558,6 +558,15 @@ footer a{color:inherit}
 .dl8k{bottom:auto;top:16px;right:16px}
 footer{padding-bottom:112px}
 .legal-ok input{margin-top:2px}
+
+/* Selector de modelo en Diseña la tuya */
+.dmodel{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.dseg{display:inline-flex;padding:4px;border-radius:999px;background:var(--ground);border:1px solid var(--line)}
+.dseg button{font:600 15px/1 var(--text);padding:12px 20px;min-height:44px;border-radius:999px;border:0;background:transparent;color:var(--slate);cursor:pointer}
+.dseg button[aria-pressed="true"]{background:var(--green);color:var(--green-ink)}
+.dseg button:focus-visible,.dname input:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.dname{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--slate)}
+.dname input{width:140px;font:600 16px/1 var(--text);padding:12px 14px;min-height:44px;border-radius:12px;border:1px solid var(--field-line);background:var(--ground);color:var(--ink)}
 </style>
 
 <header class="topbar"><div class="wrap top">
@@ -669,8 +678,9 @@ footer{padding-bottom:112px}
       <button type="button" class="dl8k" id="dl8k" hidden>Imagen 8K</button>
     </div>
     <div class="pick">
-      <div class="row"><span class="row-l">Color principal<small>Huella, contorno y la parte de atrás</small></span><div class="sw" data-zone="a"></div></div>
-      <div class="row"><span class="row-l">Color de fondo<small>Alrededor de la huella y el símbolo NFC</small></span><div class="sw" data-zone="b"></div></div>
+      <div class="row" id="dModelRow" hidden><span class="row-l">Modelo<small id="dModelSub">Redonda, con una huella</small></span><div class="dmodel"><div class="dseg" role="group" aria-label="Modelo"><button type="button" data-m="huella" aria-pressed="true">Huella</button><button type="button" data-m="hueso" aria-pressed="false">Hueso</button></div><label class="dname" id="dName" hidden>Nombre <input id="dNameIn" maxlength="10" placeholder="TOBBY" autocomplete="off" spellcheck="false"></label></div></div>
+      <div class="row"><span class="row-l">Color principal<small id="dSubA">Huella, contorno y la parte de atrás</small></span><div class="sw" data-zone="a"></div></div>
+      <div class="row"><span class="row-l">Color de fondo<small id="dSubB">Alrededor de la huella y el símbolo NFC</small></span><div class="sw" data-zone="b"></div></div>
       <div class="row"><span class="row-l">Combinaciones</span><div class="combos" id="combos"></div></div>
     </div>
   </div>
@@ -937,6 +947,24 @@ let boneImg=null;
 function syncModelo(){const h=modeloSel()==='hueso';$('r-grab-f').hidden=!h;$('miniSub').textContent=(h?'Chapa Hueso (imagen de ejemplo; se hace en tus colores)':'Chapa Huella')+' con chip NFC, en resina';const c=$('miniF'),g=c.getContext('2d');if(h){const draw=()=>{g.clearRect(0,0,c.width,c.height);const w=c.width*.96,hh=w*boneImg.naturalHeight/boneImg.naturalWidth;g.drawImage(boneImg,(c.width-w)/2,(c.height-hh)/2,w,hh);};if(!boneImg){boneImg=new Image();boneImg.onload=draw;boneImg.src='img/hueso.webp?v=2';}else if(boneImg.complete)draw();}else paint(c,side(state,'f'));}
 document.querySelectorAll('input[name=modelo]').forEach(r=>r.addEventListener('change',syncModelo));
 function openRes(){const wb=window.__bone;window.__bone=false;document.querySelector('input[name=modelo][value='+(wb?'hueso':'huella')+']').checked=true;paint($('miniF'),side(state,'f'));$('miniName').textContent=`${colorName(state.a)} con fondo ${colorName(state.b)}`;$('r-msg').textContent='';$('r-msg').className='msg';syncCanal();syncModelo();$('dlg').showModal();}
+(function(){
+  const row=$('dModelRow'), btns=row.querySelectorAll('.dseg button'), nm=$('dName'), inp=$('dNameIn');
+  const ready=()=>{ if(window.tag3d&&window.tag3d.ok) row.hidden=false; };
+  ready(); document.addEventListener('tag3d',ready);
+  window.__dmodel='huella';
+  function pick(m){
+    const go=()=>{ if(!window.tag3d.model(m)) return false;
+      window.__dmodel=m; btns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m))); nm.hidden=m!=='hueso';
+      $('dModelSub').textContent=m==='hueso'?'Con el nombre de tu perro':'Redonda, con una huella';
+      $('dSubA').textContent=m==='hueso'?'El hueso, el marco y la parte de atrás':'Huella, contorno y la parte de atrás';
+      $('dSubB').textContent=m==='hueso'?'El nombre, las huellas y el símbolo NFC':'Alrededor de la huella y el símbolo NFC';
+      if(m==='hueso') window.tag3d.setName(inp.value.trim()); return true; };
+    if(!go()) document.addEventListener('bonekit',go,{once:true});
+  }
+  btns.forEach(b=>b.addEventListener('click',()=>pick(b.dataset.m)));
+  let t; inp.addEventListener('input',()=>{inp.value=inp.value.toUpperCase();clearTimeout(t);t=setTimeout(()=>window.tag3d.setName(inp.value.trim()),180);});
+})();
+$('buy').addEventListener('click',()=>{ if(window.__dmodel==='hueso'){ window.__bone=true; const n=$('dNameIn').value.trim(); if(n) $('r-grab').value=n; } });
 $('buy').addEventListener('click',openRes);
 $('r-cancel').onclick=()=>$('dlg').close();
 
@@ -1451,7 +1479,14 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
   });
 
   window.chapaGeo={outline,disc,ring,paw,nfc,ext,R,T,HOLE_Y,RH};
-  window.tag3d={colors:(a,b)=>{colors(a,b);if(window.cut3d)window.cut3d.colors(a,b);},face};
+  let bone=null, modelo='huella';
+  function setModel(m){
+    if(m==='hueso'){ if(!bone){ if(!window.boneKit) return false; bone=window.boneKit.build(matA,matB,metal); bone.grp.rotation.copy(tag.rotation); bone.grp.scale.setScalar(1.22); bone.grp.position.y=0.3; scene.add(bone.grp); } tag.visible=false; bone.grp.visible=true; shadow.position.y=-0.95; shadow.scale.set(1.25,1.3,1); }
+    else { tag.visible=true; if(bone) bone.grp.visible=false; shadow.position.y=-1.85; shadow.scale.set(1,1,1); }
+    modelo=m; return true;
+  }
+  window.tag3d={colors:(a,b)=>{colors(a,b);if(window.cut3d)window.cut3d.colors(a,b);},face,model:setModel,setName:t=>{if(bone)bone.setName(t);},ok:true};
+  document.dispatchEvent(new Event('tag3d'));
   colors(CMAP[state.a][2],CMAP[state.b][2]);
 })();
 </script>
@@ -1591,6 +1626,21 @@ Promise.all([loadZones('huella'),loadZones('nfc')]).then(()=>{render();openOrder
     setName('TOBBY');
     return {grp,L,A,B,order:[0,1,2,6,5,4],ringAnchor:[0,boneHoleY+0.76,0],ringText:['Anilla','La única pieza de metal, para colgarla del collar.'],target:[0,-0.45,-0.25],dist:13,cam:[5.6,2.3,6.6],setName};
   }
+  // Hueso montado (sin capas) para el visor de «Diseña la tuya», con los materiales de ese visor
+  window.boneKit={build(mA,mB,mMetal){
+    const grp=new THREE.Group(), M=(geo,mat,z)=>{const m=new THREE.Mesh(geo,mat);m.position.z=z;return m;};
+    grp.add(M(ext(boneShape(true),0.26,0.035,24),mA,-0.13));
+    grp.add(M(ext(octaRing(1.92,0.74,0.16,0.07),0.045,0.01,8),mA,0.16));
+    const pawG=(x,y,r,sc)=>{const g=ext(paw(),0.04,0.01,32);g.scale(sc,sc,1);g.rotateZ(r);g.translate(x,y,0);return g;};
+    [pawG(-1.3,0.33,-0.25,0.38),pawG(1.3,-0.38,0.25,0.38)].forEach(g=>grp.add(M(g,mB,0.16)));
+    const nameM=M(new THREE.BufferGeometry(),mB,0.16); grp.add(nameM);
+    const nfcG=ext(nfc(),0.03,0.006,24); nfcG.scale(0.62,0.62,1); nfcG.translate(0,-0.04,0); grp.add(M(nfcG,mB,-0.2));
+    const rg=new THREE.Group(),tor=new THREE.TorusGeometry(0.4,0.034,24,128);[-0.036,0.036].forEach(x=>{const m=new THREE.Mesh(tor,mMetal);m.position.x=x;rg.add(m);});
+    rg.rotation.y=Math.PI/2-0.8; rg.position.set(0,boneHoleY+0.36,0); grp.add(rg);
+    const setName=t=>{const sh=nameShapes((t||'TOBBY').toUpperCase().slice(0,10));nameM.geometry.dispose();nameM.geometry=sh.length?ext(sh,0.045,0.012,6):new THREE.BufferGeometry();};
+    setName('TOBBY'); return {grp,setName};
+  }};
+  document.dispatchEvent(new Event('bonekit'));
   const models={huella:huella(),hueso:hueso()};
   Object.values(models).forEach(m=>{m.L.forEach(l=>{l.g=new THREE.Group();l.objs.forEach(o=>l.g.add(o));if(l.resin){l.mat=resin.clone();l.objs.forEach(o=>o.material=l.mat);}m.grp.add(l.g);});m.grp.visible=false;scene.add(m.grp);});
   let M=models.huella; M.grp.visible=true;
